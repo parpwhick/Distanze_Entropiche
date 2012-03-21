@@ -1,0 +1,8 @@
+grep Sizes output |perl -pe 's/Sizes: {//; s/}//; chop; s/$/,/' > output2 
+
+ perl -ne 'print unless /^\s*$/ || m#//#' *.cpp strutture.h  | wc -l
+
+
+g++ -fopenmp  -o test test.cpp -lgomp
+
+./distanze -random -seqnum 1000000 -seqlength 500 -symbols 20 -nodistance -v | grep Part | perl -i -p -e 's/,.+$//; s/^Partitions//;' | sort | uniq -c | less
