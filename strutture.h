@@ -162,7 +162,53 @@ public:
     
     
     ~general_partition();
+    
+    class Iterator{
+    private:
+        int _site;
+        const int *_next;
+        
+    public:
+        Iterator(int dove, const int *vicini): _site(dove), _next(vicini) {};
+        
+        int operator*(){
+            return(_site);
+        }
+        
+        bool operator==(Iterator due){
+            return (_site == due._site);
+        }
+        
+        bool operator!=(Iterator due){
+            return (_site != due._site);
+        }
+        
+        int operator++(){
+            if(_site==_next[_site])
+                _site=-1;
+            else
+                _site=_next[_site];
+            return(_site);
+        }
+                
+        int operator++(int) { return(operator++());}        
+        
+    };
+    
+    Iterator begin(const int where) const{
+        return Iterator(atomi[where].end,prev_site);
+    }
+    
+    Iterator begin(const atom &where) const{
+        return Iterator(where.end,prev_site);
+    }
+    
+    Iterator end() const{
+        return Iterator(-1,prev_site);
+    }
 };
+
+typedef general_partition::Iterator Iter_t;
 
 
 class distance{
@@ -209,7 +255,6 @@ public:
     
 
 };
-
 
 void set_program_options(options &opt, int argc, char**argv) ;
 template <typename T> double entropy_binary_partition(const T *p, int n);
