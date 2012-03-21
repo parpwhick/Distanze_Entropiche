@@ -473,39 +473,37 @@ void general_partition::sort_entropy(){
     delete []temp;
 }
 
-//
-//bool is_similar_atom(Iter_t from1, Iter_t from2, Iter_t to, int tol=10){               
-//    int differenze=0;
-//    
-//    while (true) {
-//        // Se il numero delle differenze e' elevato, escludo l'uguaglianza
-//        if (differenze > tol) {
-//            return (false);        
-//        // Se ho raggiunto la fine di entrambi gli atomi senza troppe differenze
-//        // allora accetto l'uguaglianza
-//        } else if ((from1 == to) && (from2 == to)) {
-//            return (true);         
-//        // Nel caso di atomi con disparita' numerica, continuo a scorrere il piu
-//        // lungo, per vedere se accumulo abbastanza differenze
-//        }else if ((from1 == to) != (from2 == to)) {
-//            differenze++;
-//            from1++;
-//            from2++;         
-//        // Se ho elementi diversi nei due atomi, scorro per riallinearli
-//        } else if (*from1>*from2) {
-//            differenze++;
-//            from1++;
-//        } else if (*from2>*from1) {
-//            differenze++;
-//            from2++;
-//        // I due atomi hanno lo stesso elemento - scorro in avanti entrambi
-//        } else {
-//            from1++;
-//            from2++;
-//        }
-//    }
-//}
-
+bool is_similar_atom(Iter_t from1, Iter_t from2, Iter_t to, int tol=10){               
+    int differenze=0;
+    
+    while (true) {
+        // Se il numero delle differenze e' elevato, escludo l'uguaglianza
+        if (differenze > tol) {
+            return (false);        
+        // Se ho raggiunto la fine di entrambi gli atomi senza troppe differenze
+        // allora accetto l'uguaglianza
+        } else if ((from1 == to) && (from2 == to)) {
+            return (true);         
+        // Nel caso di atomi con disparita' numerica, continuo a scorrere il piu
+        // lungo, per vedere se accumulo abbastanza differenze
+        }else if ((from1 == to) != (from2 == to)) {
+            differenze++;
+            from1++;
+            from2++;         
+        // Se ho elementi diversi nei due atomi, scorro per riallinearli
+        } else if (*from1>*from2) {
+            differenze++;
+            from1++;
+        } else if (*from2>*from1) {
+            differenze++;
+            from2++;
+        // I due atomi hanno lo stesso elemento - scorro in avanti entrambi
+        } else {
+            from1++;
+            from2++;
+        }
+    }
+}
 
 void general_partition::reduce(const general_partition &p1, const general_partition &p2){
     //inizializzazioni
@@ -532,9 +530,8 @@ void general_partition::reduce(const general_partition &p1, const general_partit
             continue;
         
         // Creazione degli iteratori, per ottenere tutti i siti in atomo1
-//        Iter_t ii = p1.begin(atomo1);
-//        Iter_t ii2 = ii;
-//        Iter_t end = p1.end();
+        Iter_t ii = p1.begin(atomo1);
+        Iter_t end = p1.end();
         
         
         
@@ -545,18 +542,17 @@ void general_partition::reduce(const general_partition &p1, const general_partit
         
         // altrimenti interseca il fattore dicotomico con i precedenti
         fattori_indipendenti++;
-        
-        
+                
         
         // faccio il prodotto rapido - moltiplico i siti di atomo1 per numero
-//        for (; ii != end; ii++) 
-//            labels[*ii] *= fattori_indipendenti + 1;
+        for (; ii != end; ii++) 
+            labels[*ii] *= fattori_indipendenti + 1;
         
-        for (int i = p1.atomi[which].end;; i = p1.prev_site[i]) {
-            labels[i] *= fattori_indipendenti + 1;
-            if (i == p1.prev_site[i])
-                break;
-        }
+//        for (int i = p1.atomi[which].end;; i = p1.prev_site[i]) {
+//            labels[i] *= fattori_indipendenti + 1;
+//            if (i == p1.prev_site[i])
+//                break;
+//        }
            
     }   
     //printf("%.1f%% (%d/%d) accettati\n",(fattori_indipendenti+0.0)/p1.n*100.0, fattori_indipendenti,p1.n);
