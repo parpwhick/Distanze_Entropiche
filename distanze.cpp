@@ -304,6 +304,12 @@ int WRITE(const char *where,double *what) {
         return(0);
 }
 
+void init_zero(double * &vec){
+    vec=new double[opts.n_seq * opts.n_seq];
+    for (int i = 0; i < opts.n_seq * opts.n_seq; i++) 
+        vec[i]=0;
+}
+
 void calcola_matrice_distanze(linear_partition *X, general_partition *Z, std::string *char_entries=0){
 
     double *dist_shan=0;
@@ -319,28 +325,15 @@ void calcola_matrice_distanze(linear_partition *X, general_partition *Z, std::st
      int &da_calcolare=opts.da_calcolare;
     
     //distance matrix allocation and zeroing,if needed
-    if(da_calcolare & SHAN) dist_shan = new double[opts.n_seq * opts.n_seq];
-    if(da_calcolare & RID) dist_shan_r = new double[opts.n_seq * opts.n_seq];
-    if(da_calcolare & SHAN_TOP) dist_top = new double[opts.n_seq * opts.n_seq];
-    if(da_calcolare & RID_TOP) dist_top_r = new double[opts.n_seq * opts.n_seq];
-    if(da_calcolare & HAMM) dist_ham = new double[opts.n_seq * opts.n_seq];
-    if(da_calcolare & GENERAL) dist_fuzzy = new double[opts.n_seq * opts.n_seq];
-    if(da_calcolare & GENERAL_TOP) dist_fuzzy_t = new double[opts.n_seq * opts.n_seq];
-    if(da_calcolare & GENERAL_RID) dist_fuzzy_r = new double[opts.n_seq * opts.n_seq];
-    if(da_calcolare & GENERAL_RID_TOP) dist_fuzzy_r_t = new double[opts.n_seq * opts.n_seq];
-    
-    for (int i = 0; i < opts.n_seq * opts.n_seq; i++) {
-        if (da_calcolare & SHAN) dist_shan[i]=0;
-        if (da_calcolare & RID) dist_shan_r[i]=0;
-        if (da_calcolare & SHAN_TOP) dist_top[i]=0;
-        if (da_calcolare & RID_TOP) dist_top_r[i]=0;
-        if (da_calcolare & HAMM) dist_ham[i]=0;
-        if (da_calcolare & GENERAL) dist_fuzzy[i]=0;
-        if (da_calcolare & GENERAL_TOP) dist_fuzzy_t[i]=0;
-        if(da_calcolare & GENERAL_RID) dist_fuzzy_r[i]=0;
-        if(da_calcolare & GENERAL_RID_TOP) dist_fuzzy_r_t[i]=0;
-
-    }
+    if (da_calcolare & SHAN) init_zero(dist_shan);
+    if (da_calcolare & RID) init_zero(dist_shan_r);
+    if (da_calcolare & SHAN_TOP) init_zero(dist_top);
+    if (da_calcolare & RID_TOP) init_zero(dist_top_r);
+    if (da_calcolare & HAMM) init_zero(dist_ham);
+    if (da_calcolare & GENERAL) init_zero(dist_fuzzy);
+    if (da_calcolare & GENERAL_TOP) init_zero(dist_fuzzy_t);
+    if (da_calcolare & GENERAL_RID) init_zero(dist_fuzzy_r);
+    if (da_calcolare & GENERAL_RID_TOP) init_zero(dist_fuzzy_r_t);                                                             
 
     fprintf(stderr,"Calculating distance matrix\n");
     
@@ -436,5 +429,23 @@ void calcola_matrice_distanze(linear_partition *X, general_partition *Z, std::st
         if (opts.verbose)
             fprintf(stderr, "Written %dx distance matrix\n",count);
     }
-    
+
+    if (dist_shan) 
+        delete[] dist_shan;
+    if (dist_shan_r) 
+        delete[] dist_shan_r;
+    if (dist_top) 
+        delete[] dist_top;
+    if (dist_top_r) 
+        delete[] dist_top_r;
+    if (dist_ham) 
+        delete[] dist_ham;
+    if (dist_fuzzy) 
+        delete[] dist_fuzzy;
+    if (dist_fuzzy_t) 
+        delete[] dist_fuzzy_t;
+    if (dist_fuzzy_r) 
+        delete[] dist_fuzzy_r;
+    if (dist_fuzzy_r_t) 
+        delete[] dist_fuzzy_r_t;
 }

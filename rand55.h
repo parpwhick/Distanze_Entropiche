@@ -17,6 +17,7 @@ class rand55 {
     
 public:
     double rand() ;
+    unsigned long rand_long();
     double semi_norm() ;
     
     rand55(long idum=-1) { rand_init(idum); have_next_normal=0;}

@@ -3,6 +3,10 @@
  *
  * Started on January 11, 2012, 2:30 PM
  *  
+ * Version: 5.2, 2012/03/22
+ * -Iterators for the linked list
+ * -General cleanups
+ * 
  * Version: 5.1, 2012/03/11
  * -Super optimized reduction
  * -Hashing implemented everywhere
@@ -46,11 +50,6 @@
 
 #include "strutture.h"
 
-
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 extern options opts;
 double *mylog=0;
 int *colore=0;
@@ -80,7 +79,7 @@ template void print_partition_stats(linear_partition *, const char* );
 template void print_partition_stats(general_partition *, const char* );
 
 
-void mutation_entropy(std::string *entries){
+double *mutation_entropy(std::string *entries){
     typedef std::map<char,int> map_t;
     map_t *histogram=new map_t[opts.seq_len];
     
@@ -106,6 +105,8 @@ void mutation_entropy(std::string *entries){
 //    for (int j = 0; j < opts.seq_len; j++) 
 //        printf("%02.1f,",H[j]);
 //    printf("}\n");
+
+	return(H);
 }
 
 int main(int argc, char** argv) {
@@ -116,8 +117,7 @@ int main(int argc, char** argv) {
         
     //random number initialization
     srand(time(0));
-    xrandinit(time(0));
-    
+    xrandinit(time(0));    
     
     //
     //  ALLOCATION OF MEMORY AND INITIALIZATION
@@ -135,48 +135,47 @@ int main(int argc, char** argv) {
     
     std::string *char_entries=new std::string[opts.n_seq];
     int **num_entries=new int*[opts.n_seq];
-    
-    if(opts.from == (FROM_FILE | SEQUENCE)){
+
+    if (opts.from == (FROM_FILE | SEQUENCE)) {
         fill_seq_from_file(opts, char_entries);
-     //   mutation_entropy(char_entries);
-        for (int i = 0; i < opts.n_seq; i++){            
-        X[i].fill(char_entries[i].data(), opts.seq_len);
-        Z[i].from_linear_sequence(char_entries[i].data(), opts.seq_len);
-        }        
-    }    else if(opts.from == (FROM_FILE | LATTICE)){
+        //   mutation_entropy(char_entries);
+        for (int i = 0; i < opts.n_seq; i++) {
+            X[i].fill(char_entries[i].data(), opts.seq_len);
+            Z[i].from_linear_sequence(char_entries[i].data(), opts.seq_len);
+        }
+    } else if (opts.from == (FROM_FILE | LATTICE)) {
         load_lattices_from_file(opts, num_entries);
-    
+
         for (int i = 0; i < opts.n_seq; i++)
-                Z[i].from_square_lattice(num_entries[i], opts.lato, 2);
+            Z[i].from_square_lattice(num_entries[i], opts.lato, 2);
     }
-    
-    if(opts.from & RANDOM){
-        for (int i = 0; i < opts.n_seq; i++){
-          generate_next_sequence(char_entries[0]);
-          if(opts.from & LATTICE){
+
+    if (opts.from & RANDOM) {
+        for (int i = 0; i < opts.n_seq; i++) {
+            generate_next_sequence(char_entries[0]);
+            if (opts.from & LATTICE) {
                 Z[i].from_square_lattice(char_entries[0].data(), opts.lato, 2);
-          }
-          else if(opts.from & SEQUENCE){
+            } else if (opts.from & SEQUENCE) {
                 X[i].fill(char_entries[0].data(), opts.seq_len);
                 Z[i].from_linear_sequence(char_entries[0].data(), opts.seq_len);
-          }
+            }
         }
     }
-       
-    printf("Loaded %d sequences long %d\n",opts.n_seq,opts.seq_len);
-    if(da_calcolare & SHAN)
-        print_partition_stats(X,"semplici");
-    if(da_calcolare & GENERAL)
-        print_partition_stats(Z,"con salto");
+
+    printf("Loaded %d sequences long %d\n", opts.n_seq, opts.seq_len);
+    if (da_calcolare & SHAN)
+        print_partition_stats(X, "semplici");
+    if (da_calcolare & GENERAL)
+        print_partition_stats(Z, "con salto");
     printf("\n");
-    
-    
+
+
     //
     //  DISTANCE MEASUREMENTS
     //
-    if(opts.distance==false)
+    if (opts.distance == false)
         exit(0);
-    
+
     calcola_matrice_distanze(X, Z, char_entries);
     //
     //  PROGRAM EXIT

@@ -3,15 +3,13 @@
 #include <math.h>
 #include "rand55.h"
 
-//for 32 bits
-//#define Norm_Factor   2.328306437080797e-10
+#ifdef __i386
+    #define Norm_Factor   2.328306437080797e-10
+#elif __amd64__
+	#define Norm_Factor   5.421010862427522170037264e-20 // 1/__UINT_MAX__ 
+#endif
 
-//for 64 bits
-#define Norm_Factor   5.421010862427522170037264e-20
-
-#define std_correction 1.414213562373095
-
-
+#define std_correction 1.414213562373095 // sqrt(2)
 
 long Seed = 161803398L;
 
@@ -22,6 +20,12 @@ double rand55::rand() {
     return ((double) n1->Y * Norm_Factor);
 }
 
+unsigned long rand55::rand_long() {
+    n1 = n1->next;
+    n2 = n2->next;
+    n1->Y += n2->Y;
+    return (n1->Y);
+}
 //generatore di numeri gaussiani positivi
 double rand55::semi_norm() {
     if (have_next_normal) {
