@@ -265,4 +265,5 @@ void load_lattices_from_file(options &opts, int** num_entries);
 template <typename T> void ppmout(const T *grid, int sz, const char *filename);
 template <typename T, typename U> void ppmout2(const T *grid1, const U* grid2, int sz, const char *filename);
 
+void calcola_matrice_distanze(linear_partition *X, general_partition *Z, std::string *char_entries);
 void print_array(int *array, int len, const char *nome);

@@ -1,4 +1,4 @@
-COPTS= -O3 -Wall 
+COPTS= -O3 -Wall -fopenmp
 files=*.cpp *.h Makefile2
 file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
 
@@ -12,10 +12,10 @@ rand55.o: rand55.cpp rand55.h
 	g++ ${COPTS} -c rand55.cpp
 
 ising.o: ising.cpp strutture.h
-	g++ ${COPTS} -fopenmp -c ising.cpp
+	g++ ${COPTS} -c ising.cpp
 
 main.o: main.cpp strutture.h 
-	g++ ${COPTS} -fopenmp -c main.cpp
+	g++ ${COPTS} -c main.cpp
 
 translation.o: strutture.h translation.cpp
 	g++ ${COPTS} -c translation.cpp
