@@ -1,5 +1,7 @@
 H = @(a) - sum(a .* log(a)) / sum(a) + log(sum(a));
 
+makebinpart=@(a) [1, a(2:end) ~= a(1:end-1)]
+
 primi = primes(2000);
 
 binary_part = @(e) e(2:end) ~= e(1:end-1);
@@ -17,12 +19,12 @@ Hprodrid = @(a,b) Hprodbinrid(binary_part(a),binary_part(b));
 prod_gen = @(a,b) primi(a+1) .* primi(b+length(a) +2);
 Hprod_gen = @(a,b) 2*Hpart(sort(prod_gen(a,b))) - Hpart(sort(a)) - Hpart(sort(b));
 
-tic
+Htopbin = @(e) log(sum(e)+1);
 
-for i=1:822
-for j=i+1:822
-d(i,j) = Hprodbinrid(binpart(i,:), binpart(j,:));
-end
-end
-
-toc
+% tic
+% for i=1:822
+% for j=i+1:822
+% d(i,j) = Hprodbinrid(binpart(i,:), binpart(j,:));
+% end
+% end
+% toc

@@ -1,0 +1,376 @@
+BODY
+{
+    BACKGROUND-COLOR: white
+}
+A:link
+{
+    BACKGROUND-COLOR: transparent;
+    COLOR: #264AD9;
+    TEXT-DECORATION: none
+}
+A:visited
+{
+    BACKGROUND-COLOR: transparent;
+    COLOR: #264AD9;
+    TEXT-DECORATION: none
+}
+A:hover
+{
+    BACKGROUND-COLOR: transparent;
+    COLOR: #66CCFF;
+    TEXT-DECORATION: none
+}
+.me
+{
+    FONT-FAMILY: Book Antiqua, Garamond;
+    FONT-SIZE: 12pt;
+    COLOR: black;
+    MARGIN-BOTTOM: 10pt;
+    MARGIN-LEFT: 0pt;
+    MARGIN-TOP: 18pt;
+    TEXT-ALIGN: justify;
+    TEXT-INDENT: 0pt;
+}
+.focus
+{
+    FONT-FAMILY: Book Antiqua, Garamond;
+    FONT-SIZE: 12pt;
+    COLOR: red;
+    MARGIN-BOTTOM: 10pt;
+    MARGIN-LEFT: 0pt;
+    MARGIN-TOP: 18pt;
+    TEXT-ALIGN: justify;
+    TEXT-INDENT: 0pt;
+}
+li
+{
+    FONT-FAMILY: Book Antiqua, Garamond;
+    FONT-SIZE: 12pt;
+}
+P
+{
+    FONT-FAMILY: Book Antiqua, Garamond;
+    FONT-SIZE: 12pt;
+    MARGIN-BOTTOM: 10pt;
+    MARGIN-LEFT: 0pt;
+    MARGIN-TOP: 18pt;
+    TEXT-ALIGN: justify;
+    TEXT-INDENT: 0pt;
+}
+.short
+{
+    MARGIN-TOP: 6pt;
+    TEXT-ALIGN: left;
+    MARGIN-BOTTOM: 6pt;
+}
+.abstract
+{
+    FONT-STYLE: italic;
+    MARGIN-BOTTOM: 10pt;
+    MARGIN-LEFT: 10pt;
+    MARGIN-RIGHT: 10pt;
+    MARGIN-TOP: 12pt;
+    TEXT-ALIGN: justify;
+    TEXT-INDENT: 0px;
+}
+
+.pubabstract
+{
+    FONT-FAMILY: Book Antiqua, Garamond;
+    FONT-SIZE: 12pt;
+    MARGIN-BOTTOM: 0;
+    MARGIN-LEFT: 0pt;
+    MARGIN-TOP: 0pt;
+    TEXT-ALIGN: justify;
+    TEXT-INDENT: 0pt;
+}
+
+.abstractbutton
+{
+    FONT-FAMILY: Book Antiqua, Garamond;
+    FONT-SIZE: 12pt;
+    MARGIN-BOTTOM: 0;
+    MARGIN-LEFT: 0pt;
+    MARGIN-TOP: -10pt;
+    TEXT-ALIGN: right;
+    TEXT-INDENT: 0pt;
+}
+
+.char
+{
+    FONT-FAMILY: Webdings;
+    FONT-SIZE: 14pt;
+    MARGIN-LEFT: 5pt;
+    MARGIN-RIGHT: 5pt;
+}
+
+
+
+.abdes
+{
+    FONT-STYLE: italic;
+    FONT-SIZE: 11pt;    
+    MARGIN-BOTTOM: 10pt;
+    MARGIN-LEFT: 10pt;
+    MARGIN-RIGHT: 10pt;
+    MARGIN-TOP: 12pt;
+    TEXT-ALIGN: justify;
+    TEXT-INDENT: 0px;
+}
+
+.noindent
+{
+    TEXT-INDENT: 0pt
+}
+.nojustify
+{
+    TEXT-ALIGN: left
+}
+.center
+{
+    TEXT-ALIGN: center;
+    TEXT-INDENT: 0px;
+    text-index: 0
+}
+.info
+{
+    FONT-WEIGHT: bold;
+    TEXT-ALIGN: center;
+    MARGIN-BOTTOM: 0px;
+    MARGIN-TOP: 24px;
+    TEXT-INDENT: 0px;
+}
+.title
+{
+    FONT-FAMILY: Monotype Corsiva; 
+    FONT-SIZE: 28pt;
+    TEXT-ALIGN: center;
+    MARGIN-BOTTOM: 5px;
+    MARGIN-TOP: 5px;
+    MARGIN-LEFT: 0px;
+    TEXT-INDENT: 0px;
+}
+.inlinks
+{
+
+    FONT-WEIGHT: bold;
+    MARGIN-BOTTOM: 0px;
+    MARGIN-LEFT: 50px;
+    MARGIN-TOP: 0px;
+    TEXT-INDENT: 0px;
+}
+.ref
+{
+
+    FONT-SIZE: 11pt;
+    FONT-STYLE: italic;
+    TEXT-ALIGN: center;
+    MARGIN-BOTTOM: 0px;
+    MARGIN-TOP: 0px;
+    TEXT-INDENT: 0px;
+}
+.seg
+{
+
+    FONT-SIZE: 12pt;
+    FONT-WEIGHT: bold;
+    MARGIN-BOTTOM: 5pt;
+    MARGIN-LEFT: 0pt;
+    MARGIN-TOP: 5pt;
+    TEXT-INDENT: 0pt
+}
+.sectitle
+{
+
+    FONT-SIZE: 14pt;
+    FONT-WEIGHT: bold;
+    TEXT-ALIGN: center;
+    MARGIN-BOTTOM: 12px;
+    MARGIN-TOP: 0px;
+    TEXT-INDENT: 0px;
+}
+
+.sectitlesmall
+{
+
+    FONT-SIZE: 14pt;
+    FONT-WEIGHT: bold;
+    TEXT-ALIGN: center;
+    MARGIN-BOTTOM: 12px;
+    MARGIN-TOP: 0px;
+    TEXT-INDENT: 0px;
+}
+
+.listitem
+{
+    MARGIN-BOTTOM: 5pt;
+    MARGIN-LEFT: 0pt;
+    MARGIN-TOP: 5pt;
+    TEXT-INDENT: 0pt
+}
+.listhead
+{
+    FONT-WEIGHT: bold;
+    MARGIN-BOTTOM: 5pt;
+    MARGIN-LEFT: 0pt;
+    MARGIN-TOP: 5pt;
+    TEXT-INDENT: 0pt
+}
+.head
+{
+    FONT-WEIGHT: bold;    
+    FONT-STYLE: italic;
+    MARGIN-BOTTOM: 5pt;
+    MARGIN-LEFT: 0pt;
+    MARGIN-TOP: 5pt;
+    TEXT-INDENT: 0pt
+}
+.sblink
+{
+    BACKGROUND-COLOR: transparent;
+    COLOR: black;
+    FONT-FAMILY: Verdana;
+    FONT-SIZE: 13pt;
+    MARGIN-BOTTOM: 14pt;
+    MARGIN-LEFT: 0px;
+    MARGIN-TOP: 12pt;
+    TEXT-ALIGN: center;
+    TEXT-INDENT: 0px
+}
+hr
+{
+    color: #5868B0
+}
+
+.sblink_title
+{
+    FONT-FAMILY: Verdana;
+    FONT-SIZE: 14pt;
+    FONT-WEIGHT: bold;
+    MARGIN-BOTTOM: 0px;
+    MARGIN-LEFT: 0px;
+    MARGIN-TOP: 10pt;
+    TEXT-ALIGN: center;
+    TEXT-INDENT: 0px
+}
+H2
+{
+    TEXT-ALIGN: center;
+    TEXT-INDENT: 0px
+}
+A.sblink:link
+{
+    BACKGROUND-COLOR: transparent;
+    COLOR: black
+}
+A.sblink:visited
+{
+    BACKGROUND-COLOR: transparent;
+    COLOR: black
+}
+A.sblink:hover
+{
+//    BACKGROUND-COLOR: transparent;
+    COLOR: black
+}
+.botlink
+{
+    BACKGROUND-COLOR: transparent;
+    COLOR: black;
+    FONT-FAMILY: Verdana;
+    FONT-SIZE: 8pt;
+    MARGIN-BOTTOM: 0pt;
+    MARGIN-LEFT: 0px;
+    MARGIN-TOP: 0px;
+    TEXT-ALIGN: center;
+    TEXT-INDENT: 0px
+}
+A.botlink:link
+{
+    BACKGROUND-COLOR: transparent;
+    COLOR: black
+}
+A.botlink:visited
+{
+    BACKGROUND-COLOR: transparent;
+    COLOR: black
+}
+A.botlink:hover
+{
+    BACKGROUND-COLOR: transparent;
+    COLOR: #66CCFF
+}
+
+.winecategory
+{
+    color: #264AD9;
+}
+
+.wine
+{
+    MARGIN-BOTTOM: 5pt;
+    MARGIN-TOP: 0pt;
+}
+
+.winerec
+{
+	align: center;
+	background: #F1F1F1;
+	border-right: 1px solid #999;
+	border-left: 1px solid #999;
+	border-bottom: 1px solid #999;
+	border-top: 1px solid #999;
+	text-align: center;
+	font-weight: bold; 
+	color: #000;
+	width: 150px;
+	font-size: 10pt;
+}	
+
+body {
+	font: 70% verdana, sans-serif;
+	background: #fff;
+}
+
+dl
+{
+	width: 160px;
+	padding: 4px 0px 6px 2px;
+	background: #F1F1F1;
+	border-right: 1px solid #999;
+	border-left: 1px solid #999;
+	border-bottom: 1px solid #999;
+	border-top: 1px solid #999;
+}
+
+dt { 
+	font-weight: bold; 
+	padding: 2px;
+}
+
+dd {
+	padding: 0px;
+	margin: 0px 2px 0px 0px;
+	
+}
+
+dd a
+{
+	display: block;
+	border: solid 1px #F1F1F1;
+	padding: 2px 6px 2px 6px;
+	margin: 0px 2px;
+	background: #F1F1F1;
+	height: 1%;
+	line-height: 1em;
+	color: #000;
+	text-decoration: none;
+}
+
+dd a:hover
+{
+	color: #000;
+	border: solid 1px #999;
+	background: #CCC;
+}
+

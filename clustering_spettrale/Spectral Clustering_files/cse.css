@@ -1,0 +1,89 @@
+BODY { 
+ color: black;
+ background-color: white
+}
+H1, H2, H3, H4, H5, H6 { 
+ font-family: helvetica, arial, sans-serif
+}
+
+ADDRESS { 
+ font-family: helvetica, arial, sans-serif;  
+ font-size: 75%
+}
+
+A:link { 
+ color: #cc3300;
+ background-color: transparent
+}
+A:visited { 
+ color: #990000;
+ background-color: transparent
+}
+A:active { 
+ color: #990000;
+ background-color: transparent
+}
+.barlink { 
+ font-family: helvetica, arial, sans-serif;
+ font-size: 13px;
+ font-weight: bold; 
+ color: white; 
+ background-color: #666600;
+ text-decoration: none
+}
+.navlink { 
+ font-family: helvetica, arial, sans-serif;
+ font-size: 13px;
+ font-weight: bold; 
+ text-decoration: none 
+}
+.navlinksm { 
+ font-family: helvetica, arial, sans-serif;
+ font-size: 11px;
+ font-weight: bold; 
+ text-decoration: none 
+}
+.navlinkbig { 
+ font-family: helvetica, arial, sans-serif;
+ font-size: 15px;
+ font-weight: bold; 
+ text-decoration: none 
+}
+H1 { 
+ font-size: 22px;
+ font-weight: bold; 
+ text-decoration: none;
+}
+.myH1 { 
+ font-family: helvetica, arial, sans-serif;
+ font-size: 22px;
+ font-weight: bold; 
+ text-decoration: none
+}
+H2 { 
+ font-size: 18px;
+ font-weight: bold; 
+ text-decoration: none;
+}
+.myH2 { 
+ font-family: helvetica, arial, sans-serif;
+ font-size: 18px;
+ font-weight: 
+ bold; text-decoration: none 
+}
+.iDesc {
+ font-family: helvetica, arial, sans-serif;
+ font-size: 12px;
+}
+.h {
+ font-family: helvetica,arial,sans-serif;
+ font-size: 18px;
+ font-weight: bold;
+ text-decoration: none;
+ color: #330000;
+ background-color: white;
+}
+.button {
+ background-color: #cccc99;
+ font-weight: bold;
+}

@@ -1,12 +1,13 @@
-stringa1=[1,0,0,0,1,0,0,1,0,0,1,1,1]
-stringa2=[1,0,1,0,0,1,0,1,0,0,1,0,1];
-comune=bitand(stringa1,stringa2)
-ridotto2=bitxor(stringa2,comune)
-ridotto1=bitxor(stringa1,comune)
-ridotto1(end)=1;
-ridotto1(1)=1;
-ridotto2(1)=1;
-ridotto2(end)=1;
+% stringa1=[1,0,0,0,1,0,0,1,0,0,1,1,1]
+% stringa2=[1,0,1,0,0,1,0,1,0,0,1,0,1];
+% comune=bitand(stringa1,stringa2)
+% ridotto2=bitxor(stringa2,comune)
+% ridotto1=bitxor(stringa1,comune)
+% ridotto1(end)=1;
+% ridotto1(1)=1;
+% ridotto2(1)=1;
+% ridotto2(end)=1;
+
 
 dove=5;
 multiplier=40;

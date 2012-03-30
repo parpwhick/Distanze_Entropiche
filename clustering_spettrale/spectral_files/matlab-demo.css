@@ -1,0 +1,34 @@
+.code 
+{
+}
+
+.matlab
+{
+	margin-left: 20px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	background-color: #bbbbbb;
+	font-size: 12pt;
+	font-family: Courier;
+	border: solid 1px;
+	white-space: pre;
+}
+
+p
+{
+	margin: 10px;
+	font-size: 12pt;
+}
+
+.main
+{
+	border-left-style: solid;
+	margin-left: 100px;	
+	width: 550px;
+	font-size: 14pt;
+}
+
+img
+{
+	text-align: center;
+}

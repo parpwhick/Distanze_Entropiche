@@ -1,0 +1,249 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<title>Cheeger cut minimization and 1-Spectral Clustering</title>
+
+<style type="text/css">
+div.standard_text {
+	MARGIN-LEFT: 3em;MARGIN-RIGHT: 3em;TEXT-ALIGN:justify;FONT-FAMILY: Verdana
+}
+div.centered_text {
+	TEXT-ALIGN:center;FONT-FAMILY: Verdana
+}
+div.code {
+	FONT-FAMILY: 'Courier New'; font-size:20px;TEXT-ALIGN:left;
+}
+font.code {
+	FONT-FAMILY: 'Courier New'; font-size:20px
+}
+H2 {
+	FONT-FAMILY: Verdana;MARGIN-LEFT: 2em;PADDING-TOP: 20px;
+}
+
+H3 {
+	FONT-FAMILY: Verdana;MARGIN-LEFT: 2.5em;PADDING-TOP: 20px;
+}
+
+#heading {
+	MARGIN-LEFT: 0em;MARGIN-RIGHT: 0em;TEXT-ALIGN:left
+}
+BODY {
+	PADDING-RIGHT: 0px; PADDING-LEFT: 0px; PADDING-BOTTOM: 0px; MARGIN: 0px; PADDING-TOP: 0px; FONT-FAMILY: Georgia, Serif; BACKGROUND: skyblue;
+}
+#header {
+	BORDER-RIGHT: navy 3px solid; PADDING-RIGHT: 0px; BORDER-TOP: navy 3px solid; MARGIN-TOP: 0px; PADDING-LEFT: 0px; BACKGROUND: skyblue; PADDING-BOTTOM: 0px; 
+	MARGIN-LEFT: 180px; OVERFLOW: auto; WIDTH: 820px; PADDING-TOP: 0px; BORDER-BOTTOM: navy 3px solid; POSITION: absolute; HEIGHT: 180px
+}
+#logo {
+	BORDER-RIGHT: navy 3px solid; PADDING-RIGHT: 0px; BORDER-TOP: navy 3px solid; MARGIN-TOP: 0px; PADDING-LEFT: 0px; BACKGROUND: royalblue; LEFT: 0px; PADDING-BOTTOM: 0px; 
+	BORDER-LEFT: navy 3px solid; WIDTH: 180px; MARGIN-RIGHT: 0px; PADDING-TOP: 0px; BORDER-BOTTOM: navy 3px solid; POSITION: absolute; HEIGHT: 180px
+}
+#menu {
+	BORDER-RIGHT: navy 3px solid; PADDING-RIGHT: 0px; MARGIN-TOP: 180px; PADDING-LEFT: 0px; BACKGROUND: skyblue; LEFT: 0px; PADDING-BOTTOM: 0px; BORDER-LEFT: navy 3px solid; 
+	WIDTH: 180px; MARGIN-RIGHT: 0px; PADDING-TOP: 0px; BORDER-BOTTOM: navy 3px solid; POSITION: absolute; HEIGHT: 800px
+}
+#menu A {
+	FONT-SIZE: 20px; COLOR: navy; LINE-HEIGHT: 1
+}
+#content {
+	PADDING-RIGHT: 0px; PADDING-LEFT: 0px; BACKGROUND: white; PADDING-BOTTOM: 0px; MARGIN-LEFT: 15%; OVERFLOW: auto; WIDTH: 70%; PADDING-TOP: 0px; POSITION: absolute; 
+}
+H1 {
+	FONT-SIZE: large; PADDING-TOP: 10px
+}
+
+</style>
+<!--hr { color:skyblue; background-color:skyblue; height:30px; border:0;
+}-->
+</head><body>
+
+<div id="content">
+<br>
+  <table style="width: 90%; height: 20%; overflow: auto;" align="center">
+    <tbody>
+      <tr>
+        <td width="10%"><a href="http://www.cs.uni-saarland.de/"><img src="oneSpectralClustering_files/saarland-university.png" height="104" border="0" width="215"></a></td>
+
+        <td width="2%"></td>
+
+        <td bgcolor="white" width="76%">
+          <p align="center"><font face="Verdana" size="6">1-Spectral Clustering</font></p>          
+          <p align="center"><font face="Verdana">by <a href="http://www.ml.uni-saarland.de/people/hein/Hein.shtml">Matthias Hein</a> and <a href="http://www.ml.uni-saarland.de/people/buehler/Buehler.shtml">Thomas Bühler</a> </font></p>
+        </td>
+		
+		<td width="2%"></td>
+		
+		<td width="10%"><a href="http://www.ml.uni-saarland.de/"><img src="oneSpectralClustering_files/machine-learning-logo3.jpg" height="125" border="0" width="184"></a></td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <br>
+<hr>
+
+
+<a name="app_1spectral">
+<h2>Cheeger cut minimization and 1-Spectral Clustering</h2>
+</a><div class="standard_text"><a name="app_1spectral">
+Spectral clustering is a graph-based clustering method based on a 
+relaxation of
+the NP-hard problem of finding the optimal balanced cut of an undirected
+ weighted graph where the weights represent the similiarities between 
+points.
+<div align="center">
+<table>
+<tbody><tr width="100%">
+<td height="250" width="320"><br><div align="center"><img src="oneSpectralClustering_files/graph-partitioning.png" width="250"><br></div>
+</td>
+<td>
+The balanced cut criteria to be optimized are the <b>Ratio Cheeger cut (RCC)</b>, defined 
+for a partition (C,<font style="text-decoration: overline;">C</font>) where <font style="text-decoration: overline;">C</font>=V \ C as
+<br>
+<div align="center"><img src="oneSpectralClustering_files/rcc1.png" width="270"><img src="oneSpectralClustering_files/rcc2.png" width="270"></div>
+or the <b>Normalized Cheeger cut (NCC)</b>, where the cardinalities of the clusters are replaced by the sums of degrees.
+<br><br>
+The standard spectral relaxation has as its solution the second 
+eigenvector of the graph Laplacian and the final partition is found by 
+optimal thresholding.
+</td>
+</tr></tbody></table>
+</div>
+
+In </a><a href="#pub_buehei09pspectral">[2]</a> we proposed <a href="http://www.ml.uni-saarland.de/code/pSpectralClustering/pSpectralClustering.html">p-spectral clustering</a>, a generalization of spectral clustering based on the second eigenvector of the nonlinear <b>graph p-Laplacian</b>
+ (the graph Laplacian is recovered for p=2). One can show that for p 
+approaching 1 the cut found by thresholding the second eigenvector 
+converges to the optimal Cheeger cut, and indeed one obtains much better
+ cuts, at the expense of higher runtime. In <a href="#pub_heibue10NIPM">[1]</a> we considered directly the case p=1 and showed that the <b>second eigenvalue</b> of the <b>graph 1-Laplacian</b> is <b>equal to the optimal Cheeger cut</b>.
+<br><br>
+
+Our <a href="http://www.ml.uni-saarland.de/code/IPM/IPM.html">nonlinear inverse power method</a> can be applied to efficiently compute nonconstant nonlinear eigenvectors of the graph 1-Lapacian and the resulting <b>1-spectral clustering</b>. An implementation can be downloaded from this website.
+</div>
+<br><br>
+<hr>
+<h2>Download and License</h2>
+
+<div class="standard_text">
+
+1-Spectral Clustering has been developed by <a href="http://www.ml.uni-saarland.de/people/hein/Hein.shtml">Matthias Hein</a> and <a href="http://www.ml.uni-saarland.de/people/buehler/Buehler.shtml">Thomas Bühler</a>,
+ Department of Computer Science, Saarland University, Germany. The code 
+for 1-Spectral Clustering is published as free software under the terms 
+of the <a href="http://www.gnu.org/licenses/gpl-3.0-standalone.html">GNU GPL v3.0</a>. Please include a reference to the paper <a href="#pub_heibue10NIPM">An inverse power method for nonlinear eigenproblems with applications in 1-spectral clustering and sparse PCA</a> and include the original documentation and copyright notice.
+
+</div>
+
+  <p align="center"><font face="Verdana">
+  <a href="http://www.ml.uni-saarland.de/code/oneSpectralClustering/1SpectralClustering_V1_1.rar"><font face="Verdana" size="5">Download 1SpectralClustering</font></a>
+  <!--Download will be available soon.-->
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  &nbsp;(Version: 1.1)
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  &nbsp;<a href="http://www.ml.uni-saarland.de/code/oneSpectralClustering/HISTORY">Version history</a></font></p>
+
+  
+  <br><br>
+<hr>
+
+<h2>References</h2>
+
+<div class="standard_text">    
+    
+	
+	<a name="pub_heibue10NIPM">
+	<br>
+	[1] M. Hein and T. Bühler, <br> <strong>An inverse power method for nonlinear eigenproblems with applications in 1-spectral clustering and sparse PCA</strong>,<br>
+	In Advances in Neural Information Processing Systems 23 (NIPS 2010), accepted.
+	</a><a href="http://www.ml.uni-saarland.de/Publications/HeinBuehler-IPMNonlinEigProb%282010%29.pdf">PDF</a> (Supplementary material:  <a href="http://www.ml.uni-saarland.de/Publications/HeinBuehler-IPMNonlinEigProb-Supplement%282010%29.pdf">PDF</a>)
+				<br>
+                <br>
+	
+	<a name="pub_buehei09pspectral">
+	<br>
+    [2] T. Bühler, M. Hein, <br> <strong>Spectral Clustering based on the graph p-Laplacian</strong>,<br>
+				In Leon Bottou and Michael Littman, editors,  Proceedings of the 26th
+                International Conference on Machine Learning (ICML 2009), 81-88, Omnipress, 2009, </a><a href="http://www.ml.uni-saarland.de/Publications/BueHei-pSpectralClustering2009.pdf">PDF</a>
+				(Supplementary material:  <a href="http://www.ml.uni-saarland.de/Publications/BueHei09tech.pdf">PDF</a> - Errata of Supp. Mat.:  <a href="http://www.ml.uni-saarland.de/Publications/BueHei09tech-Errata.pdf">PDF</a>)
+	<br>
+    <br>
+        
+</div>    
+
+
+<hr>
+
+<h2>Documentation</h2>
+
+<div class="standard_text">
+To run 1-Spectral Clustering, download the file 
+OneSpectralClustering.rar and unrar it in some convenient directory. Add
+ this directory to the Matlab path variable. The clustering can then be 
+computed by the function
+'OneSpectralClustering'. If you find bugs or have other comments contact
+ <a href="http://www.ml.uni-saarland.de/people/buehler/Buehler.shtml">Thomas Bühler</a> or <a href="http://www.ml.uni-saarland.de/people/hein/Hein.shtml">Matthias Hein</a>.</div>
+
+<br><br>
+
+<div class="standard_text">
+	<strong>Usage, fast version:	</strong>
+	<div class="standard_text">
+	<font class="code">[clusters,cuts,cheegers] = <br> OneSpectralClustering(W,criterion,k);</font></div><br>
+	<strong>Usage, slower version, but improved partitioning (recommended):</strong>
+	<div class="standard_text">
+	<font class="code">[clusters,cuts,cheegers] = 	<br>OneSpectralClustering(W,criterion,k,numOuter,numInner);<br><br>
+[clusters,cuts,cheegers] = <br>  OneSpectralClustering(W,criterion,k,numOuter,numInner,verbosity);</font></div>
+	
+	<br>
+	<strong>Input: </strong>
+	<div class="standard_text">
+	<font class="code">W: </font> Sparse weight matrix. Has to be symmetric.<br>
+	<font class="code">criterion:</font> The multipartition criterion to be optimized. Available 
+	choices are<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'ncut' - Normalized Cut, <br>
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'ncc' - Normalized Cheeger Cut,<br>
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'rcut' - Ratio Cut, <br>
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'rcc' - Ratio Cheeger Cut<br>
+	<font class="code">k:</font> number of clusters<br><br>
+
+If no additional parameters are specified, the multipartitioning scheme
+is performed once, where each subpartitioning problem is initialized with
+the second eigenvector of the standard graph Laplacian (fast version).<br><br>
+ 
+The quality of the obtained partitioning can be improved by performing 
+additional runs of the multipartitioning scheme (parameter numOuter)
+with multiple random initializations at each level (parameter numInner).<br><br>
+</div>
+
+<strong>Input(optional):</strong>
+<div class="standard_text">
+<font class="code">numOuter:</font> number of additional times the multipartitioning scheme is 
+performed (default is 0); <br>
+<font class="code">numInner:</font> for the additional runs of the multipartitioning scheme: 
+number of random initializations at each level (default is 0).<br>
+<font class="code">verbosity:</font> Controls how much information is displayed. Levels 0-3,
+default is 2.<br><br>
+</div>
+
+<strong>Output:</strong>
+<div class="standard_text">
+<font class="code">clusters:</font> mx(k-1) matrix containing in each column the computed
+clustering for each partitioning step.<br>
+<font class="code">cuts:</font> (k-1)x1 vector containing the Ratio/Normalized Cut values after 
+each partitioning step.<br>
+<font class="code">cheegers:</font> (k-1)x1 vector containing the Ratio/Normalized Cheeger Cut 
+values after each partitioning step.<br><br>
+
+The final clustering is obtained via clusters(:,end), the corresponding 
+cut/cheeger values via cuts(end), cheegers(end).<br><br>
+
+If more flexibility is desired, call the subroutine computeMultiPartitioning directly. 
+	</div><br>
+	
+	</div>
+</div>
+
+	
+
+
+
+
+</body></html>

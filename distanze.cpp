@@ -61,7 +61,7 @@ void distance::fill(const general_partition& e1, const general_partition& e2) {
         ridotto2.reduce(e2, partizione_comune);
 
      
-        if(!opts.verbose){
+        if(opts.verbose>2){
         int quanto=std::min(e1.N,50);
         print_array(partizione_comune.labels,quanto,"lbls comune");
         print_array(e1.labels,quanto,               "lbls e1    ");
@@ -74,7 +74,6 @@ void distance::fill(const general_partition& e1, const general_partition& e2) {
 //        ridotto2.reduce(e2, e1);
 
         linear_product_sorted(ridotto1,ridotto2);
-        //linear_product_sorted(e1,e2);
         dist_fuzzy_r = dist_fuzzy;
         dist_fuzzy_r_t = dist_fuzzy_t;
        //printf("comune generale: %d, r1: %d/%d, r2: %d/%d, prod: %d\n",partizione_comune.n, ridotto1.n, e1.n, ridotto2.n,e2.n,(int)dist_fuzzy_t);

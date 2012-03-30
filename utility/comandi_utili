@@ -6,3 +6,5 @@ grep Sizes output |perl -pe 's/Sizes: {//; s/}//; chop; s/$/,/' > output2
 g++ -fopenmp  -o test test.cpp -lgomp
 
 ./distanze -random -seqnum 1000000 -seqlength 500 -symbols 20 -nodistance -v | grep Part | perl -i -p -e 's/,.+$//; s/^Partitions//;' | sort | uniq -c | less
+
+ls beta_* | sort -t '_' -k 2 -n | perl ../make_load_script.pl > carica_tutto_in_matlab.m 

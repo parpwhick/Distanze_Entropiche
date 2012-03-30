@@ -1,0 +1,361 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"></head><body bgcolor="#ffffff"><old notice="" -="" ignore="" --="" this="" is="" a="" machine-generated="" maintained="" file.="" you="" can="" manually="" edit="" content="" only="" between="" html="" comments="" "begin="" content"="" and="" "end="" other="" changes="" will="" be="" lost!="" to="" maintain,="" use="" http:="" www.cs.washington.edu="" htbin-post="" content-tool.cgi.="">
+
+ <title>Spectral Clustering</title>
+ <link rel="stylesheet" href="Spectral%20Clustering_files/cse.css" type="text/css">
+ <script src="Spectral%20Clustering_files/cse2.html"></script>
+
+
+
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+ <tbody><tr>
+  <td>
+   <table cellpadding="10" width="100%">
+    <tbody><tr>
+     <td>
+		<img src="Spectral%20Clustering_files/cse_logo_133.gif" alt="CSE logo" height="100" border="0" width="133">
+</td>
+     <td width="100%">
+		<img src="Spectral%20Clustering_files/csehead2.png" alt="University of Washington Department of Computer Science &amp; Engineering" height="70" width="440">
+      <hr noshade="noshade">
+      <font class="myH2" size="5">Spectral Clustering</font></td>
+    </tr>
+   </tbody></table>
+  </td>
+ </tr>
+</tbody></table>
+
+<table bgcolor="#666600" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tbody><tr valign="middle">
+ <td width="100%" align="left">
+	<table id="table3" bgcolor="#666600" border="0" cellpadding="0" cellspacing="0" width="100%">
+		<tbody><tr valign="center" align="right">
+			<td width="100%" align="left">
+			<a onmouseover="m('cse',1)" onmouseout="m('cse',0)" href="http://www.cs.washington.edu/">
+			<font class="barlink" color="#ffcc33">&nbsp;<img alt="" src="Spectral%20Clustering_files/wsarrow.gif" name="cse" border="0">&nbsp;CSE&nbsp;Home</font></a></td>
+			<td>
+			<a onmouseover="m('about',1)" onmouseout="m('about',0)" href="http://www.cs.washington.edu/info/aboutus/">
+			<font class="barlink" color="#ffcc33">
+			<img alt="" src="Spectral%20Clustering_files/wharrow.gif" name="about" border="0">&nbsp;About&nbsp;Us</font></a></td>
+			<td>
+			<a onmouseover="m('search',1)" onmouseout="m('search',0)" href="http://www.cs.washington.edu/info/search/">
+			<font class="barlink" color="#ffcc33">&nbsp;&nbsp;<img alt="" src="Spectral%20Clustering_files/wharrow.gif" name="search" border="0">&nbsp;Search</font></a></td>
+			<td>
+			<a onmouseover="m('contact',1)" onmouseout="m('contact',0)" href="http://www.cs.washington.edu/info/contact/">
+			<font class="barlink" color="#ffcc33">&nbsp;&nbsp;<img alt="" src="Spectral%20Clustering_files/wharrow.gif" name="contact" border="0">&nbsp;Contact&nbsp;In</font></a></td>
+		</tr>
+	</tbody></table>
+	</td>
+ <td>&nbsp;</td>
+ </tr>
+</tbody></table>
+
+<p>
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody><tr valign="top">
+
+<!--begin standard navigation-->
+<td>
+<table border="0" cellpadding="0" cellspacing="0" width="162">
+<tbody><tr>
+	<td><img src="Spectral%20Clustering_files/1.png" alt="" height="5"></td>
+	<td height="5"></td>
+</tr>
+<tr>
+ <td colspan="2" height="19"><font class="navlinkbig"></font><p><font class="navlinkbig">Faculty</font></p></td>
+</tr>
+<tr>
+ <td><img src="Spectral%20Clustering_files/noarrow.gif" alt="" name="i16" border="0"></td>
+ <td height="28" nowrap="nowrap"><a href="http://www.stat.washington.edu/mmp/" class="navlink" onmouseover="mIn('i16', 1)" onmouseout="mOut('i16', 1)">Marina Meila</a></td>
+</tr>
+<tr>
+	<td><img src="Spectral%20Clustering_files/1.png" alt="" height="5"></td>
+	<td height="5"></td>
+</tr>
+<tr>
+ <td colspan="2" height="19"><a href="#students" class="navlinkbig">Students</a></td>
+</tr>
+
+<tr>
+ <td width="26"><img src="Spectral%20Clustering_files/noarrow.gif" alt="" name="i25" border="0"></td>
+ <td height="28" nowrap="nowrap" width="126"><a href="" class="navlink" onmouseover="mIn('i25', 1)" onmouseout="mOut('i25', 1)">Le Bao</a></td>
+</tr>
+<tr>
+ <td width="26"><img src="Spectral%20Clustering_files/noarrow.gif" alt="" name="i25" border="0"></td>
+ <td height="28" nowrap="nowrap" width="126"><a href="" class="navlink" onmouseover="mIn('i25', 1)" onmouseout="mOut('i25', 1)">Saraswata Chaudhuri</a></td>
+</tr>
+<tr>
+ <td width="26"><img src="Spectral%20Clustering_files/noarrow.gif" alt="" name="i25" border="0"></td>
+ <td height="28" nowrap="nowrap" width="126"><a href="" class="navlink" onmouseover="mIn('i25', 1)" onmouseout="mOut('i25', 1)">Aneesh Hariharan</a></td>
+</tr>
+<tr>
+ <td width="26"><img src="Spectral%20Clustering_files/noarrow.gif" alt="" name="i25" border="0"></td>
+ <td height="28" nowrap="nowrap" width="126"><a href="" class="navlink" onmouseover="mIn('i25', 1)" onmouseout="mOut('i25', 1)">David Hiller</a></td>
+</tr>
+<tr>
+ <td width="26"><img src="Spectral%20Clustering_files/noarrow.gif" alt="" name="i25" border="0"></td>
+ <td height="28" nowrap="nowrap" width="126"><a href="http://www.stat.washington.edu/qli" class="navlink" onmouseover="mIn('i25', 1)" onmouseout="mOut('i25', 1)">Laura Qunhua Li</a></td>
+</tr>
+<tr>
+</tr><tr>
+ <td width="26"><img src="Spectral%20Clustering_files/noarrow.gif" alt="" name="i25" border="0"></td>
+ <td height="28" nowrap="nowrap" width="126"><a href="" class="navlink" onmouseover="mIn('i25', 1)" onmouseout="mOut('i25', 1)">Bhushan Mandhani</a></td>
+</tr>
+<tr>
+ <td width="26"><img src="Spectral%20Clustering_files/noarrow.gif" alt="" name="i25" border="0"></td>
+ <td height="28" nowrap="nowrap" width="126"><a href="" class="navlink" onmouseover="mIn('i25', 1)" onmouseout="mOut('i25', 1)">Tatiana Maravina</a></td>
+</tr>
+<tr>
+ <td><img src="Spectral%20Clustering_files/noarrow.gif" alt="" name="i16" border="0"></td>
+ <td height="28" nowrap="nowrap"><a href="" class="navlink" onmouseover="mIn('i16', 1)" onmouseout="mOut('i16', 1)"> Anne Patrikainen </a> </td>
+</tr>
+<tr>
+ <td><img src="Spectral%20Clustering_files/noarrow.gif" alt="" name="i16" border="0"></td>
+ <td height="28" nowrap="nowrap"><a href="http://www.cs.washington.edu/homes/bill/" class="navlink" onmouseover="mIn('i16', 1)" onmouseout="mOut('i16', 1)"> William Pentney </a> </td>
+</tr>
+<tr>
+ <td width="26"><img src="Spectral%20Clustering_files/noarrow.gif" alt="" name="i25" border="0"></td>
+ <td height="28" nowrap="nowrap" width="126"><a href="http://www.stat.washington.edu/people/dcpj" class="navlink" onmouseover="mIn('i25', 1)" onmouseout="mOut('i25', 1)">Dominique Perrault-Joncas</a></td>
+</tr>
+ <tr>
+ <td><img src="Spectral%20Clustering_files/noarrow.gif" alt="" name="i23" border="0"></td>
+ <td height="28" nowrap="nowrap"><a href="http://www.stat.washington.edu/susanms" class="navlink" onmouseover="mIn('i23', 1)" onmouseout="mOut('i23', 1)">Susan Shortreed</a></td>
+</tr>
+<tr>
+ <td><img src="Spectral%20Clustering_files/noarrow.gif" alt="" name="i16" border="0"></td>
+ <td height="28" nowrap="nowrap"><a href="http://www.cs.washington.edu/homes/deepak/" class="navlink" onmouseover="mIn('i16', 1)" onmouseout="mOut('i16', 1)">Deepak Verma</a></td>
+</tr>
+<tr>
+ <td><img src="Spectral%20Clustering_files/noarrow.gif" alt="" name="i16" border="0"></td>
+ <td height="28" nowrap="nowrap"><a href="" class="navlink" onmouseover="mIn('i16', 1)" onmouseout="mOut('i16', 1)">Linda Liang Xu</a> </td>
+</tr>
+<tr>
+	<td><img src="Spectral%20Clustering_files/1.png" alt="" height="5"></td>
+	<td height="5"></td>
+</tr>
+<tr>
+ <td colspan="2" height="19"><font class="navlinkbig"><a href="#publications" class="navlinkbig">Publications</a></font></td>
+</tr>
+<tr>
+ <td colspan="2" height="29"><font class="navlinkbig"><a href="#talks" class="navlinkbig">Talks</a></font></td>
+</tr>
+
+<tr>
+ <td colspan="2" height="29"><font class="navlinkbig"><a href="#code" class="navlinkbig">Code and data</a></font></td>
+</tr>
+
+<tr>
+ <td colspan="2" height="29"><font class="navlinkbig"><a href="#funding" class="navlinkbig">Funding</a></font></td>
+</tr>
+
+
+
+
+</tbody></table>
+</td>
+<!--end standard navigation-->
+
+<td width="5">&nbsp;</td>
+<td bgcolor="#ff6600" width="2">
+<img src="Spectral%20Clustering_files/1.png" alt="" height="1" width="1">
+</td>
+<td width="5">&nbsp;</td>
+<td>
+
+
+<h4>
+<a name="publications">
+<h3>Publications</h3>
+</a><ul><a name="publications">
+<li>Dominique Perrault-Joncas, Marina Meila, Marc Scott <i>"Building a Job Lanscape from Directional Transition Data</i>, AAAI 2010 Fall Symposium on Manifold Learning and its Applications (accepted)
+</li></a><li><a name="publications">Dominique Perrault-Joncas, Marina Meila, Marc Scott, <i>Directed Graph Embedding: Asymptotics for Laplacian-Based Operator</i>, PIMS 2010 Summer school on social networks. (</a><a href="http://www.stat.washington.edu/people/dcpj/_static/poster.pdf">Poster</a>) 
+	
+        </li><li> Susan Shortreed and Marina Meila <a href="http://www.stat.washington.edu/mmp/Papers/jmlr-reg-super-learning-revised.pdf"><i>"Regularized Spectral Learning."</i></a> (revision submitted)
+	</li>
+        <li> Marina Meila and William Pentney  <a href="http://www.stat.washington.edu/spectral/papers/sdm-wcuts.pdf"><i>"Clustering by Weighted 
+Cuts in Directed Graphs"</i></a>, SIAM Conference on Data Mining (SDM) 2007
+        </li>
+       <li> Marina Meila and Tatiana Maravina <i>"Methods for generating matrices with PCE"</i> UW Statistics TR, 2007. 
+      </li><li><font size="-0">
+      Shortreed, S. <i>" Learning in spectral clustering"</i>&nbsp; PhD Thesis [5.2MB], 2006
+      </font></li>
+
+        <li> Susan Shortreed and Marina Meila <a href="http://uai.sis.pitt.edu/displayArticleDetails.jsp?mmnu=1&amp;smnu=2&amp;article_id=1207&amp;proceeding_id=21"><i>"Unsupervised Spectral Learning."</i></a>, UAI 2005
+	</li>
+
+        <li> William Pentney and Marina Meila <i>"Spectral Clustering of Biological Sequence Data."</i>, AAAI 2005
+	</li>
+        <li> Anne Patrikainen and Marina Meila <a href="ftp://ftp.cs.washington.edu/tr/2005/06/UW-CSE-05-06-05.pdf"><i>"Spectral 
+clustering of Microsoft Netscan data"</i></a>, CSSS Working Paper 49 and CSE Technical Report UW-CSE-2005-06-05, 2005.
+	</li>
+       <li>  Meila, M., Shortreed, S, and Xiang, L., <a href="http://www.stat.washington.edu/www/research/reports/2004/tr465.pdf"><i>"Regularized Spectral Learning"</i></a>, UW Statistics TR #465, November, 2004 and AISTATS 2005.
+	</li>
+        <li>
+	Marina Meila and Liang Xu.
+	<a href="http://www.stat.washington.edu/research/reports/2004/tr442.pdf">
+	<i>"Multiway cuts and spectral clustering"</i></a> UW Statistics TR 442, 2004
+	</li><li>
+	Deepak Verma and Marina Meila <font size="-0">&nbsp;<i><a href="http://www.stat.washington.edu/spectral/papers/nips03-comparison.ps">"Comparison 
+	of Spectral Clustering Methods"</a> </i> (short version) and  (longer version, with proofs) as 
+	<a href="http://www.cs.washington.edu/homes/deepak/spectral/UW-CSE-03-05-01.ps">UW TR CSE-03-05-01</a>, 2003
+	 </font></li>
+	<li>
+    <font size="-0">Marina Meila. <a href="http://www.stat.washington.edu/www/research/reports/2002/tr417.ps">
+	<i>"The multicut lemma"</i></a> UW Statistics Technical Report 417, 2002</font></li>
+	<li><font size="-0">
+    Meila, M., Shi J., <a href="http://www.stat.washington.edu/mmp/Papers/aistats2001.ps"><i>"A 
+	random walks view of spectral segmentation"</i></a>&nbsp; <a href="http://www.ai.mit.edu/conferences/aistats2001">AISTATS 2001</a>
+      </font></li>	
+      <li><font size="-0">
+      Meila, M., Shi J., <a href="http://www.stat.washington.edu/mmp/Papers/nips2000.ps"><i>" Learning segmentation by random walks
+"</i></a>&nbsp; NIPS 2000
+      </font></li>
+</ul>
+
+<font size="0"><h3>Related Publications</h3>
+</font><ul><font size="0">
+       <li><font size="-0">Sebastien Bubeck, Marina Meila and Ulrike von Luxburg <i><a href="http://arxiv.org/pdf/0907.5494">"How the initialization affects the stability of the k-means algorithm"</a></i></font>
+       </li><li><font size="-0">Marina Meila and Le Bao <i>"An exponential family model over infinite rankings"</i> (revision submitted)</font>
+        </li></font><li><font size="0"><font size="-0">Marina Meila <i><a href="http://www.stat.washington.edu/research/reports/2010/tr553.pdf">Local equivalence of distances between clusterings"</a></i>, UW Statistics TR 553</font> 
+         </font></li><li><font size="-0">Le Bao and Marina Meila <a href="http://www.stat.washington.edu/research/reports/2008/tr524.pdf"><i>"Clustering permutations by Exponential Blurring Mean-Shift"</i></a>, UW Statistics TR 524, 2007
+	</font></li>
+
+         <li><font size="-0">Saraswata Chaudhuri, Thomas Richardson, James Robins and Eric Zivot <i>"Split-Sample Score Tests in Linear Instrumental Variables Regression"</i>  Center for Statistics and the Social Sciences, <a href="http://www.csss.washington.edu/Papers/wp73R.pdf">TR 73</a>, 2007. <a href="http://journals.cambridge.org/action/displayIssue?iid=440399">Published in Econometric Theory, March 2010</a>. 
+
+         </font></li><li><font size="-0">Marina Meila <a href="http://www.stat.washington.edu/mmp/Papers/equivalence-ml.pdf"><i>"Local equivalence of distances between clusterings"</i></a>, (revision under review)
+	</font></li>
+
+       <li><font size="-0">Marina Meila <a href="http://www.stat.washington.edu/mmp/Papers/compare-jmva-revised.ps"><i>"Comparing clusterings -- an information based distance."</i></a>, Journal of Multivariate Analysis, 98, 873-895, 2007.
+<a href="http://www.elsevier.com/wps/find/journaldescription.cws_home/622892/description#description"><br><b><font color="orange">#4 Most cited paper since fall 2009</font></b></a>, 
+<b><font color="orange">#1 Most popular download in late 2009, early 2010</font></b>
+
+	</font></li>
+
+       <li><font size="-0">Marina Meila <a href="http://www.stat.washington.edu/mmp/Papers/icml06-kmeans-final.ps"><i>"The uniqueness of a good clustering for K-means."</i></a>, ICML, 2006
+	</font></li>
+
+        <li><font size="-0"> Anne Patrikainen and Marina Meila <a><i>"Comparing subspace clusterings."</i></a>,IEEE Transactions on Knowledge and Data Engineering (TKDE) 18(7),902-916, 2006
+	</font></li>
+
+        <li>Marina Meila <a href="http://www.stat.washington.edu/mmp/Papers/icml05-compare-axioms.pdf"><i>"Comparing clusterings -- an axiomatic view."</i></a>, ICML 2005
+	</li>
+
+  <li><font size="-0">Qunhua Li and Marina Meila <a href="http://www.stat.washington.edu/research/reports/2004/tr451.new.pdf">
+	<i>"Clustering by Intersection-Merging"</i></a>UW Statistics TR 451, 2004</font></li>
+  <li><font size="-0">Anne Patrikainen and Marina Meila <a href="ftp://ftp.cs.washington.edu/tr/2004/10/UW-CSE-04-10-01.pdf">
+	<i>"Comparing Subspace Clusterings"</i></a> UW Computer Science Technical Report UW-CSE-04-10-01, 2004</font></li>
+  <li><font size="-0">Marina Meila <a href="http://www.stat.washington.edu/www/research/reports/2002/tr418.ps">
+	<i>"Comparing clusterings"</i></a> UW Statistics Technical Report 418 and 
+	COLT 2003 <a href="http://www.stat.washington.edu/mmp/Papers/compare-colt.pdf">
+	(pdf)</a></font></li>
+</ul>
+
+<font size="-0">
+
+<a name="talks">
+<h3> Talks and Tutorials </h3>
+</a><ul><a name="talks">
+<li>
+</li></a><li><a name="talks"> "Does a graph have eigenvalues?" and "Graphs, grouping and eigenvectors" lectures at </a><a href="http://www.mathcamp.org/"> Mathcamp</a> <a href="http://www.mathcamp.org/handouts2006/06ScheduleW1.pdf">2006</a>, Tacoma, WA
+</li><li> <a href="http://videolectures.net/Top/Computer_Science/Machine_Learning/Clustering/">Tutorial course on Clustering</a> at the <a href="http:///">International Machine Learning Summer School</a> Taipei, 2006 [videolecture]
+</li>
+<li>``Classic and Modern data clustering'', at the <a href="http://events.rosa-rc.ro/index.php/SummerSchool_09">International
+Summer School on Data Mining Techniques in Support of GEOSS, Sinaia,
+2009</a>
+</li>
+</ul>
+
+<a name="code">
+<h3>Matlab Code&nbsp;</h3>
+</a><p><a name="code">
+<img src="Spectral%20Clustering_files/redbullet1.gif" valign="top" width="25"><strong>
+SpectraLIB -  Package for symmetric spectral clustering</strong> written by Deepak Verma. Updated by Tatiana Maravina [with support from </a><a href="http://www.nsf.gov/awardsearch/showAward.do?AwardNumber=0313339">NSF award 0313339</a> ] <br>
+<a href="http://www.stat.washington.edu/spectral/code/SpectraLib.pdf">[Overview/Manual]</a> <br>
+<a href="http://www.cs.washington.edu/homes/deepak/spectral/library.tgz">[Download 
+SpectraLIB]</a><br>
+<br>
+<img alt="Supported by NSF Grant IIS-0313339" src="Spectral%20Clustering_files/nsf01.gif" width="25"><strong>SpectraLIB_A -  Package for asymmetric spectral clustering</strong> written by Marina Meila and Tatiana Maravina (an extension to SpectraLIB) [supported by <a href="http://www.nsf.gov/awardsearch/showAward.do?AwardNumber=0313339">NSF award 0313339</a> ] <br>
+
+<a href="http://www.stat.washington.edu/spectral/code/SpectraLib_A.pdf">[Overview/Manual]</a><br>
+<a href="http://www.stat.washington.edu/spectral/code/SpectraLib_A.tar">[Download 
+SpectraLIB_A]</a> <br>
+<br>
+<img alt="Supported by NSF Grant IIS-0313339" src="Spectral%20Clustering_files/nsf01.gif" width="25"><strong>
+Utilities to generate symmetric and asymmetric matrices</strong> that normalize to block stochastic P's (these utilities are 
+also included in the SpectraLIB_A) written by Deepak Verma, Tatiana Maravina and Marina Meila [With support from <a href="http://www.nsf.gov/awardsearch/showAward.do?AwardNumber=0313339">NSF award 0313339</a>]
+<br>
+[see the Overview/Manual of SpectraLIB_A]<br>
+<a href="http://www.stat.washington.edu/spectral/code/SpectraLib_A.tar">[Download utilities]</a> <br>
+<br>
+<img alt="Supported by NSF Grant IIS-0313339" src="Spectral%20Clustering_files/nsf01.gif" width="25"> <strong>RSL_library_beta - Package for spectral Learning</strong> written by Susan Shortreed and Marina Meila [Supported by <a href="http://www.nsf.gov/awardsearch/showAward.do?AwardNumber=0313339">NSF award 0313339</a>]<br>
+<a href="http://www.stat.washington.edu/spectral/code/RSL_Library.pdf">[Overview/Manual]</a><br>
+<a href="http://www.stat.washington.edu/susanms/RSL_library_beta.tar">[Download RSL_Library]</a>(temporarily unavailable)<br>
+
+</p><p>
+
+</p><h3>Datasets</h3>
+
+<p>Some of the datasets we used are available <a href="http://www.stat.washington.edu/spectral/datasets.html">here</a>.&nbsp;</p>
+
+<h3> For Members only </h3>
+<a href="http://www.stat.washington.edu/spectral/working_group/index.html"> Working group member access.  </a>
+<br><br>
+
+<a name="students">
+<h3>Students</h3>
+<ul>
+<li> Le Bao, Statistics, Spring, Summer 2007<img alt="Supported by NSF Grant IIS-0313339" src="Spectral%20Clustering_files/nsf01.gif" width="21">
+</li><li> Saraswata Chaudhuri, Economics, Summer 2007<img alt="Supported by NSF Grant IIS-0313339" src="Spectral%20Clustering_files/nsf01.gif" width="21">
+</li><li> David Hiller ACMS major, Winter, Spring, Summer 2003, Summer 2004
+</li><li> Aneesh Hariharan, Applied Mathematics, Autumn 2008-Spring 2009 <img alt="Supported by NSF Grant IIS-0313339" src="Spectral%20Clustering_files/nsf01.gif" width="21">
+</li><li> Laura Qunhua Li, Statistics, Fall 2003 - Summer 2004<img alt="Supported by NSF Grant IIS-0313339" src="Spectral%20Clustering_files/nsf01.gif" width="21">
+</li><li> Bhushan Mandhani, Computer Science, Summer 2007<img alt="Supported by NSF Grant IIS-0313339" src="Spectral%20Clustering_files/nsf01.gif" width="21">
+</li><li> Tatiana Maravina, Statistics, Winter, Spring 2007<img alt="Supported by NSF Grant IIS-0313339" src="Spectral%20Clustering_files/nsf01.gif" width="21">
+</li><li> Anne Patrikainen, Helsinki University of Technology visiting 
+student Spring-Summer 2003,  then UW Computer Science, Winter-Spring 
+2004 
+</li><li> William Pentney, Computer Science, Fall 2004 - Summer 2005
+</li><li> Dominique Perrault-Joncas, Statistics, Fall 2008-Summer 2009 <img alt="Supported by NSF Grant IIS-0313339" src="Spectral%20Clustering_files/nsf01.gif" width="21">
+</li><li> Susan Shortreed, Statistics, Winter 2004-Spring 2005, Fall 2005-Summer 2006<img alt="Supported by NSF Grant IIS-0313339" src="Spectral%20Clustering_files/nsf01.gif" width="21">, Fall 2006
+</li><li> Deepak Verma, Computer Science, Winter-Spring 2003
+</li><li> Linda Liang Xu, Mathematics, Winter-Spring 2003
+</li></ul>
+
+
+</a><a name="funding">
+<h3>Funding</h3>
+The following sources of funding have supported this project
+</a><ul><a name="funding"> 
+</a><li><a name="funding"> University of Washington </a><a href="http://www.washington.edu/research/4researchers/rrf.php">RRF</a> Grant 2684
+</li><li> <a href="http://www.engr.washington.edu/advance/tsp.html">Advance TSP Grant 62-6456 </a>
+</li><li> <a href="http://www.nsf.gov/awardsearch/showAward.do?AwardNumber=0313339">NSF Grant IIS-0313339</a>
+</li><li> <a href="http://www.math.washington.edu/vigre">The VIGRE program</a> at the UW
+</li><li> The Washington Space Grant <a href="http://www.waspacegrant.org/u-gradsum.html">Summer Undergraduates Research Program (SURP)</a> 2003, 2004
+</li><li> <a href="http://www.csss.washington.edu/SeedGrants">CSSS Seed Grant</a>
+</li></ul>
+
+
+
+<!--end HTML content-->
+</font>
+</h4></td>
+</tr></tbody></table>
+
+</p><p>
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tbody><tr><td colspan="2"><hr noshade="noshade" size="2"></td></tr>
+<tr valign="middle" align="center">
+ <td width="15%"><a href="http://www.stat.washington.edu/">
+	<img src="Spectral%20Clustering_files/logo.png" alt="CSE logo" height="33" border="0" width="34"></a></td>
+ <td width="85%"><font style="font-family: helvetica, arial, sans-serif; font-size: 13px; text-decoration: none">
+ Department&nbsp;of&nbsp;Computer&nbsp;Science&nbsp;&amp;&nbsp;Engineering &nbsp;&nbsp;&nbsp;
+ Department&nbsp;of&nbsp;Statistics&nbsp;<br>
+ University&nbsp;of&nbsp;Washington<br>
+ [comments to <em><a href="mailto:mmp@stat.washington.edu">
+spectral@ms.washington.edu</a></em>]</font>
+ </td></tr>
+</tbody></table>
+
+
+</p></old></body></html>

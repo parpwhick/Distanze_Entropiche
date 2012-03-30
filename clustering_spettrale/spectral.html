@@ -1,0 +1,340 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+    <title>Spectral Graph Partitioning and the Laplacian</title>
+    
+    <link rel="stylesheet" type="text/css" href="spectral_files/site.css">
+    <link rel="stylesheet" type="text/css" href="spectral_files/matlab-demo.css">
+</head>
+<body>
+<h1>Spectral Graph Partitioning and the Laplacian with Matlab</h1>
+<p>
+  <a href="http://www.stanford.edu/%7Edgleich/">David Gleich</a><br>
+  Last Edited: 16 January, 2006.
+</p>
+
+<p>
+Outline
+</p><ul>
+<li><a href="#finding">Finding a Partition</a></li>
+<li><a href="#meaningful">Meaningful Partitions of Real Datasets</a></li>
+<li><a href="#recursive">Recursive Spectral Partitioning</a></li>
+</ul>
+<p></p>
+
+<div class="main">
+<a name="finding"></a>
+<h3> Finding a Partition</h3>
+<p>In this segment, we'll plant a partition in a graph, and then use the second smallest eigenvector to find it.</p>
+<p>As always, the first step is to generate our dataset.  In this example, we'll be a little more ambitious
+and use a larger number of vertices.  </p>
+<p class="matlab">&gt;&gt; n = 1000;</p>
+<p>To plant an artificial partition in our dataset, we need to determine the vectices in each of the groups.
+To do this, we randomly generate a permutation of all the vertices and select one set as group 1
+and the rest as group 2.  The variable gs controls how big the size of the first group.</p>
+<p class="matlab">&gt;&gt; x = randperm(n);
+&gt;&gt; gs = 450;
+&gt;&gt; group1 = x(1:gs);
+&gt;&gt; group2 = x(gs+1:end);</p>
+<p>Now, we need to decide on the probabilities of edges within each group and between the two groups.  Because we are
+planting a partition, the probabilities of edges between the groups should be much lower than the probability of 
+edges within each group.
+Suppose that group 1 is a little more tightly connected than group 2.  (Please insert your own amusing names 
+for an actual identification of group 1 and group 2, e.g. politicians and mathematicians.)</p>
+<p class="matlab">&gt;&gt; p_group1 = 0.5;
+&gt;&gt; p_group2 = 0.4;
+&gt;&gt; p_between = 0.1;</p>
+<p>With these probabilities in hand, we can construct our graph.  The last few operations symmetrize the matrix.</p>
+<p class="matlab">&gt;&gt; A(group1, group1) = rand(gs,gs) &lt; p_group1;
+&gt;&gt; A(group2, group2) = rand(n-gs,n-gs) &lt; p_group2;
+&gt;&gt; A(group1, group2) = rand(gs, n-gs) &lt; p_between;
+&gt;&gt; A = triu(A,1);
+&gt;&gt; A = A + A';</p>
+<p>Next, let's see if we can see the partition.</p>
+<p class="matlab">&gt;&gt; spy(A);</p>
+<img src="spectral_files/conn-graph.png">
+<p>While some might claim to see a partition in this data, I think it is not particularly obvious.</p>
+<p>Now, let's investigate what the second smallest eigenvector tells us about this graph.</p>
+<p class="matlab">&gt;&gt; L = laplacian(A);
+&gt;&gt; [V D] = eigs(L, 2, 'SA');
+&gt;&gt; D(2,2)
+
+ans =
+
+    46.7158
+</p>
+<p>The large second smallest eigenvalue states that we 
+shouldn't expect to find any very good cuts in our dataset.
+To see what we found, let's plot the second smallest eigenvector V(:,2).</p>
+<p class="matlab">&gt;&gt; plot(V(:,2), '.-');</p>
+<img src="spectral_files/conn-graph-ev2.png">
+<p>That isn't all that helpful.  Maybe sorting the vector...</p>
+<p class="matlab">&gt;&gt; plot(sort(V(:,2)), '.-');</p>
+<img src="spectral_files/conn-graph-ev2-sort.png">
+<p>Now, that picture is much more informative!  We see a large gap in the middle of the values.  
+Interestingly enough, the number of points on the right gap is the same as gs, the size of
+our planted group.  Let's see what happens when we permute the vertices of the graph 
+to this ordering.</p>
+<p class="matlab">&gt;&gt; [ignore p] = sort(V(:,2));
+&gt;&gt; spy(A(p,p));</p>
+<img src="spectral_files/conn-graph-sort.png">
+<p>Looks like we found our partitions!</p>
+<hr>
+</div>
+
+<div class="main">
+<a name="meaningful"></a>
+<h3>Meaningful Partitions of Real Datasets</h3>
+<p>The previous example was rather compelling.  However, it was also fake.  We 
+planted a partition there!  How do we know such things occur in real data?
+In this two section, we'll see what happens when we try the same procedure 
+on two matrices.  Unfortunately, the data for these sets is private,
+so it's difficult to "follow along" with the Matlab.  Nevertheless,
+the pictures should tell the story.</p>
+<p>The dataset for this section is a bipartite graph
+from Yahoo! Search Marketing (formerly known as Overture).
+The two types of nodes are advertisers and keywords.  Advertisers
+place bids on keywords.</p>
+<p>The functions readSMAT and readList are my own functions
+for reading in datafiles from disk.</p>
+<p class="matlab">&gt;&gt; A = readSMAT('us.3k.2k.smat');
+&gt;&gt; labels = readList('us.3k.2k.trms');</p>
+<p>Because the data is bipartite, we need to
+form the full adjacency matrix for the graph.</p>
+<p class="matlab">&gt;&gt; [m n] = size(A);
+&gt;&gt; B = [sparse(m,m) A; A' sparse(n,n)];</p>
+<p>As always, a first good step is to take a look at the matrix.</p>
+<p class="matlab">&gt;&gt; spy(B);</p>
+<img src="spectral_files/us-bipartite.png">
+<p>Except for the trivial structure of a bipartite graph, there isn't much else here, so let's 
+use the second smallest eigenvector of the Laplacian matrix.</p>
+<p class="matlab">&gt;&gt; L = laplacian(B);
+&gt;&gt; [V D] = eigs(L, 2, 'SA');
+&gt;&gt; D(2,2)
+
+ans =
+
+    0.6031</p>
+<p>Here, the second smallest eigenvalue is significantly smaller than the first dataset.  
+This means that we expect to find some fairly small cuts or rather tight clusters.
+In the previous test, we found that plotting the sorted eigenvector was most informative.</p>
+<p class="matlab">&gt;&gt; plot(sort(V(:,2)), '.-');</p>
+<img src="spectral_files/us-bipartite-ev2-sort.png">
+<p>Widely generalizing from our previous results, the two large gaps in the 
+sorted eigenvector state that we'd expect three large groups in our dataset.</p>
+<p class="matlab">&gt;&gt; [ignore p] = sort(V(:,2));
+&gt;&gt; spy(B(p,p));</p>
+<img src="spectral_files/us-bipartite-sort.png">
+<p>As expected, we see three large groups.  For this graph, we can 
+validate the identity of each group using the terms associated
+with part of the vertices.</p>
+<p>Because the graph was bipartite, we need to find the
+terms that correspond to the vertices in the "tight" groups
+in the lower right.  The first 3000 vertices in 
+the graph correspond to the labels on the terms.</p>
+<p class="matlab">&gt;&gt; plabels = p(p &lt;= 3000);
+&gt;&gt; labels(plabels(2500:2525))
+
+ans = 
+
+    'casino gambling online'
+    'online roulette'
+    'craps play'
+    'sports wagering'
+    'casino free online'
+    'play slot'
+    'betting'
+    'gambling sports'
+    'gambling online sports'
+    'bet bowl super'
+    'casino net'
+    'black jack online'
+    'casino free gambling online'
+    'game poker'
+    'betting online sports'
+    'gambling game'
+    'black jack play'
+    'online slot'
+    'black jack poker roulette'
+    'betting online shop'
+    'craps internet'
+    'book online sport wagering'
+    'casino free gambling'
+    'casino game online'
+    'roulette winning'
+    'machine poker video'</p>
+<p>All the terms relate very strongly to gambling and betting.  Thus, the 
+partition in the data we found corresponds to a gambling cluster of terms.
+</p>
+<p>We can also recursively apply this process (see the next section).</p>
+<p>We can browse the same dataset that was ordered using a similiar (but distinct)
+procedure at this website:
+</p><ul><li><a href="http://research.yahoo.com/demo/clustergraph/top_level#img">http://research.yahoo.com/demo/clustergraph/top_level#img</a></li></ul><p></p>
+<hr>
+</div>
+
+<div class="main">
+<a name="recursive"></a>
+<h3>Recursive Spectral Partitioning</h3>
+<p>In this section, we'll see yet another dataset and apply the idea not just once, but recursively
+to extract hierarchical structure in the dataset.</p>
+<p>The dataset in this section is a similarity score between two musical artists formed
+by the ratings of 150,000 users.  The data comes from Yahoo!'s LaunchCast service.</p>
+
+<p class="matlab">&gt;&gt; A = readSMAT('artistuser-md100.sim.smat');
+&gt;&gt; labels = readList('artistuser-md100.labels');
+&gt;&gt; spy(A);</p>
+<img src="spectral_files/au.png">
+<p>Without any processing, it's hard to divine any structure in the dataset.</p>
+<p class="matlab">&gt;&gt; L = laplacian(A);
+&gt;&gt; [V D] = eigs(L, 2, 'SA');
+&gt;&gt; D(2,2)
+
+ans =
+
+    0.0738
+    
+&gt;&gt; plot(sort(V(:,2)), '.-');
+&gt;&gt; [ignore p] = sort(V(:,2));
+&gt;&gt; spy(A(p,p));</p>
+<img src="spectral_files/au-ev2-sort.png">
+<img src="spectral_files/au-sort.png">
+<p>Aha!  That's better.  It looks like there is a cohesive cluster of 
+artists in the upper left hand corner of the adjacency matrix.  
+Let's explore the artists in this area.</p>
+<p class="matlab">&gt;&gt; labels(p(25:50))
+
+ans = 
+
+    'The Williams Sisters'
+    'GMWA Women Of Worship'
+    'Bishop Paul S. Morton, Sr.'
+    'Tyrone Block'
+    'The Canton Spirituals'
+    '1NC (One Nation Crew)'
+    'Michael Fletcher'
+    'The McClurkin Project'
+    'Lawrence Matthews'
+    'Woody Rock'
+    'Darwin Hobbs'
+    'Rev. James Moore'
+    'Anointed Pace Sisters'
+    'Colorado Mass Choir'
+    'Helen Baylor'
+    'Bishop Clarence E. McClendon'
+    'Full Gospel Baptist Fellowship Mass Choir'
+    'The Jackson Southernaires'
+    'Vanessa Williams [Gospel]'
+    'Calvin Bernard Rhone'
+    'Mighty Clouds Of Joy'
+    'New Direction'
+    'Deitrick Haddon'
+    'Rance Allen Group'
+    'Joann Rosario'
+    'The Soul Stirrers'</p>
+<p>I hope it is pretty obvious that these artists are gospel artists.</p>
+<p>While this shows a little bit about the data, it isn't all that much.
+Presumably, there is also more structure in the rest of the dataset, besides
+just one gospel group of artists.</p>
+<p>To expose the remainder of the structure, we apply the second 
+smallest eigenvector recursively.  That is, use the second smallest
+eigenvector of the full graph to determine a good way to split the 
+graph into two pieces (e.g. the gospel cluster and the rest of the data)
+and then repeat the process on each subgraph.</p>
+<p>If we do this for the entire dataset using 
+an optimized program written in C, we get the following
+adjacency matrix.  (The file "au-out.rperm" is the
+final permutation produced by the recursive program.)</p>
+<p class="matlab">&gt;&gt; p = load('au-out.rperm')+1;
+&gt;&gt; spy(A(p,p))</p>
+<img src="spectral_files/au-sort-hier.png">
+<p>In the new dataset, related artists should always
+be close by.  Let's check this hypothesis for
+Metallica (mainstream rock), Britney Spears
+(teeny bob), and DJ Tiesto (techno).</p>
+<p class="matlab">&gt;&gt; strmatch('Metallica', labels(p))
+
+ans =
+
+        5265
+        
+&gt;&gt; labels(p(5265-5:5265+5))
+
+ans = 
+
+    'Nazareth'
+    'Molly Hatchet'
+    'April Wine'
+    'Nine Inch Nails'
+    'Pantera'
+    'Metallica'
+    'Black Sabbath'
+    'Stone Temple Pilots'
+    'Ozzy Osbourne'
+    'Cypress Hill'
+    'Nirvana'
+</p>    
+<p class="matlab">&gt;&gt; strmatch('Britney Spears', labels(p))
+
+ans =
+
+        8806
+        
+&gt;&gt; labels(p(8806-5:8806+5))
+
+ans = 
+
+    'Paulina Rubio'
+    'Shakira'
+    'Anastacia'
+    'Anastacia'
+    'JC Chasez'
+    'Britney Spears'
+    '*NSYNC'
+    'Celine Dion'
+    'Backstreet Boys'
+    'Ricky Martin'
+    'Lou Bega'
+</p>    
+<p class="matlab">&gt;&gt; strmatch('DJ Tiesto', labels(p))
+
+ans =
+
+        3918
+
+&gt;&gt; labels(p(3918-5:3918+5))
+
+ans = 
+
+    'DJ Irene'
+    'Darude'
+    'Zombie Nation'
+    'Christopher Lawrence'
+    'Louie DeVito'
+    'DJ Tiesto'
+    'George Acosta'
+    'Sash!'
+    'Pete Tong'
+    'Peter Rauhofer'
+    'DJ Sammy'
+</p>    
+<p>Clearly, we can find similiar artists to our seed artists in these datasets.</p>                        
+<hr>
+
+</div>
+
+<!-- Start of StatCounter Code -->
+<script type="text/javascript" language="javascript">
+<!-- 
+var sc_project=520172; 
+var sc_partition=3; 
+var sc_invisible=1; 
+//-->
+</script>
+
+<script type="text/javascript" language="javascript" src="spectral_files/counter.js"></script><noscript><a href="http://www.statcounter.com/" target="_blank"><img  src="http://c4.statcounter.com/counter.php?sc_project=520172&amp;amp;java=0&amp;amp;invisible=1" alt="web statistics" border="0"></a> </noscript>
+<!-- End of StatCounter Code -->
+
+
+
+</body></html>
