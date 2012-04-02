@@ -1,0 +1,31 @@
+http://www.ncbi.nlm.nih.gov/genomes/FLU/Database/nph-select.cgi?cmd=&go=database&accfile=&acc=&sequence=P&search=&searchin=strain&type=a&host=Human&country=3&segment=HA&segment=NA&subtype_h=3&subtype_n=2&flen=&tlen=&fyear=1993&fmonth=&fday=&tyear=&tmonth=&tday=&fpyear=&fpmonth=&fpday=&tpyear=&tpmonth=&tpday=&showfilters=true&reqseg_full=complete&reqseg=HA&reqseg=NA&cdate_has_month=true&cdate_has_day=true&swine=include&niaid=include&lab=exclude&vac_strain=include&lineage=include&
+
+NA:
+---------------
+2 453
+1 457
+1 458
+2 462
+2 463
+2 465
+32 466
+20 467
+52 468
+1510 469
+
+
+HA:
+--------------
+1 554
+1 555
+1 563
+2 564
+2 565
+1617 566
+
+
+Filtri: nord america
+dal 1993 in poi
+H3N2
+data completa
+richieste NA e HA full length
