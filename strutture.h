@@ -31,8 +31,8 @@ enum DISTANZE {
 };
 
 enum source{
-    SEQUENCE=1,
-    LATTICE=1<<1,
+    LINEARE=1,
+    RETICOLO=1<<1,
     RANDOM=1<<2,
     FROM_FILE=1<<3
 };
@@ -43,7 +43,8 @@ typedef struct {
     int n_seq;
     int lato;
     
-    int from;
+    source letto_da;
+    source topologia;
     char filename[255];
     bool write;
     bool distance;

@@ -344,7 +344,7 @@ void general_partition::from_linear_sequence(const T* seq, int len) {
     
     from_nnb(NNB,dim); 
     
-    if (opts.graphics && (opts.from & SEQUENCE)){
+    if (opts.graphics && (opts.topologia & LINEARE)){
         static int imagenr=0; 
         char filename[255];
         imagenr++;
@@ -473,7 +473,7 @@ void general_partition::sort_entropy(){
     delete []temp;
 }
 
-bool is_similar_atom(Iter_t from1, Iter_t from2, Iter_t to, int tol=10){               
+bool symmetric_difference(Iter_t from1, Iter_t from2, Iter_t to, int tol=10){               
     int differenze=0;
     
     while (true) {
@@ -537,7 +537,7 @@ void general_partition::reduce(const general_partition &p1, const general_partit
         
         // uguaglianza "fuzzy" tra atomi, a meno di 'tol' siti
         // similmente, se sono 'uguali', salto l'atomo nella partizione risultante
-//        if(is_similar_atom(ii,p2.begin(atomo2),end))
+//        if(symmetric_difference(ii,p2.begin(atomo2),end))
 //            continue;
         
         // altrimenti interseca il fattore dicotomico con i precedenti
@@ -577,15 +577,18 @@ void general_partition::linear_intersection(const general_partition &p1, const g
     
     // Per fare l'intersezione unisco l'insieme dei vicini delle due partizioni
     // ottenendo sostanzialmente una struttura di adiacenza 2x dimensionale
-    for (int i = 0; i < p1.dim; i++) {
-        vicinato[2 * i] = p1.NNB[i];
-        vicinato[2 * i + 1] = p2.NNB[i];
-    }
+//    for (int i = 0; i < p1.dim; i++) {
+//        vicinato[2 * i] = p1.NNB[i];
+//        vicinato[2 * i + 1] = p2.NNB[i];
+//    }
+    vicinato[0]=p1.prev_site;
+    vicinato[1]=p2.prev_site;
     // Calcolo a partire dall'insieme dei vicini
-    from_nnb(vicinato, 2 * p1.dim);
+    //from_nnb(vicinato, 2 * p1.dim);  // SEMPRE CORRETTO
+    from_nnb(vicinato, 2 ); //OTTIMIZZATO con il prev_site;
 
     // Grafico il reticolo risultante, se richiesto
-    if (opts.graphics && (opts.from & LATTICE)) {
+    if (opts.graphics && (opts.topologia & RETICOLO)) {
         static int imagecount=0;     
         char filename[255];
         imagecount++;
@@ -610,12 +613,12 @@ void general_partition::from_nnb(int **neighbors, int dimensione){
     /* FASE DI PERCOLAZIONE
      * E LABELLING
      */
- //   print_array(neighbors[0],N,"neighbors: ");
+ 
     for (s1 = 0; s1 < N; s1++) {
         int r2;
         int r1=findroot(s1,labels);
         
-        //printf("%d ha come vicini: %d e %d\n",s1,neighbors[0][s1],neighbors[1][s1]);
+        
         for (int j = 0; j < dim; j++) {
             s2=neighbors[j][s1];
                 if(s1==s2 || s2 < 0)
@@ -623,7 +626,7 @@ void general_partition::from_nnb(int **neighbors, int dimensione){
 		r2=findroot(s2,labels);
 //                printf("%d--->%d(%d)\n",s1,s2,r2);
 		if(r1!=r2){
-			if(labels[r1]>=labels[r2]){ //VERSIONE GIUSTA!
+			if(labels[r1]>=labels[r2]){
 //                           printf("%d=>%d\n",r1,r2);
 				labels[r2]+=labels[r1];
 				labels[r1]=r2;
@@ -637,16 +640,15 @@ void general_partition::from_nnb(int **neighbors, int dimensione){
 		}
 	}
     }
-    int *new_site_label=new int[N];
+    int *new_label=new int[N];
     entropia_shannon=0;
-    int label_count=0;
+    n=0;
     
- //   print_array(labels,N,"raw parti: ");
-    // 1-creazione array atomi
+     // 1-creazione array atomi
     // 2-inizializzazione ogni elemento
     // 3-creazione indice (label atomo) <--> root
     // 4-calcolo entropia a partire dai size nei root
-    #define ATOMO atomi[label_count]
+    #define ATOMO atomi[n]
     for(i=0;i<N;i++){
         if(labels[i]<0){
             entropia_shannon+= -labels[i]*mylog[-labels[i]];
@@ -654,16 +656,15 @@ void general_partition::from_nnb(int **neighbors, int dimensione){
             ATOMO.hash=5381;
             ATOMO.end=i;
             ATOMO.start=i;
-            new_site_label[i]=label_count;
+            new_label[i]=n;
             prev_site[i]=i;
-            label_count++;
+            n++;
         } else{
             prev_site[i]=findroot(i,labels);
-            new_site_label[i]=prev_site[i];
+            new_label[i]=prev_site[i];
         }
     }
- //   print_array(prev_site,N,"good labels: ");
-    n=label_count;
+ 
     entropia_topologica=mylog[n];
     entropia_shannon= -entropia_shannon/N+mylog[N];
     
@@ -673,16 +674,13 @@ void general_partition::from_nnb(int **neighbors, int dimensione){
     #undef HASHVAR
     #define HASHVAR atomi[atom_pos].hash
     for(i=0;i<N;i++){
-        int atom_pos=new_site_label[prev_site[i]];
+        int atom_pos=new_label[prev_site[i]];
         labels[i]=atom_pos;
         DJBHASH_STEP(HASHVAR,i);
         prev_site[i]=std::min(atomi[atom_pos].end,i);
-        //next_site[prev_site[i]]=i;
-        atomi[atom_pos].end=i;
-      
+         atomi[atom_pos].end=i;      
     }
- //   print_array(labels,N,"best labels: ");
     
-    delete []new_site_label;        
+    delete []new_label;        
 }
 

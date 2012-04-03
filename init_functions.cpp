@@ -51,7 +51,8 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.lato = 25;
     opts.n_seq = 2550;
     opts.n_symbols = 2;
-    opts.from = SEQUENCE | RANDOM;
+    opts.topologia = LINEARE ;
+    opts.letto_da = RANDOM;
     opts.seed = 37337;
     opts.translate = false;
     opts.graphics=false;
@@ -61,10 +62,11 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.fuzzy=2;
     opts.threads=2;
     opts.alg=AUTO;
-    opts.da_calcolare=   SHAN | SHAN_TOP 
-                        | RID | RID_TOP 
-         //              | GENERAL | GENERAL_TOP 
-          //              | GENERAL_RID | GENERAL_RID_TOP
+    opts.da_calcolare= 0
+		               // |SHAN | SHAN_TOP 
+                       // | RID | RID_TOP 
+                       | GENERAL | GENERAL_TOP 
+                      //  | GENERAL_RID | GENERAL_RID_TOP
                       //| HAMM                        
             ;
     
@@ -77,8 +79,7 @@ void set_program_options(options &opts, int argc, char**argv) {
             input = argv[read_argvs++];
             if (input == "-random") {
                 fprintf(stderr, "Specifying random sequence generation\n");
-                opts.from |= RANDOM;
-                opts.from &= ~FROM_FILE;
+                opts.letto_da = RANDOM;
             } else if (input == "-file") {
                 if (argc - read_argvs < 1)
                     error("Missing filename to read!\n");
@@ -87,16 +88,15 @@ void set_program_options(options &opts, int argc, char**argv) {
                 
                 strncpy(opts.filename, argv[read_argvs++], 255);
                 fprintf(stderr, "Reading from filename: %s\n", opts.filename);
-                opts.from &= ~RANDOM;
-                opts.from |= FROM_FILE;
+                opts.letto_da = FROM_FILE;
             } else if (input == "-lattice") {
                 fprintf(stderr, "Analysing 2d lattice\n");
-                opts.from |= LATTICE;
-                opts.from &= ~SEQUENCE;
+                opts.topologia= RETICOLO;
+                
             } else if (input == "-sequence") {
                 fprintf(stderr, "Analysing 1d sequences\n");
-                opts.from &= ~LATTICE;
-                opts.from |= SEQUENCE;
+                
+                opts.topologia = LINEARE;
             } else if (input == "-seqlength") {
                 if (argc - read_argvs < 1)
                     error("Need to specify sequence length\n");
@@ -199,7 +199,7 @@ void set_program_options(options &opts, int argc, char**argv) {
     
     srand(opts.seed);
     
-    if(opts.from & LATTICE){
+    if(opts.topologia == RETICOLO){
         opts.seq_len = opts.lato * opts.lato;
         opts.da_calcolare &= ~(SHAN | SHAN_TOP | RID | RID_TOP);
     }

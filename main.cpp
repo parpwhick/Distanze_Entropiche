@@ -136,26 +136,26 @@ int main(int argc, char** argv) {
     std::string *char_entries=new std::string[opts.n_seq];
     int **num_entries=new int*[opts.n_seq];
 
-    if (opts.from == (FROM_FILE | SEQUENCE)) {
+    if (opts.topologia == LINEARE && opts.letto_da == FROM_FILE) {
         fill_seq_from_file(opts, char_entries);
         //   mutation_entropy(char_entries);
         for (int i = 0; i < opts.n_seq; i++) {
             X[i].fill(char_entries[i].data(), opts.seq_len);
             Z[i].from_linear_sequence(char_entries[i].data(), opts.seq_len);
         }
-    } else if (opts.from == (FROM_FILE | LATTICE)) {
+    } else if (opts.topologia == RETICOLO && opts.letto_da == FROM_FILE ) {
         load_lattices_from_file(opts, num_entries);
 
         for (int i = 0; i < opts.n_seq; i++)
             Z[i].from_square_lattice(num_entries[i], opts.lato, 2);
     }
 
-    if (opts.from & RANDOM) {
+    if (opts.letto_da== RANDOM) {
         for (int i = 0; i < opts.n_seq; i++) {
             generate_next_sequence(char_entries[0]);
-            if (opts.from & LATTICE) {
+            if (opts.topologia == RETICOLO) {
                 Z[i].from_square_lattice(char_entries[0].data(), opts.lato, 2);
-            } else if (opts.from & SEQUENCE) {
+            } else if (opts.topologia == LINEARE) {
                 X[i].fill(char_entries[0].data(), opts.seq_len);
                 Z[i].from_linear_sequence(char_entries[0].data(), opts.seq_len);
             }

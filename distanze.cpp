@@ -77,7 +77,7 @@ void distance::fill(const general_partition& e1, const general_partition& e2) {
         dist_fuzzy_r = dist_fuzzy;
         dist_fuzzy_r_t = dist_fuzzy_t;
        //printf("comune generale: %d, r1: %d/%d, r2: %d/%d, prod: %d\n",partizione_comune.n, ridotto1.n, e1.n, ridotto2.n,e2.n,(int)dist_fuzzy_t);
-        if (opts.graphics && (opts.from & LATTICE)) {
+        if (opts.graphics && (opts.topologia & RETICOLO)) {
             char filename[255];
             imagecount++;
             sprintf(filename, "ridotto%03d.ppm", imagecount);
@@ -244,7 +244,7 @@ void distance::linear_product_sorted(const general_partition &p1,const  general_
     
     static int imagecount=0; 
     char filename[255];
-    if (opts.graphics && (opts.from & LATTICE)) {
+    if (opts.graphics && (opts.topologia & RETICOLO)) {
           imagecount++;
           sprintf(filename,"prodotto%03d.ppm",imagecount);
           ppmout2(p1.labels,p2.labels,p1.lato,filename);
