@@ -66,7 +66,7 @@ void set_program_options(options &opts, int argc, char**argv) {
 		               // |SHAN | SHAN_TOP 
                        // | RID | RID_TOP 
                        | GENERAL | GENERAL_TOP 
-                      //  | GENERAL_RID | GENERAL_RID_TOP
+                        | GENERAL_RID | GENERAL_RID_TOP
                       //| HAMM                        
             ;
     
@@ -201,7 +201,7 @@ void set_program_options(options &opts, int argc, char**argv) {
     
     if(opts.topologia == RETICOLO){
         opts.seq_len = opts.lato * opts.lato;
-        opts.da_calcolare &= ~(SHAN | SHAN_TOP | RID | RID_TOP);
+        opts.da_calcolare = ~(SHAN | SHAN_TOP | RID | RID_TOP);
     }
     
     fprintf(stderr,"\n");
