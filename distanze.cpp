@@ -425,6 +425,9 @@ void calcola_matrice_distanze(linear_partition *X, general_partition *Z, std::st
         if (da_calcolare & GENERAL_TOP) 
             count+=WRITE("output-fuzzyt.bin",dist_fuzzy_t);
         
+        if (da_calcolare & HAMM) 
+            count+=WRITE("output-hamm.bin",dist_ham);
+        
         if (opts.verbose)
             fprintf(stderr, "Written %dx distance matrix\n",count);
     }

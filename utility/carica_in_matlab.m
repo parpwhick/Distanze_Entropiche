@@ -43,6 +43,15 @@ if(have_simple)
     title('Distanze ridotte');
 end
 
+try 
+    fid5=fopen('output-hamm.bin','r');
+    dist_ham=fread(fid5,[n,n],'double');
+    [hist_h,labels5]=hist(dist_ham(dist_ham>0),100);
+catch ME
+    % do nothing
+end
+    
+
 if(have_fuzzy)
     fid6=fopen('output-fuzzy.bin','r');
     fid7=fopen('output-fuzzyt.bin','r');

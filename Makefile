@@ -1,4 +1,6 @@
-COPTS= -O3 -Wall -fopenmp
+COPTS= -O3 
+#COPTS= -g
+COPTS += -Wall -fopenmp
 files=*.cpp *.h Makefile2
 file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
 

@@ -63,11 +63,11 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.threads=2;
     opts.alg=AUTO;
     opts.da_calcolare= 0
-		               // |SHAN | SHAN_TOP 
-                       // | RID | RID_TOP 
+		                |SHAN | SHAN_TOP 
+                       | RID | RID_TOP 
                        | GENERAL | GENERAL_TOP 
                         | GENERAL_RID | GENERAL_RID_TOP
-                      //| HAMM                        
+                      | HAMM                        
             ;
     
     int killswitch=0;

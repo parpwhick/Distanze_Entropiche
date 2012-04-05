@@ -351,8 +351,6 @@ void general_partition::from_linear_sequence(const T* seq, int len) {
         sprintf(filename, "sequenza%03d.ppm", imagenr);
         linearppmout(labels, N, filename);
     }
-    
-    delete NNB;
 }
 template void general_partition::from_linear_sequence(const char *,int);
 template void general_partition::from_linear_sequence(const int *,int);
