@@ -65,9 +65,9 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.da_calcolare= 0
 		                |SHAN | SHAN_TOP 
                        | RID | RID_TOP 
-                       | GENERAL | GENERAL_TOP 
-                        | GENERAL_RID | GENERAL_RID_TOP
-                      | HAMM                        
+                     //  | GENERAL | GENERAL_TOP 
+                     //   | GENERAL_RID | GENERAL_RID_TOP
+                     // | HAMM                        
             ;
     
     int killswitch=0;
@@ -136,7 +136,11 @@ void set_program_options(options &opts, int argc, char**argv) {
             }  else if (input == "-graphics") {
                 opts.graphics = true;
                 fprintf(stderr, "Making pretty lattice graphs\n");
+            }   else if (input == "-hamming") {
+                opts.da_calcolare |= HAMM;
+				fprintf(stderr, "Hamming distance\n");
             }         
+                   
             else if (input == "-translate") {
                 opts.translate = true;
                 fprintf(stderr, "Simplifying sequence alphabet\n");

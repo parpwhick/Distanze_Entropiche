@@ -5,6 +5,7 @@ open HA, ">usa_HA.fasta";
 open NA, ">usa_NA.fasta";
 open DATE, ">sequenze_date.txt";
 
+$nomefile=$ARGV[0];
 while(($title = (<>))) {
 	$seq=<>;
 	chop($title);
@@ -19,6 +20,7 @@ while(($title = (<>))) {
 	$prot=$a[3];
 	$country=$a[4];
 
+	$seq_count{$seq}++;
 	if($old=$strains{$strain}{$prot}){
 		$duplicati++;
 		print "Duplicato: $strain $data $prot: FAIL\n" unless $old==$seq;
@@ -27,7 +29,15 @@ while(($title = (<>))) {
 	$strains{$strain}{"data"}=$data;
 	$i++;
 }
-print "read $i records, $duplicati repetitions\n";
+print "Read $i records, $duplicati harmless repetitions\n";
+if($i < 10) {
+	print<<EOF;
+Pochi records: affinche il programma funzioni, eseguire prima:
+  perl -i -pe '\$i++; chop unless /^>/; s/>/\\n>/ unless (\$i==1);' $nomefile
+per formattare correttamente le sequenze!
+EOF
+	exit(1);
+}
 $i=0;
 
 #usa file di indicativi
@@ -46,6 +56,11 @@ else{
 	@k = keys %strains;
 }
 
+@k = map  { $_->[0] }
+     sort { $a->[1] cmp $b->[1] }
+	 #map  { [$_, foo($_)] }
+	 map  { [$_, $strains{$_}{"data"}] }
+     @k;
 
 foreach $kk (@k){
 	$data = $strains{$kk}{"data"};
@@ -69,10 +84,16 @@ foreach $kk (@k){
 		print "Missing HA! $kk, $data\n" ;
 		next;
 	}
+	$n_na=$seq_count{$seq_na};
+	$n_ha=$seq_count{$seq_ha};
+	if($n_na > 1 && $n_ha > 1){
+		$skipped++;
+		next;
+	}
 	$i++;
 	print NA ">$data|$kk|NA\n$seq_na\n";
 	print HA ">$data|$kk|HA\n$seq_ha\n";
 	print DATE "$data\n";
 }
 
-print "Found and printed $i records\n";
+print "Printed $i records, skipped $skipped (" . sprintf("%.2f%%)\n", $skipped / $#k * 100);
