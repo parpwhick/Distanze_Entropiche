@@ -22,12 +22,15 @@ for j=1:M
     h(j)=-h(j)/N+log(N);
 end
 
-plot(h);
-title('Entropia di Shannon');
+plot(h,'o-');
+legend('Clustering gerarchico')
+ylabel('entropia della popolazione dei cluster')
+xlabel('p clusters')
 n=input('Numero di cluster? ');
 end
 
 c=cluster(Z,'maxclust',n);
+n=max(c);
 
 sequenze_date=importdata('sequenze_date.txt','/');
 label_anni=sequenze_date(:,1)+(sequenze_date(:,2)-1)/12+(sequenze_date(:,3)-1)/365;

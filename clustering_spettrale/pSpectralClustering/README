@@ -1,0 +1,61 @@
+P-SPECTRAL CLUSTERING
+
+This archive contains a Matlab implementation of the method for 
+p-Laplacian based spectral clustering proposed in the paper
+
+Thomas Buehler and Matthias Hein,
+Spectral Clustering based on the graph p-Laplacian,
+In Leon Bottou and Michael Littman, Proceedings of the 26th 
+International Conference on Machine Learning (ICML), 
+81-88, Omnipress, 2009
+
+The code for p-Spectral Clustering can be freely distributed for 
+non-commercial applications. Please include a reference to the above 
+paper and include the original documentation and copyright notice. 
+
+
+
+INSTALLATION
+
+To run p-Spectral Clustering, just add this directory and all 
+subfolders to the Matlab path variable. The eigenvector and resulting 
+clustering can then be computed by the functions 
+'computePEigenvector' and 'computeClustering', respectively. 
+
+To achieve an additional speedup, you may want to use the mexfiles 
+located in the subfolder 'mexfiles'. To install them, cd to the 
+directory 'mexfiles' and compile them by starting the make.m script 
+from within Matlab. So far this has been tested with Gcc 4.3.2 and 
+Lcc-win32 2.4.1. You will need an implementation of the OpenMP API 
+(e.g. the libgomp libary) to exploit parallelism.
+
+
+
+SHORT DOCUMENTATION
+
+For more information type 'help functionname' on the Matlab prompt.
+
+computePEigenvector: Computes the second p-eigenvector of the graph 
+p-Laplacian of the graph with weight matrix W using the iterative 
+scheme introduced in the paper. As described in the paper, the 
+iterative scheme is initialized with the second eigenvector of the 
+standard graph Laplacian (p=2). However one can also provide an 
+initialization with a different p-eigenvector.
+
+createClusters: Transforms an eigenvector into a cluster indicator 
+function. You have the possibility to choose between different 
+thresholding criteria. 
+
+computeClustering: Computes a multipartitioning using the recursive 
+splitting scheme described in the paper. Performs p-Spectral 
+Clustering into k clusters of the graph with weight matrix W by using 
+the second eigenvector of the unnormalized/normalized graph 
+p-Laplacian.
+
+
+
+CONTACT
+
+Thomas Buehler and Matthias Hein
+Machine Learning Group, Saarland University
+http://www.ml.uni-saarland.de

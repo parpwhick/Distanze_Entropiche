@@ -47,6 +47,7 @@ try
     fid5=fopen('output-hamm.bin','r');
     dist_ham=fread(fid5,[n,n],'double');
     [hist_h,labels5]=hist(dist_ham(dist_ham>0),100);
+    dist_ham=dist_ham+dist_ham';
 catch ME
     % do nothing
 end

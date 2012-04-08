@@ -1,6 +1,6 @@
 H = @(a) - sum(a .* log(a)) / sum(a) + log(sum(a));
 
-makebinpart=@(a) [1, a(2:end) ~= a(1:end-1)]
+makebinpart=@(a) [1, a(2:end) ~= a(1:end-1)];
 
 primi = primes(2000);
 
@@ -10,6 +10,8 @@ xorand = @(a,b) bitxor(a,bitand(a,b));
 
 Hbin  = @(e) H(diff(find([1,e,1])));
 Hpart = @(e) H(diff(find([1,binary_part(e),1])));
+
+populationEntropy = @(e)  Hpart(sort(e));
 
 Hprod = @(a,b) 2*Hbin(bitor(binary_part(a), binary_part(b))) - Hbin(binary_part(a)) - Hbin(binary_part(b));
 Hprodbin = @(a,b) 2*Hbin(bitor(a,b)) - Hbin(a) - Hbin(b);
