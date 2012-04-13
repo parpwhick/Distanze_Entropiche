@@ -72,7 +72,7 @@ void print_partition_stats(part *X, const char* name){
     std = std - mean*mean;
     
     fprintf(stderr,"Partizioni %9s: nr. frammenti tra [%d,%d], ",name,min,max);
-    fprintf(stderr,"media %.1f con %.1f siti/atomo\n",mean,opts.seq_len/mean);
+    fprintf(stderr,"media %.2f con %.2f siti/atomo\n",mean,opts.seq_len/mean);
     
 }
 template void print_partition_stats(linear_partition *, const char* );

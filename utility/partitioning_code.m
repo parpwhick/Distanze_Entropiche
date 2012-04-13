@@ -13,7 +13,9 @@ Hpart = @(e) H(diff(find([1,binary_part(e),1])));
 
 populationEntropy = @(e)  Hpart(sort(e));
 
-Hprod = @(a,b) 2*Hbin(bitor(binary_part(a), binary_part(b))) - Hbin(binary_part(a)) - Hbin(binary_part(b));
+
+Honlyprod=@(a,b) Hbin(bitor(binary_part(a), binary_part(b))) ;
+Hprod= @(a,b) 2*Hbin(bitor(binary_part(a), binary_part(b))) - Hbin(binary_part(a)) - Hbin(binary_part(b));
 Hprodbin = @(a,b) 2*Hbin(bitor(a,b)) - Hbin(a) - Hbin(b);
 Hprodbinrid =  @(a,b) 2*Hbin(bitxor(a, b)) - Hbin(xorand(a,b)) - Hbin(xorand(b,a));
 Hprodrid = @(a,b) Hprodbinrid(binary_part(a),binary_part(b));

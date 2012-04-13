@@ -1,32 +1,48 @@
 function [c,Z,numerosita] = cluster_count(distanza,n,old_clusters)
 
+global nome;
+
 if(nargin < 2)
     n=13;
 end
 
-M=100;
+M=50;
 [N,m]=size(distanza);
 assert(N==m, 'La matrice non e` quadrata');
 h=zeros(1,M);
 
 Z=linkage(squareform(distanza),'complete');
 
+
+figure1=figure;
 %calcolo del vettore entropie h
 if(nargin<2)
-for j=1:M
-    c=cluster(Z,'maxclust',j);
-    for i=1:max(c)
-        mu=sum(c==i);
-        h(j)=h(j)+mu*log(mu);
+    indici=1:M;
+    for j=indici
+        c=cluster(Z,'maxclust',j);
+        for i=1:max(c)
+            mu=sum(c==i);
+            h(j)=h(j)+mu*log(mu);
+        end
+        h(j)=-h(j)/N+log(N);
     end
-    h(j)=-h(j)/N+log(N);
-end
-
-plot(h,'o-');
-legend('Clustering gerarchico')
-ylabel('entropia della popolazione dei cluster')
-xlabel('p clusters')
-n=input('Numero di cluster? ');
+    
+    fattore=1/mean(h(2:M)./log(2:M));
+    
+    plot(indici,h(indici),'o-',indici, log(indici)/fattore,'--')
+    
+    if(~isempty(whos('global','nome')))
+        
+        aggiungere=nome;
+    else
+        aggiungere='';
+    end
+    
+    legend(['Clustering gerarchico',aggiungere],'logaritmo naturale riscalato','Location','SouthEast')
+    xlabel('p clusters')
+    ylabel('entropia della popolazione dei cluster')
+    
+    n=input('Numero di cluster? ');
 end
 
 c=cluster(Z,'maxclust',n);
@@ -69,13 +85,13 @@ if(nargin<3)
 else
     colori=old_clusters;
     provenienza=zeros(n);
-     for i=1:n
+    for i=1:n
         for j=1:n
             provenienza(i,j)=sum(c==i & old_clusters==j);
         end
-     end
+    end
     figure;
-    normalizz=ones(n,1);
+    %normalizz=ones(n,1);
     normalizz=sum(provenienza,2);
     %normalizz=normalizz ./ max(1,log10(normalizz));
     subplot(2,1,1);
@@ -89,16 +105,19 @@ else
     ylabel('Numero di elementi nel cluster');
     
 end
-figure;
+figure(figure1);
 %scatter plot, usando x=data, y=cluster label, colori=cluster label,
 %dimensione dei punti 50
-subplot(1,2,1);
-scatter(label_anni,c,30,colori,'filled');
+ggg=subplot(1,2,1);
+scatter(label_anni,c,30,colori,'filled','MarkerEdgeColor','black');
+set(ggg,'YTick',1:1:n,'Box','on','YGrid','on');
 ylim([0.5,n+0.5]);
 xlim([floor(min(label_anni)),ceil(max(label_anni))]);
-subplot(1,2,2);
+ggg=subplot(1,2,2);
 barh(numerosita);
 ylim([0.5,n+0.5]);
+set(ggg,'YTick',1:1:n,'Box','on','YGrid','on');
+
 
 %scatterhist(label_anni,c);
 %colormap('lines');
@@ -109,7 +128,7 @@ ylim([0.5,n+0.5]);
 % for cur_cluster=l
 %     siti=find(c==cur_cluster);
 %     da_labellare=siti(ceil(rand(1,10)*length(siti)));
-% 
+%
 %     for i=1:10
 %     text(label_anni(da_labellare(i)),c(da_labellare(i)),num2str(cur_cluster),'EdgeColor','black','BackgroundColor','white');
 %     end
@@ -126,6 +145,6 @@ da_labellare=ceil(rand(1,100)*N);
 for i=da_labellare;
     text(label_anni(i),c(i),num2str(colori(i)),'EdgeColor','black','BackgroundColor','white');
 end
-    
+
 end
 

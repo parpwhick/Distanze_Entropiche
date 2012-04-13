@@ -1,0 +1,110 @@
+Specifying random sequence generation
+Sequence length limited to 1000
+Number of sequences limited to: 100
+Number of letters limited to: 20
+Fuzziness degree set to: 1
+
+Partizioni  semplici: nr. frammenti tra [931,963], media 950.97 con 1.05 siti/atomo
+Partizioni con salto: nr. frammenti tra [878,927], media 903.47 con 1.11 siti/atomo
+Calculating distance matrix
+2.0% done, ETA 2s    5.9% done, ETA 2s    9.8% done, ETA 1s    13.6% done, ETA 1s    17.3% done, ETA 1s    20.9% done, ETA 1s    24.4% done, ETA 1s    27.9% done, ETA 1s    31.3% done, ETA 1s    34.5% done, ETA 1s    37.8% done, ETA 1s    40.9% done, ETA 1s    43.9% done, ETA 1s    46.9% done, ETA 1s    49.8% done, ETA 1s    52.6% done, ETA 1s    55.3% done, ETA 1s    58.0% done, ETA 1s    60.5% done, ETA 1s    63.0% done, ETA 1s    65.4% done, ETA 1s    67.8% done, ETA 1s    68.9% done, ETA 1s    71.1% done, ETA 1s    73.2% done, ETA 1s    75.3% done, ETA 1s    78.2% done, ETA 1s    79.1% done, ETA 1s    81.8% done, ETA 1s    83.4% done, ETA 1s    85.0% done, ETA 1s    86.5% done, ETA 1s    88.0% done, ETA 1s    89.3% done, ETA 1s    90.0% done, ETA 1s    91.2% done, ETA 1s    92.9% done, ETA 1s    93.4% done, ETA 1s    94.4% done, ETA 1s    95.8% done, ETA 1s    96.5% done, ETA 1s    96.9% done, ETA 1s    97.9% done, ETA 1s    98.2% done, ETA 1s    98.9% done, ETA 1s    99.1% done, ETA 1s    99.6% done, ETA 1s    99.7% done, ETA 1s    99.9% done, ETA 1s    100.0% done, ETA 1s    100% done in 1.7 seconds of CPU time
+Specifying random sequence generation
+Sequence length limited to 1000
+Number of sequences limited to: 100
+Number of letters limited to: 20
+Fuzziness degree set to: 6
+
+Partizioni  semplici: nr. frammenti tra [935,966], media 950.44 con 1.05 siti/atomo
+Partizioni con salto: nr. frammenti tra [667,724], media 696.78 con 1.44 siti/atomo
+Calculating distance matrix
+4.0% done, ETA 2s    5.9% done, ETA 2s    9.8% done, ETA 2s    13.6% done, ETA 2s    19.1% done, ETA 1s    22.7% done, ETA 1s    26.2% done, ETA 1s    29.6% done, ETA 1s    32.9% done, ETA 1s    36.2% done, ETA 1s    39.3% done, ETA 1s    42.4% done, ETA 1s    45.4% done, ETA 1s    48.4% done, ETA 1s    51.2% done, ETA 1s    54.0% done, ETA 1s    56.7% done, ETA 1s    59.3% done, ETA 1s    61.8% done, ETA 1s    64.2% done, ETA 1s    65.4% done, ETA 1s    67.8% done, ETA 1s    70.0% done, ETA 1s    72.2% done, ETA 1s    74.2% done, ETA 1s    77.2% done, ETA 1s    79.1% done, ETA 1s    80.9% done, ETA 1s    81.8% done, ETA 1s    83.4% done, ETA 1s    85.0% done, ETA 1s    87.3% done, ETA 1s    88.7% done, ETA 1s    90.0% done, ETA 1s    90.6% done, ETA 1s    92.4% done, ETA 1s    92.9% done, ETA 1s    93.9% done, ETA 1s    95.3% done, ETA 1s    96.2% done, ETA 1s    96.9% done, ETA 1s    97.3% done, ETA 1s    97.9% done, ETA 1s    98.7% done, ETA 1s    98.9% done, ETA 1s    99.4% done, ETA 1s    99.6% done, ETA 1s    99.8% done, ETA 1s    100.0% done, ETA 1s    100.0% done, ETA 0s    100% done in 2.0 seconds of CPU time
+Specifying random sequence generation
+Sequence length limited to 1000
+Number of sequences limited to: 100
+Number of letters limited to: 20
+Fuzziness degree set to: 11
+
+Partizioni  semplici: nr. frammenti tra [933,967], media 951.09 con 1.05 siti/atomo
+Partizioni con salto: nr. frammenti tra [516,569], media 544.56 con 1.84 siti/atomo
+Calculating distance matrix
+4.0% done, ETA 1s    5.9% done, ETA 2s    9.8% done, ETA 2s    13.6% done, ETA 2s    17.3% done, ETA 1s    20.9% done, ETA 1s    24.4% done, ETA 1s    27.9% done, ETA 1s    31.3% done, ETA 1s    36.2% done, ETA 1s    37.8% done, ETA 1s    40.9% done, ETA 1s    43.9% done, ETA 1s    46.9% done, ETA 1s    49.8% done, ETA 1s    52.6% done, ETA 1s    55.3% done, ETA 1s    58.0% done, ETA 1s    60.5% done, ETA 1s    63.0% done, ETA 1s    65.4% done, ETA 1s    67.8% done, ETA 1s    70.0% done, ETA 1s    72.2% done, ETA 1s    74.2% done, ETA 1s    76.2% done, ETA 1s    78.2% done, ETA 1s    80.9% done, ETA 1s    82.6% done, ETA 1s    84.2% done, ETA 1s    85.8% done, ETA 1s    86.5% done, ETA 1s    88.0% done, ETA 1s    89.3% done, ETA 1s    90.6% done, ETA 1s    91.8% done, ETA 1s    92.9% done, ETA 1s    93.4% done, ETA 1s    93.9% done, ETA 1s    94.9% done, ETA 1s    95.8% done, ETA 1s    96.5% done, ETA 1s    97.3% done, ETA 1s    97.9% done, ETA 1s    98.7% done, ETA 1s    99.1% done, ETA 1s    99.4% done, ETA 1s    99.7% done, ETA 1s    99.8% done, ETA 1s    99.9% done, ETA 1s    100.0% done, ETA 0s    100% done in 2.1 seconds of CPU time
+Specifying random sequence generation
+Sequence length limited to 1000
+Number of sequences limited to: 100
+Number of letters limited to: 20
+Fuzziness degree set to: 16
+
+Partizioni  semplici: nr. frammenti tra [932,968], media 949.65 con 1.05 siti/atomo
+Partizioni con salto: nr. frammenti tra [400,450], media 423.76 con 2.36 siti/atomo
+Calculating distance matrix
+2.0% done, ETA 2s    5.9% done, ETA 2s    9.8% done, ETA 2s    13.6% done, ETA 2s    17.3% done, ETA 1s    20.9% done, ETA 1s    24.4% done, ETA 1s    27.9% done, ETA 1s    31.3% done, ETA 1s    34.5% done, ETA 1s    37.8% done, ETA 1s    40.9% done, ETA 1s    43.9% done, ETA 1s    46.9% done, ETA 1s    49.8% done, ETA 1s    54.0% done, ETA 1s    56.7% done, ETA 1s    59.3% done, ETA 1s    61.8% done, ETA 1s    64.2% done, ETA 1s    66.6% done, ETA 1s    68.9% done, ETA 1s    71.1% done, ETA 1s    73.2% done, ETA 1s    75.3% done, ETA 1s    77.2% done, ETA 1s    79.1% done, ETA 1s    81.8% done, ETA 1s    83.4% done, ETA 1s    85.0% done, ETA 1s    86.5% done, ETA 1s    88.0% done, ETA 1s    89.3% done, ETA 1s    90.6% done, ETA 1s    92.4% done, ETA 1s    93.4% done, ETA 1s    94.4% done, ETA 1s    95.3% done, ETA 1s    96.2% done, ETA 1s    96.9% done, ETA 1s    97.6% done, ETA 1s    98.2% done, ETA 1s    98.7% done, ETA 1s    99.1% done, ETA 1s    99.4% done, ETA 1s    99.7% done, ETA 1s    99.9% done, ETA 1s    100.0% done, ETA 1s    100% done in 2.2 seconds of CPU time
+Specifying random sequence generation
+Sequence length limited to 1000
+Number of sequences limited to: 100
+Number of letters limited to: 20
+Fuzziness degree set to: 21
+
+Partizioni  semplici: nr. frammenti tra [931,964], media 949.25 con 1.05 siti/atomo
+Partizioni con salto: nr. frammenti tra [311,351], media 329.38 con 3.04 siti/atomo
+Calculating distance matrix
+4.0% done, ETA 1s    5.9% done, ETA 2s    9.8% done, ETA 2s    13.6% done, ETA 2s    17.3% done, ETA 1s    20.9% done, ETA 1s    24.4% done, ETA 1s    27.9% done, ETA 1s    31.3% done, ETA 1s    36.2% done, ETA 1s    39.3% done, ETA 1s    42.4% done, ETA 1s    45.4% done, ETA 1s    48.4% done, ETA 1s    51.2% done, ETA 1s    54.0% done, ETA 1s    56.7% done, ETA 1s    59.3% done, ETA 1s    61.8% done, ETA 1s    64.2% done, ETA 1s    66.6% done, ETA 1s    68.9% done, ETA 1s    72.2% done, ETA 1s    74.2% done, ETA 1s    76.2% done, ETA 1s    78.2% done, ETA 1s    80.0% done, ETA 1s    81.8% done, ETA 1s    83.4% done, ETA 1s    85.0% done, ETA 1s    86.5% done, ETA 1s    88.0% done, ETA 1s    89.3% done, ETA 1s    90.6% done, ETA 1s    91.8% done, ETA 1s    92.9% done, ETA 1s    93.9% done, ETA 1s    94.9% done, ETA 1s    95.8% done, ETA 1s    96.5% done, ETA 1s    97.3% done, ETA 1s    98.2% done, ETA 1s    98.4% done, ETA 1s    99.1% done, ETA 1s    99.4% done, ETA 1s    99.7% done, ETA 1s    99.9% done, ETA 1s    99.9% done, ETA 1s    100.0% done, ETA 0s    100% done in 2.2 seconds of CPU time
+Specifying random sequence generation
+Sequence length limited to 1000
+Number of sequences limited to: 100
+Number of letters limited to: 20
+Fuzziness degree set to: 26
+
+Partizioni  semplici: nr. frammenti tra [928,961], media 948.65 con 1.05 siti/atomo
+Partizioni con salto: nr. frammenti tra [241,281], media 259.14 con 3.86 siti/atomo
+Calculating distance matrix
+2.0% done, ETA 3s    7.9% done, ETA 2s    11.7% done, ETA 2s    15.4% done, ETA 2s    19.1% done, ETA 1s    22.7% done, ETA 1s    26.2% done, ETA 1s    29.6% done, ETA 1s    32.9% done, ETA 1s    36.2% done, ETA 1s    39.3% done, ETA 1s    42.4% done, ETA 1s    45.4% done, ETA 1s    49.8% done, ETA 1s    52.6% done, ETA 1s    55.3% done, ETA 1s    58.0% done, ETA 1s    60.5% done, ETA 1s    63.0% done, ETA 1s    65.4% done, ETA 1s    67.8% done, ETA 1s    70.0% done, ETA 1s    72.2% done, ETA 1s    74.2% done, ETA 1s    76.2% done, ETA 1s    78.2% done, ETA 1s    80.0% done, ETA 1s    81.8% done, ETA 1s    84.2% done, ETA 1s    85.8% done, ETA 1s    87.3% done, ETA 1s    88.7% done, ETA 1s    90.0% done, ETA 1s    91.2% done, ETA 1s    92.4% done, ETA 1s    93.4% done, ETA 1s    94.4% done, ETA 1s    95.3% done, ETA 1s    96.2% done, ETA 1s    96.9% done, ETA 1s    97.6% done, ETA 1s    98.2% done, ETA 1s    98.9% done, ETA 1s    99.3% done, ETA 1s    99.4% done, ETA 1s    99.8% done, ETA 1s    99.9% done, ETA 1s    100.0% done, ETA 1s    100% done in 2.3 seconds of CPU time
+Specifying random sequence generation
+Sequence length limited to 1000
+Number of sequences limited to: 100
+Number of letters limited to: 20
+Fuzziness degree set to: 31
+
+Partizioni  semplici: nr. frammenti tra [932,971], media 950.56 con 1.05 siti/atomo
+Partizioni con salto: nr. frammenti tra [179,220], media 204.48 con 4.89 siti/atomo
+Calculating distance matrix
+2.0% done, ETA 2s    5.9% done, ETA 2s    9.8% done, ETA 2s    13.6% done, ETA 2s    17.3% done, ETA 2s    20.9% done, ETA 1s    24.4% done, ETA 1s    27.9% done, ETA 1s    32.9% done, ETA 1s    36.2% done, ETA 1s    39.3% done, ETA 1s    42.4% done, ETA 1s    45.4% done, ETA 1s    48.4% done, ETA 1s    51.2% done, ETA 1s    54.0% done, ETA 1s    56.7% done, ETA 1s    59.3% done, ETA 1s    61.8% done, ETA 1s    64.2% done, ETA 1s    66.6% done, ETA 1s    68.9% done, ETA 1s    71.1% done, ETA 1s    73.2% done, ETA 1s    75.3% done, ETA 1s    77.2% done, ETA 1s    79.1% done, ETA 1s    80.9% done, ETA 1s    83.4% done, ETA 1s    85.0% done, ETA 1s    86.5% done, ETA 1s    88.0% done, ETA 1s    89.3% done, ETA 1s    90.6% done, ETA 1s    91.8% done, ETA 1s    92.9% done, ETA 1s    93.9% done, ETA 1s    94.9% done, ETA 1s    95.8% done, ETA 1s    96.5% done, ETA 1s    97.3% done, ETA 1s    97.9% done, ETA 1s    98.4% done, ETA 1s    98.9% done, ETA 1s    99.3% done, ETA 1s    99.6% done, ETA 1s    99.8% done, ETA 1s    100.0% done, ETA 1s    100.0% done, ETA 0s    100% done in 2.3 seconds of CPU time
+Specifying random sequence generation
+Sequence length limited to 1000
+Number of sequences limited to: 100
+Number of letters limited to: 20
+Fuzziness degree set to: 36
+
+Partizioni  semplici: nr. frammenti tra [939,966], media 950.08 con 1.05 siti/atomo
+Partizioni con salto: nr. frammenti tra [144,179], media 160.56 con 6.23 siti/atomo
+Calculating distance matrix
+2.0% done, ETA 2s    5.9% done, ETA 2s    9.8% done, ETA 2s    13.6% done, ETA 2s    17.3% done, ETA 2s    20.9% done, ETA 1s    24.4% done, ETA 1s    27.9% done, ETA 1s    31.3% done, ETA 1s    34.5% done, ETA 1s    37.8% done, ETA 1s    40.9% done, ETA 1s    43.9% done, ETA 1s    46.9% done, ETA 1s    49.8% done, ETA 1s    52.6% done, ETA 1s    55.3% done, ETA 1s    58.0% done, ETA 1s    60.5% done, ETA 1s    63.0% done, ETA 1s    65.4% done, ETA 1s    67.8% done, ETA 1s    70.0% done, ETA 1s    72.2% done, ETA 1s    74.2% done, ETA 1s    76.2% done, ETA 1s    78.2% done, ETA 1s    80.0% done, ETA 1s    81.8% done, ETA 1s    83.4% done, ETA 1s    85.8% done, ETA 1s    87.3% done, ETA 1s    88.7% done, ETA 1s    90.0% done, ETA 1s    91.2% done, ETA 1s    92.4% done, ETA 1s    93.4% done, ETA 1s    94.4% done, ETA 1s    95.3% done, ETA 1s    96.2% done, ETA 1s    96.9% done, ETA 1s    97.3% done, ETA 1s    97.9% done, ETA 1s    98.7% done, ETA 1s    98.9% done, ETA 1s    99.4% done, ETA 1s    99.6% done, ETA 1s    99.9% done, ETA 1s    99.9% done, ETA 1s    100% done in 2.4 seconds of CPU time
+Specifying random sequence generation
+Sequence length limited to 1000
+Number of sequences limited to: 100
+Number of letters limited to: 20
+Fuzziness degree set to: 41
+
+Partizioni  semplici: nr. frammenti tra [933,969], media 950.10 con 1.05 siti/atomo
+Partizioni con salto: nr. frammenti tra [114,141], media 128.30 con 7.79 siti/atomo
+Calculating distance matrix
+2.0% done, ETA 3s    5.9% done, ETA 2s    9.8% done, ETA 2s    13.6% done, ETA 2s    17.3% done, ETA 2s    20.9% done, ETA 2s    24.4% done, ETA 1s    27.9% done, ETA 1s    31.3% done, ETA 1s    34.5% done, ETA 1s    37.8% done, ETA 1s    40.9% done, ETA 1s    43.9% done, ETA 1s    46.9% done, ETA 1s    49.8% done, ETA 1s    52.6% done, ETA 1s    55.3% done, ETA 1s    58.0% done, ETA 1s    60.5% done, ETA 1s    63.0% done, ETA 1s    65.4% done, ETA 1s    67.8% done, ETA 1s    70.0% done, ETA 1s    72.2% done, ETA 1s    74.2% done, ETA 1s    76.2% done, ETA 1s    78.2% done, ETA 1s    80.0% done, ETA 1s    81.8% done, ETA 1s    83.4% done, ETA 1s    85.0% done, ETA 1s    87.3% done, ETA 1s    88.7% done, ETA 1s    89.3% done, ETA 1s    91.2% done, ETA 1s    92.4% done, ETA 1s    92.9% done, ETA 1s    94.4% done, ETA 1s    95.3% done, ETA 1s    96.2% done, ETA 1s    96.5% done, ETA 1s    97.6% done, ETA 1s    97.9% done, ETA 1s    98.7% done, ETA 1s    99.1% done, ETA 1s    99.3% done, ETA 1s    99.7% done, ETA 1s    99.8% done, ETA 1s    100.0% done, ETA 1s    100.0% done, ETA 0s    100% done in 2.4 seconds of CPU time
+Specifying random sequence generation
+Sequence length limited to 1000
+Number of sequences limited to: 100
+Number of letters limited to: 20
+Fuzziness degree set to: 46
+
+Partizioni  semplici: nr. frammenti tra [932,968], media 949.39 con 1.05 siti/atomo
+Partizioni con salto: nr. frammenti tra [89,119], media 103.58 con 9.65 siti/atomo
+Calculating distance matrix
+2.0% done, ETA 3s    5.9% done, ETA 2s    9.8% done, ETA 2s    13.6% done, ETA 2s    17.3% done, ETA 2s    20.9% done, ETA 2s    24.4% done, ETA 1s    27.9% done, ETA 1s    31.3% done, ETA 1s    36.2% done, ETA 1s    39.3% done, ETA 1s    40.9% done, ETA 1s    43.9% done, ETA 1s    46.9% done, ETA 1s    49.8% done, ETA 1s    52.6% done, ETA 1s    56.7% done, ETA 1s    59.3% done, ETA 1s    61.8% done, ETA 1s    63.0% done, ETA 1s    66.6% done, ETA 1s    68.9% done, ETA 1s    71.1% done, ETA 1s    73.2% done, ETA 1s    75.3% done, ETA 1s    77.2% done, ETA 1s    79.1% done, ETA 1s    80.0% done, ETA 1s    81.8% done, ETA 1s    83.4% done, ETA 1s    85.8% done, ETA 1s    86.5% done, ETA 1s    88.0% done, ETA 1s    89.3% done, ETA 1s    90.6% done, ETA 1s    91.8% done, ETA 1s    92.9% done, ETA 1s    93.9% done, ETA 1s    94.9% done, ETA 1s    96.2% done, ETA 1s    96.9% done, ETA 1s    97.3% done, ETA 1s    98.2% done, ETA 1s    98.4% done, ETA 1s    99.1% done, ETA 1s    99.4% done, ETA 1s    99.6% done, ETA 1s    99.9% done, ETA 1s    99.9% done, ETA 1s    100.0% done, ETA 0s    100% done in 2.4 seconds of CPU time
+Specifying random sequence generation
+Sequence length limited to 1000
+Number of sequences limited to: 100
+Number of letters limited to: 20
+Fuzziness degree set to: 51
+
+Partizioni  semplici: nr. frammenti tra [937,966], media 950.31 con 1.05 siti/atomo
+Partizioni con salto: nr. frammenti tra [72,97], media 85.33 con 11.72 siti/atomo
+Calculating distance matrix
+2.0% done, ETA 3s    5.9% done, ETA 2s    9.8% done, ETA 2s    13.6% done, ETA 2s    17.3% done, ETA 2s    20.9% done, ETA 2s    24.4% done, ETA 1s    27.9% done, ETA 1s    31.3% done, ETA 1s    34.5% done, ETA 1s    37.8% done, ETA 1s    40.9% done, ETA 1s    43.9% done, ETA 1s    46.9% done, ETA 1s    49.8% done, ETA 1s    52.6% done, ETA 1s    55.3% done, ETA 1s    58.0% done, ETA 1s    60.5% done, ETA 1s    63.0% done, ETA 1s    65.4% done, ETA 1s    68.9% done, ETA 1s    70.0% done, ETA 1s    72.2% done, ETA 1s    74.2% done, ETA 1s    77.2% done, ETA 1s    78.2% done, ETA 1s    80.9% done, ETA 1s    81.8% done, ETA 1s    84.2% done, ETA 1s    85.8% done, ETA 1s    86.5% done, ETA 1s    88.0% done, ETA 1s    89.3% done, ETA 1s    90.6% done, ETA 1s    92.4% done, ETA 1s    92.9% done, ETA 1s    93.9% done, ETA 1s    95.3% done, ETA 1s    96.2% done, ETA 1s    96.9% done, ETA 1s    97.6% done, ETA 1s    98.2% done, ETA 1s    98.7% done, ETA 1s    99.1% done, ETA 1s    99.4% done, ETA 1s    99.6% done, ETA 1s    99.9% done, ETA 1s    99.9% done, ETA 1s    100.0% done, ETA 0s    100% done in 2.5 seconds of CPU time

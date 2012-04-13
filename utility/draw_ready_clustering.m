@@ -63,8 +63,8 @@ figure;
 %scatter plot, usando x=data, y=cluster label, colori=cluster label,
 %dimensione dei punti 50
 subplot(1,2,1);
-scatter(label_anni,c,30,colori,'filled');
-ylim([0.5,n+0.5]);
+scatter(label_anni,c,30,colori,'filled','MarkerEdgeColor','black');
+ylim([0,n+1]);
 xlim([floor(min(label_anni)),ceil(max(label_anni))]);
 subplot(1,2,2);
 barh(numerosita);
