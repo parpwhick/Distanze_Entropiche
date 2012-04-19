@@ -6,6 +6,7 @@ open NA, ">usa_NA.fasta";
 open DATE, ">sequenze_date.txt";
 
 $nomefile=$ARGV[0];
+$duplicati=0;
 while(($title = (<>))) {
 	$seq=<>;
 	chop($title);
@@ -19,6 +20,7 @@ while(($title = (<>))) {
 	$strain=$a[2];
 	$prot=$a[3];
 	$country=$a[4];
+	$other=$a[5];
 
 	$seq_count{$seq}++;
 	if($old=$strains{$strain}{$prot}){
@@ -27,6 +29,7 @@ while(($title = (<>))) {
 	}
 	$strains{$strain}{$prot}=$seq;
 	$strains{$strain}{"data"}=$data;
+	$strains{$strain}{"other"}=$a[5] if $a[5];
 	$i++;
 }
 print "Read $i records, $duplicati harmless repetitions\n";
@@ -62,6 +65,8 @@ else{
 	 map  { [$_, $strains{$_}{"data"}] }
      @k;
 
+$skipped=0;
+
 foreach $kk (@k){
 	$data = $strains{$kk}{"data"};
 	if( $data=~m#(\d+)/(\d+)/(\d{4})#){
@@ -72,10 +77,15 @@ foreach $kk (@k){
 	}
 	if( !($data=~m#\d{4}/\d{2}/\d{2}#)){
 		print "Data incompleta, $kk: $data\n";
-		next;
+		#next;
 	}
 	$seq_na = $strains{$kk}{"NA"};
 	$seq_ha = $strains{$kk}{"HA"};
+	if($other=$strains{$kk}{"other"}){
+		$other="|$other";
+	}else{
+		$other="";
+	}
 	if(length($seq_na)<10){
 		print "Missing NA! $kk, $data\n" ;
 		next;
@@ -91,8 +101,8 @@ foreach $kk (@k){
 		next;
 	}
 	$i++;
-	print NA ">$data|$kk|NA\n$seq_na\n";
-	print HA ">$data|$kk|HA\n$seq_ha\n";
+	print NA ">$data|$kk|NA$other\n$seq_na\n";
+	print HA ">$data|$kk|HA$other\n$seq_ha\n";
 	print DATE "$data\n";
 }
 
