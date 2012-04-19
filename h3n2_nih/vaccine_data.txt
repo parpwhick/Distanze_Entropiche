@@ -1,0 +1,13 @@
+1 New_Y
+2 Perth
+3 Austr
+4 Beiji
+5 Shang
+45 Johan
+170 Sydne
+233 Mosco
+352 Fujia
+496 Calif
+547 Hiros
+548 Wisco
+612 Brisb

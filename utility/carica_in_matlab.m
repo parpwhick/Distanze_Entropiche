@@ -3,10 +3,14 @@ fclose('all');
 clear fid*;
 
 bins=200;
-have_simple= ~isempty(dir('output-dist*'));
-have_fuzzy = ~isempty(dir('output-fuzzy*'));
+r1=dir('output-dist*');
+have_simple= ~isempty(r1);
+r2=dir('output-fuzzy*');
+have_fuzzy= ~isempty(r2);
+
 
 if(have_simple)
+    n= round(sqrt(r1(1).bytes/8));
     fid1=fopen('output-distn.bin','r');
     fid2=fopen('output-distr.bin','r');
     fid3=fopen('output-distt.bin','r');
@@ -54,6 +58,7 @@ end
     
 
 if(have_fuzzy)
+    n= round(sqrt(r2(1).bytes/8));
     fid6=fopen('output-fuzzy.bin','r');
     fid7=fopen('output-fuzzyt.bin','r');
     fid8=fopen('output-fuzzyr.bin','r');
