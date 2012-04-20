@@ -1,13 +1,18 @@
-1 New_Y
-2 Perth
-3 Austr
-4 Beiji
-5 Shang
-45 Johan
-170 Sydne
-233 Mosco
-352 Fujia
-496 Calif
-547 Hiros
-548 Wisco
-612 Brisb
+1 Wellin b
+2 Perth r
+3 Urugua b
+4 Victor b
+5 Beijin r
+6 Shangd r
+61 Johann r
+117 Wuhan r
+222 Sydney r
+298 Moscow r
+299 Panama b
+452 Fujian r
+527 Wyomin b
+632 Califo r
+633 NwYork b
+700 Hirosh r
+701 Wiscon r
+776 Brisba r

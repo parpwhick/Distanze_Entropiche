@@ -1,10 +1,13 @@
-function [c,Z,numerosita] = cluster_count(distanza,n,old_clusters)
+function [c,Z,numerosita] = cluster_count(distanza,n,effettivi,old_clusters)
 
 M=50;
 [N,m]=size(distanza);
 assert(N==m, 'La matrice non e` quadrata');
 
-Z=linkage(squareform(distanza),'complete');
+if(nargin<3)
+    effettivi=N;    
+end
+Z=linkage(squareform(distanza(1:effettivi,1:effettivi)),'complete');
 
 figure1=figure;
 %calcolo del vettore entropie h
@@ -47,7 +50,7 @@ for i=1:n
     numerosita(i)=sum(c==i);
 end
 
-if(nargin<3)
+if(nargin<4)
     colori=c;
 else
     colori=old_clusters;
@@ -57,7 +60,7 @@ end
 %scatter plot, usando x=data, y=cluster label, colori=cluster label,
 %dimensione dei punti 50
 ggg=subplot(1,2,1);
-scatter(label_anni,c,30,colori,'filled','MarkerEdgeColor','black');
+scatter(label_anni(1:effettivi),c,30,colori,'filled','MarkerEdgeColor','black');
 set(ggg,'YTick',1:1:n,'Box','on','YGrid','on');
 ylim([0.5,n+0.5]);
 xlim([floor(min(label_anni)),ceil(max(label_anni))]);
@@ -67,28 +70,41 @@ ylim([0.5,n+0.5]);
 set(ggg,'YTick',1:1:n,'Box','on','YGrid','on');
 
 
+
+try
+    fid=fopen('vaccine_data.txt');
+    vaccine = textscan(fid, '%d %s %s');
 % now draw vaccine strain info
-fid=fopen('vaccine_data.txt');
-vaccine = textscan(fid, '%d %s');
-if(~isempty(vaccine))
+    distanze_da_cluster=zeros(1,n);
     
-subplot(1,2,1);
-
-for i=1:length(vaccine{1})
-    text(label_anni(vaccine{1}(i)),c(vaccine{1}(i)),vaccine{2}(i),'EdgeColor','black','BackgroundColor','white');
+    if(~isempty(vaccine))
+        
+        subplot(1,2,1);
+        for i=1:length(vaccine{1})
+            sigla=vaccine{2}{i};
+            posizione=vaccine{1}(i);
+            colore_testo=vaccine{3}{i};
+            if(nargin>2)
+                for j=1:n
+                    distanze_da_cluster(j)=mean(distanza(c==j,posizione));
+                end
+                [~,appartenenza]=min(distanze_da_cluster);
+            else
+                appartenenza=c(posizione);
+            end
+            text(label_anni(posizione),appartenenza,sigla,'EdgeColor','black','BackgroundColor','white','Color',colore_testo);
+        end
+    end
+catch
+    % do nothing
 end
-
-end
-
-
-
 
 
 
 
 %colori forniti dall'utente, per mostrare come si sono spostati
 %i vecchi cluster
-if(nargin<3)
+if(nargin<4)
     return
 end
 
