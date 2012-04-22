@@ -106,10 +106,9 @@ foreach $kk (@k){
 	$n_ha=$seq_count{$seq_ha}++;
 	if($n_na > 1 && $n_ha > 1 && !$other){
 		$skipped++;
-		#	next;
+			next;
 	}
 	$i++;
-
 	print NA ">$data|$kk|NA$other\n$seq_na\n";
 	print HA ">$data|$kk|HA$other\n$seq_ha\n";
 	print DATE "$data\n";
