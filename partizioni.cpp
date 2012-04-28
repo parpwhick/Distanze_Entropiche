@@ -526,8 +526,8 @@ void general_partition::reduce(const general_partition &p1, const general_partit
         
         // Se gli atomi sono uguali, l'intersezione delle partizioni dicotomiche
         // non e' banale => salto
-        if (atomo1 == atomo2)
-            continue;
+       // if (atomo1 == atomo2)
+        //    continue;
         
         // Creazione degli iteratori, per ottenere tutti i siti in atomo1
         Iter_t ii = p1.begin(atomo1);
@@ -537,8 +537,8 @@ void general_partition::reduce(const general_partition &p1, const general_partit
         
         // uguaglianza "fuzzy" tra atomi, a meno di 'tol' siti
         // similmente, se sono 'uguali', salto l'atomo nella partizione risultante
-//        if(symmetric_difference(ii,p2.begin(atomo2),end))
-//            continue;
+        if(symmetric_difference(ii,p2.begin(atomo2),end,0)     )
+            continue;
         
         // altrimenti interseca il fattore dicotomico con i precedenti
         fattori_indipendenti++;

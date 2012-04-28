@@ -60,7 +60,7 @@ end
 %scatter plot, usando x=data, y=cluster label, colori=cluster label,
 %dimensione dei punti 50
 ggg=subplot(1,2,1);
-scatter(label_anni(1:effettivi),c,30,colori,'filled','MarkerEdgeColor','black');
+scatter(label_anni(1:effettivi),c,50,colori,'filled','MarkerEdgeColor','black');
 set(ggg,'YTick',1:1:n,'Box','on','YGrid','on');
 ylim([0.5,n+0.5]);
 xlim([floor(min(label_anni)),ceil(max(label_anni))]);
@@ -85,10 +85,13 @@ try
             posizione=vaccine{1}(i);
             colore_testo=vaccine{3}{i};
             if(nargin>2)
-                for j=1:n
-                    distanze_da_cluster(j)=mean(distanza(c==j,posizione));
-                end
-                [~,appartenenza]=min(distanze_da_cluster);
+%                 for j=1:n
+%                     distanze_da_cluster(j)=mean(distanza(c==j,posizione));
+%                 end
+%                 [~,appartenenza]=min(distanze_da_cluster);
+                [~,appartenenza]=min(distanza(:,posizione));
+                appartenenza=c(appartenenza);
+                
             else
                 appartenenza=c(posizione);
             end
