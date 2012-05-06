@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="80">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df name="distanze" root=".">
+      <df name="bin">
+        <df name="Debug">
+        </df>
+      </df>
+      <df name="clustering_spettrale">
+        <df name="1SpectralClustering_matlab">
+          <in>OneSpectralClustering.m</in>
+          <in>cluster_count.m</in>
+          <in>computeCutValue.m</in>
+          <in>computeEigenvectorGeneral.m</in>
+          <in>computeMultiCut.m</in>
+          <in>computeMultiPartitioning.m</in>
+          <in>connectedComponents.m</in>
+          <in>createClustersGeneral.m</in>
+          <in>isConnected.m</in>
+          <in>solveInnerProblem.cpp</in>
+          <in>weighted_median.m</in>
+        </df>
+        <df name="oneSpectralClustering_files">
+        </df>
+        <df name="pSpectralClustering">
+          <df name="clustering">
+            <in>DegreeMatrix.m</in>
+            <in>Functional.m</in>
+            <in>Gradient.m</in>
+            <in>Hessian.m</in>
+            <in>SecondEigenvector.m</in>
+            <in>computeAbsPower.m</in>
+            <in>computeBestCutValue.m</in>
+            <in>computeClusterIndicatorFunction.m</in>
+            <in>computeCutValue.m</in>
+            <in>computeUnbalancedCutWeight.m</in>
+            <in>determineThreshold.m</in>
+            <in>getSparseDerivativeMatrix.m</in>
+            <in>isConnected.m</in>
+            <in>minimizeFunctional.m</in>
+            <in>minimizeVariance.m</in>
+            <in>pNormPowDegParallel.m</in>
+            <in>pNormPowParallel.m</in>
+          </df>
+          <df name="mexfiles">
+            <in>computeAbsPower.cpp</in>
+            <in>getSparseDerivativeMatrix.cpp</in>
+            <in>make.m</in>
+            <in>pNormPowDegParallel.cpp</in>
+            <in>pNormPowParallel.cpp</in>
+          </df>
+          <in>computeClustering.m</in>
+          <in>computePEigenvector.m</in>
+          <in>createClusters.m</in>
+        </df>
+        <df name="simple Spectral Clustering">
+          <in>CalculateAffinity.m</in>
+          <in>GenerateData.m</in>
+          <in>Jordan_Weiss.m</in>
+          <in>Perona_Freeman.m</in>
+          <in>Scott_Longuet_Higgins.m</in>
+          <in>Shi_Malik.m</in>
+        </df>
+        <df name="Spectral Clustering_files">
+        </df>
+        <df name="spectral_files">
+        </df>
+      </df>
+      <df name="codice_hashing">
+        <in>GeneralHashFunctions.cpp</in>
+        <in>GeneralHashFunctions.h</in>
+        <in>HashTest.cpp</in>
+        <in>MurmurHash3.cpp</in>
+        <in>MurmurHash3.h</in>
+        <in>hashtest2.cpp</in>
+      </df>
+      <df name="dati_base">
+        <in>carica_in_matlab.m</in>
+        <in>cluster_count.m</in>
+      </df>
+      <df name="GUI">
+        <df name="DistanzeGui">
+          <in>main.cpp</in>
+          <in>mainwindow.cpp</in>
+          <in>mainwindow.h</in>
+        </df>
+        <df name="DistanzeGui-build-desktop">
+          <in>moc_mainwindow.cpp</in>
+          <in>ui_finestra.h</in>
+        </df>
+      </df>
+      <df name="H1N1">
+        <in>carica_in_matlab.m</in>
+        <in>cluster_count.m</in>
+        <in>createfigure.m</in>
+        <in>draw_ready_clustering.m</in>
+      </df>
+      <df name="h1n1_nih">
+        <df name="HA">
+          <in>carica_in_matlab.m</in>
+        </df>
+        <df name="NA">
+          <in>carica_in_matlab.m</in>
+        </df>
+        <in>cluster_count.m</in>
+        <in>draw_ready_clustering.m</in>
+        <in>spectral_clustering.m</in>
+      </df>
+      <df name="H3N2">
+        <df name="immagini">
+        </df>
+        <in>carica_in_matlab.m</in>
+        <in>cluster_count.m</in>
+        <in>createfigure.m</in>
+        <in>disegna_distanze.m</in>
+        <in>disegna_laplaciano.m</in>
+        <in>draw_ready_clustering.m</in>
+        <in>laplacian.m</in>
+        <in>pconfronto.m</in>
+        <in>spectral_clustering.m</in>
+      </df>
+      <df name="H3N2_HA+NA">
+        <df name="HA">
+          <in>carica_in_matlab.m</in>
+        </df>
+        <df name="NA">
+        </df>
+        <in>cluster_count.m</in>
+        <in>draw_ready_clustering.m</in>
+        <in>pconfronto.m</in>
+        <in>spectral_clustering.m</in>
+      </df>
+      <df name="h3n2_nih">
+        <df name="HA">
+          <in>carica_in_matlab.m</in>
+          <in>cluster_count.m</in>
+          <in>pconfronto.m</in>
+        </df>
+        <df name="NA">
+          <in>carica_in_matlab.m</in>
+          <in>cluster_count.m</in>
+        </df>
+        <in>cluster_count.m</in>
+        <in>draw_ready_clustering.m</in>
+        <in>spectral_clustering.m</in>
+      </df>
+      <df name="h3n2_vac">
+      </df>
+      <df name="obj">
+        <df name="Debug">
+        </df>
+      </df>
+      <df name="old_versions">
+        <in>init_functions2.cpp</in>
+        <in>init_functions3.cpp</in>
+        <in>main-0.5.cpp</in>
+        <in>main-1.0.cpp</in>
+        <in>main2.cpp</in>
+        <in>main3.cpp</in>
+        <in>newfile.cpp</in>
+        <in>old_distance_program.c</in>
+        <in>partizioni3.cpp</in>
+        <in>rand55.c</in>
+        <in>rand55.h</in>
+        <in>simple_partition.cpp</in>
+        <in>strutture2.h</in>
+        <in>strutture3.h</in>
+        <in>translation.cpp</in>
+      </df>
+      <df name="statistiche_grafici">
+      </df>
+      <df name="tempi">
+      </df>
+      <df name="tests">
+        <in>carica_in_matlab.m</in>
+      </df>
+      <df name="utility">
+        <in>carica_in_matlab.m</in>
+        <in>cluster_count.m</in>
+        <in>confronta_distanze.m</in>
+        <in>disegna_distanze.m</in>
+        <in>disegna_laplaciano.m</in>
+        <in>draw_ready_clustering.m</in>
+        <in>partitioning_code.m</in>
+        <in>pconfronto.m</in>
+        <in>spectral_clustering.m</in>
+        <in>visualizza_riduzione.m</in>
+      </df>
+      <in>cluster_count.m</in>
+      <in>distanze.cpp</in>
+      <in>init_functions.cpp</in>
+      <in>main.cpp</in>
+      <in>partizioni.cpp</in>
+      <in>rand55.cpp</in>
+      <in>rand55.h</in>
+      <in>strutture.h</in>
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
+  <sourceRootList>
+    <Elem>.</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
+        <compilerSet>MinGW_1|MinGW</compilerSet>
+      </toolsSet>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>.</buildCommandWorkingDir>
+          <buildCommand>${MAKE} -f Makefile</buildCommand>
+          <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
+          <executablePath>distanze.exe</executablePath>
+        </makeTool>
+      </makefileType>
+    </conf>
+  </confs>
+</configurationDescriptor>

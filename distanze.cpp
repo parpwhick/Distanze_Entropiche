@@ -293,14 +293,16 @@ void distance::linear_product_sorted(const general_partition &p1,const  general_
 }
 
 int WRITE(const char *where,double *what) {
-    FILE *out=fopen(where, "w");
+    FILE *out=fopen(where, "wb");
     int expected = opts.n_seq * opts.n_seq;
     int bytes_written = fwrite(what, sizeof (double), expected, out);
     fclose(out);
     if(bytes_written==expected)
         return(1);
-    else
+    else{
+        printf("Expected to write %d bytes, %d instead\n",expected,bytes_written);
         return(0);
+    }
 }
 
 void init_zero(double * &vec){
@@ -376,6 +378,8 @@ void calcola_matrice_distanze(linear_partition *X, general_partition *Z, std::st
            
         }
 
+        if(i%4)
+            continue;
 #ifdef _OPENMP
         int this_thread = omp_get_thread_num();
         if (this_thread)
@@ -428,7 +432,7 @@ void calcola_matrice_distanze(linear_partition *X, general_partition *Z, std::st
         if (da_calcolare & HAMM) 
             count+=WRITE("output-hamm.bin",dist_ham);
         
-        if (opts.verbose)
+        //if (opts.verbose)
             fprintf(stderr, "Written %dx distance matrix\n",count);
     }
 

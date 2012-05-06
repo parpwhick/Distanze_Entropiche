@@ -47,7 +47,7 @@
 #include <string>
 #include <vector>
 #include <map>
-
+#include <time.h>
 #include "strutture.h"
 
 extern options opts;

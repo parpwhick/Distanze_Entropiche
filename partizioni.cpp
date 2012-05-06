@@ -121,8 +121,8 @@ void ppmout2(const T *grid1, const U* grid2, int sz, const char *filename) {
     }
 }
 
-template void ppmout(const int *grid, int sz, const char *filename);
-template void ppmout(const unsigned long*grid, int sz, const char *filename);
+template void ppmout(const int32_t *grid, int sz, const char *filename);
+template void ppmout(const uint64_t *grid, int sz, const char *filename);
 template void ppmout2(const int *grid1, const int* grid2, int , const char *) ;
 template void ppmout2(const unsigned long *grid1, const unsigned long* grid2, int , const char *) ;
 
