@@ -27,13 +27,14 @@ def correct_date(data):
 	return(corretta)
 
 
-righe=[]
 try:
 	filename=sys.argv[1]
 except:
-	sys.stderr.write("Usage : python %s inputfile\n" % sys.argv[0])
+	sys.stderr.write("Usage : python %s inputfile1 [... inputfileN]\n" % sys.argv[0])
 	raise SystemExit(1)
 
+
+righe=[]
 
 for line in open(filename):
 	stripped=line.strip()
@@ -77,6 +78,7 @@ for header,sequence in righe:
 		arch[strain]=new
 
 strains=arch.keys()
+strains.sort(key=lambda strain: bool(arch[strain]["other"]))
 strains.sort(key=lambda strain: arch[strain]["date"])
 
 already_printed=set('');
