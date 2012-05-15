@@ -1,0 +1,6 @@
+nbproject/
+h3n2_gisaid/
+
+*.o
+
+*.bin
