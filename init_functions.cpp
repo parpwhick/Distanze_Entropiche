@@ -65,8 +65,8 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.da_calcolare= 0
 		                |SHAN | SHAN_TOP 
                        | RID | RID_TOP 
-                       | GENERAL | GENERAL_TOP 
-                      | GENERAL_RID | GENERAL_RID_TOP
+                    //   | GENERAL | GENERAL_TOP 
+                    //  | GENERAL_RID | GENERAL_RID_TOP
             ;
     
     int killswitch=0;
