@@ -10,7 +10,7 @@ have_fuzzy= ~isempty(r2);
 
 
 if(have_simple)
-    n= round(sqrt(r1(1).bytes/8));
+    n= round(sqrt(r1(2).bytes/8));
     fid1=fopen('output-distn.bin','r');
     fid2=fopen('output-distr.bin','r');
     fid3=fopen('output-distt.bin','r');

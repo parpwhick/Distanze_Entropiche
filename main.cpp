@@ -61,6 +61,8 @@ void print_partition_stats(part *X, const char* name){
     int min=X[0].N*20, max=0;
     double mean=0, std=0;
     for(int i=0; i<opts.n_seq; i++){
+	if(X[i].n < 10)
+		printf("Il problema e' in %d\n",i);
         min=std::min(X[i].n,min);
         max=std::max(X[i].n,max);
         mean+=X[i].n;
@@ -163,7 +165,7 @@ int main(int argc, char** argv) {
     }
 
     printf("Loaded %d sequences long %d\n", opts.n_seq, opts.seq_len);
-    if (da_calcolare & SHAN)
+    if (da_calcolare & (SHAN|RID))
         print_partition_stats(X, "semplici");
     if (da_calcolare & GENERAL)
         print_partition_stats(Z, "con salto");

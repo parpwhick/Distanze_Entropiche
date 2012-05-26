@@ -378,8 +378,6 @@ void calcola_matrice_distanze(linear_partition *X, general_partition *Z, std::st
            
         }
 
-        if(i%4)
-            continue;
 #ifdef _OPENMP
         int this_thread = omp_get_thread_num();
         if (this_thread)

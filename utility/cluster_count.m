@@ -34,7 +34,7 @@ first_appearance=zeros(1,n);
 for i=1:n
     first_appearance(i)=min(label_anni(c==i));
 end
-[~,order1]=sort(first_appearance);
+[pp,order1]=sort(first_appearance);
 
 %inversione della permutazione(del sorting)
 %necessaria a riordinare i cluster
@@ -89,7 +89,7 @@ try
 %                     distanze_da_cluster(j)=mean(distanza(c==j,posizione));
 %                 end
 %                 [~,appartenenza]=min(distanze_da_cluster);
-                [~,appartenenza]=min(distanza(:,posizione));
+                [pp,appartenenza]=min(distanza(:,posizione));
                 appartenenza=c(appartenenza);
                 
             else

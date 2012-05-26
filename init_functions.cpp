@@ -63,8 +63,8 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.threads=2;
     opts.alg=AUTO;
     opts.da_calcolare= 0
-		                |SHAN | SHAN_TOP 
-                       | RID | RID_TOP 
+		         //       |SHAN | SHAN_TOP 
+                       | RID //| RID_TOP 
                     //   | GENERAL | GENERAL_TOP 
                     //  | GENERAL_RID | GENERAL_RID_TOP
             ;
@@ -266,11 +266,14 @@ void fill_seq_from_file(options &opts, std::string *sequenze) {
         if (in.eof()) {
             break;
         }
+        int len=buffer.length();        
         //skip comments in the sequence file, i.e. lines marked with #
-        if (buffer[0] == '#' || buffer.length() == 0) {
+        if (buffer[0] == '#' || len == 0) {
             cout << "Skipping comment or whiteline "<< endl;
             continue;
         }
+        if(buffer[len-1]=='\r')
+            buffer.resize(len-1);
         //a line beginning with ">" is the name of a new sequence
         if (buffer[0] == '>') {
             if (cur_entry == opts.n_seq-1)

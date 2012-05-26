@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="80">
+<configurationDescriptor version="79">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df name="distanze" root=".">
-      <df name="bin">
-        <df name="Debug">
-        </df>
-      </df>
       <df name="clustering_spettrale">
         <df name="1SpectralClustering_matlab">
           <in>OneSpectralClustering.m</in>
@@ -111,24 +107,24 @@
         </df>
         <in>carica_in_matlab.m</in>
         <in>cluster_count.m</in>
-        <in>createfigure.m</in>
-        <in>disegna_distanze.m</in>
-        <in>disegna_laplaciano.m</in>
-        <in>draw_ready_clustering.m</in>
-        <in>laplacian.m</in>
-        <in>pconfronto.m</in>
-        <in>spectral_clustering.m</in>
+        <in>cluster_stagionali.m</in>
+      </df>
+      <df name="h3n2_gisaid">
+        <in>carica_in_matlab.m</in>
+        <in>cluster_count.m</in>
+        <in>cluster_stagionali.m</in>
       </df>
       <df name="H3N2_HA+NA">
         <df name="HA">
           <in>carica_in_matlab.m</in>
+          <in>cluster_stagionali.m</in>
         </df>
         <df name="NA">
         </df>
+        <in>carica_in_matlab.m</in>
         <in>cluster_count.m</in>
-        <in>draw_ready_clustering.m</in>
-        <in>pconfronto.m</in>
-        <in>spectral_clustering.m</in>
+        <in>cluster_stagionali.m</in>
+        <in>confronta_distanze.m</in>
       </df>
       <df name="h3n2_nih">
         <df name="HA">
@@ -145,10 +141,6 @@
         <in>spectral_clustering.m</in>
       </df>
       <df name="h3n2_vac">
-      </df>
-      <df name="obj">
-        <df name="Debug">
-        </df>
       </df>
       <df name="old_versions">
         <in>init_functions2.cpp</in>
@@ -169,24 +161,21 @@
       </df>
       <df name="statistiche_grafici">
       </df>
-      <df name="tempi">
-      </df>
-      <df name="tests">
-        <in>carica_in_matlab.m</in>
-      </df>
       <df name="utility">
         <in>carica_in_matlab.m</in>
         <in>cluster_count.m</in>
+        <in>cluster_stagionali.m</in>
         <in>confronta_distanze.m</in>
         <in>disegna_distanze.m</in>
         <in>disegna_laplaciano.m</in>
         <in>draw_ready_clustering.m</in>
         <in>partitioning_code.m</in>
         <in>pconfronto.m</in>
+        <in>rotateticklabel.m</in>
         <in>spectral_clustering.m</in>
         <in>visualizza_riduzione.m</in>
+        <in>xticklabel_rotate.m</in>
       </df>
-      <in>cluster_count.m</in>
       <in>distanze.cpp</in>
       <in>init_functions.cpp</in>
       <in>main.cpp</in>
@@ -211,7 +200,7 @@
     <conf name="Default" type="0">
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
-        <compilerSet>MinGW_1|MinGW</compilerSet>
+        <compilerSet>GNU|GNU</compilerSet>
       </toolsSet>
       <makefileType>
         <makeTool>
@@ -221,6 +210,41 @@
           <executablePath>distanze.exe</executablePath>
         </makeTool>
       </makefileType>
+      <item path="GUI/DistanzeGui-build-desktop/ui_finestra.h"
+            ex="true"
+            tool="3"
+            flavor="0">
+      </item>
+      <item path="distanze.cpp" ex="false" tool="1" flavor="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>_OPENMP=200505</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="init_functions.cpp" ex="false" tool="1" flavor="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>_OPENMP=200505</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="main.cpp" ex="false" tool="1" flavor="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>_OPENMP=200505</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="old_versions/strutture3.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="partizioni.cpp" ex="false" tool="1" flavor="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>_OPENMP=200505</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
     </conf>
   </confs>
 </configurationDescriptor>
