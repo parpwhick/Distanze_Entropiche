@@ -88,15 +88,8 @@ void distance::fill(const general_partition& e1, const general_partition& e2) {
         }        
     }
 
-    if (opts.da_calcolare & GENERAL) {
-        switch (opts.alg) {
-            case PMATRIX:
-            case SORTED:
-            default:
-                linear_product_sorted(e1, e2);
-                break;
-        }
-    }
+    if (opts.da_calcolare & GENERAL)
+        linear_product_sorted(e1, e2);
 }
 
 void print_binary_partition(int*p, int N) {

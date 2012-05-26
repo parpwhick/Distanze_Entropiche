@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
-//#include <unordered_map>
 
 #include "strutture.h"
 using namespace std;
@@ -61,12 +60,11 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.distance=true;
     opts.fuzzy=2;
     opts.threads=2;
-    opts.alg=AUTO;
     opts.da_calcolare= 0
 		         //       |SHAN | SHAN_TOP 
                        | RID //| RID_TOP 
-                    //   | GENERAL | GENERAL_TOP 
-                    //  | GENERAL_RID | GENERAL_RID_TOP
+                       | GENERAL | GENERAL_TOP 
+                      | GENERAL_RID | GENERAL_RID_TOP
             ;
     
     int killswitch=0;
@@ -143,15 +141,6 @@ void set_program_options(options &opts, int argc, char**argv) {
             else if (input == "-translate") {
                 opts.translate = true;
                 fprintf(stderr, "Simplifying sequence alphabet\n");
-            } else if (input == "-sorted") {
-                opts.alg=SORTED;
-                fprintf(stderr, "Using sorted algorithm\n");
-            } else if (input == "-pmatrix") {
-                opts.alg=PMATRIX;
-                fprintf(stderr, "Using pmatrix algorithm\n");
-            } else if (input == "-standard") {
-                opts.alg=NORMAL;
-                fprintf(stderr, "Using standard algorithm\n");
             } else if (input == "-write") {
                 opts.write = true;
                 fprintf(stderr, "Writing out the distance matrices\n");

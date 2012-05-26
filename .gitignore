@@ -1,6 +1,7 @@
 nbproject/
 h3n2_gisaid/
 
+distanze
 *.o
 .fuse*
 *.bin

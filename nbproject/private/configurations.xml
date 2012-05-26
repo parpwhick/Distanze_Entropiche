@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="79">
+<configurationDescriptor version="80">
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="Default" type="0">
@@ -19,21 +19,21 @@
         </gdb_options>
         <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
       </dbx_gdbdebugger>
-      <gizmo_options version="3">
-      </gizmo_options>
       <nativedebugger version="1">
         <engine>gdb</engine>
       </nativedebugger>
       <runprofile version="9">
         <runcommandpicklist>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -seqlength 566 -seqnum 1470 -symbols 24 </runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -file H3N2/H3N2.fa</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -file H3N2/H3N2.fa -write</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -file H3N2/H3N2.fa -write -seqnum 100</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -file H3N2/H3N2.fa -write -seqnum 1470</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" -file H3N2/H3N2.fa -write -seqnum 1470</runcommand>
+        <runcommand>"${OUTPUT_PATH}"</runcommand>
         <rundir>.</rundir>
         <buildfirst>true</buildfirst>
-        <console-type>1</console-type>
+        <terminal-type>0</terminal-type>
+        <remove-instrumentation>0</remove-instrumentation>
+        <environment>
+        </environment>
+      </runprofile>
+    </conf>
+  </confs>
+</configurationDescriptor>

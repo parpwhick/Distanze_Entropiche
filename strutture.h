@@ -58,7 +58,6 @@ typedef struct {
     bool graphics;
 
     int threads;
-    algorithm alg;
 
     int da_calcolare;
 
@@ -114,21 +113,11 @@ public:
     int size;
     int start;
     int end;
-    u_int32_t hash;
 
     atom() {
         size = 0;
         end = 0;
         start = 0;
-        hash = 5381;
-    }
-
-    bool operator==(const atom &due) const {
-        return (hash == due.hash);
-    }
-
-    bool operator!=(const atom &due) const {
-        return (hash != due.hash);
     }
 };
 
@@ -138,7 +127,6 @@ public:
     int *labels;
     //nearest neighbors
     int *prev_site;
-
 
     atom * atomi;
     int lato;
@@ -233,7 +221,6 @@ private:
     general_partition ridotto1;
     general_partition ridotto2;
     general_partition partizione_comune;
-    //std::unordered_map<int, int> mappa;
 
     int N;
 

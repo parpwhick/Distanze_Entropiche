@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="79">
+<configurationDescriptor version="80">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <df name="distanze" root=".">
+    <df name="Distanze_Entropiche" root=".">
       <df name="clustering_spettrale">
         <df name="1SpectralClustering_matlab">
           <in>OneSpectralClustering.m</in>
@@ -93,10 +93,8 @@
       </df>
       <df name="h1n1_nih">
         <df name="HA">
-          <in>carica_in_matlab.m</in>
         </df>
         <df name="NA">
-          <in>carica_in_matlab.m</in>
         </df>
         <in>cluster_count.m</in>
         <in>draw_ready_clustering.m</in>
@@ -105,7 +103,6 @@
       <df name="H3N2">
         <df name="immagini">
         </df>
-        <in>carica_in_matlab.m</in>
         <in>cluster_count.m</in>
         <in>cluster_stagionali.m</in>
       </df>
@@ -128,12 +125,10 @@
       </df>
       <df name="h3n2_nih">
         <df name="HA">
-          <in>carica_in_matlab.m</in>
           <in>cluster_count.m</in>
           <in>pconfronto.m</in>
         </df>
         <df name="NA">
-          <in>carica_in_matlab.m</in>
           <in>cluster_count.m</in>
         </df>
         <in>cluster_count.m</in>
@@ -169,9 +164,11 @@
         <in>disegna_distanze.m</in>
         <in>disegna_laplaciano.m</in>
         <in>draw_ready_clustering.m</in>
+        <in>load_sierpinski.m</in>
         <in>partitioning_code.m</in>
         <in>pconfronto.m</in>
         <in>rotateticklabel.m</in>
+        <in>sierpinski.cpp</in>
         <in>spectral_clustering.m</in>
         <in>visualizza_riduzione.m</in>
         <in>xticklabel_rotate.m</in>
@@ -200,50 +197,376 @@
     <conf name="Default" type="0">
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
-        <compilerSet>GNU|GNU</compilerSet>
+        <compilerSet>default</compilerSet>
       </toolsSet>
       <makefileType>
         <makeTool>
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
           <buildCommand>${MAKE} -f Makefile</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
-          <executablePath>distanze.exe</executablePath>
+          <executablePath></executablePath>
+          <ccTool>
+            <preprocessorList>
+              <Elem>_OPENMP=200505</Elem>
+            </preprocessorList>
+          </ccTool>
         </makeTool>
       </makefileType>
+      <item path="GUI/DistanzeGui-build-desktop/moc_mainwindow.cpp"
+            ex="true"
+            tool="1"
+            flavor="0">
+      </item>
       <item path="GUI/DistanzeGui-build-desktop/ui_finestra.h"
             ex="true"
             tool="3"
             flavor="0">
       </item>
-      <item path="distanze.cpp" ex="false" tool="1" flavor="0">
-        <ccTool>
-          <preprocessorList>
-            <Elem>_OPENMP=200505</Elem>
-          </preprocessorList>
-        </ccTool>
+      <item path="GUI/DistanzeGui/main.cpp" ex="true" tool="1" flavor="0">
       </item>
-      <item path="init_functions.cpp" ex="false" tool="1" flavor="0">
-        <ccTool>
-          <preprocessorList>
-            <Elem>_OPENMP=200505</Elem>
-          </preprocessorList>
-        </ccTool>
+      <item path="GUI/DistanzeGui/mainwindow.cpp" ex="true" tool="1" flavor="0">
       </item>
-      <item path="main.cpp" ex="false" tool="1" flavor="0">
-        <ccTool>
-          <preprocessorList>
-            <Elem>_OPENMP=200505</Elem>
-          </preprocessorList>
-        </ccTool>
+      <item path="GUI/DistanzeGui/mainwindow.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="H1N1/carica_in_matlab.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="H1N1/cluster_count.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="H1N1/createfigure.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="H1N1/draw_ready_clustering.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="H3N2/cluster_count.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="H3N2/cluster_stagionali.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="H3N2_HA+NA/HA/carica_in_matlab.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="H3N2_HA+NA/HA/cluster_stagionali.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="H3N2_HA+NA/carica_in_matlab.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="H3N2_HA+NA/cluster_count.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="H3N2_HA+NA/cluster_stagionali.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="H3N2_HA+NA/confronta_distanze.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="clustering_spettrale/1SpectralClustering_matlab/OneSpectralClustering.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/1SpectralClustering_matlab/cluster_count.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/1SpectralClustering_matlab/computeCutValue.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/1SpectralClustering_matlab/computeEigenvectorGeneral.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/1SpectralClustering_matlab/computeMultiCut.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/1SpectralClustering_matlab/computeMultiPartitioning.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/1SpectralClustering_matlab/connectedComponents.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/1SpectralClustering_matlab/createClustersGeneral.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/1SpectralClustering_matlab/isConnected.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/1SpectralClustering_matlab/solveInnerProblem.cpp"
+            ex="true"
+            tool="1"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/1SpectralClustering_matlab/weighted_median.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/DegreeMatrix.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/Functional.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/Gradient.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/Hessian.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/SecondEigenvector.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/computeAbsPower.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/computeBestCutValue.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/computeClusterIndicatorFunction.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/computeCutValue.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/computeUnbalancedCutWeight.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/determineThreshold.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/getSparseDerivativeMatrix.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/isConnected.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/minimizeFunctional.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/minimizeVariance.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/pNormPowDegParallel.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/clustering/pNormPowParallel.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/computeClustering.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/computePEigenvector.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/createClusters.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/mexfiles/computeAbsPower.cpp"
+            ex="true"
+            tool="1"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/mexfiles/getSparseDerivativeMatrix.cpp"
+            ex="true"
+            tool="1"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/mexfiles/make.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/mexfiles/pNormPowDegParallel.cpp"
+            ex="true"
+            tool="1"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/pSpectralClustering/mexfiles/pNormPowParallel.cpp"
+            ex="true"
+            tool="1"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/simple Spectral Clustering/CalculateAffinity.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/simple Spectral Clustering/GenerateData.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/simple Spectral Clustering/Jordan_Weiss.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/simple Spectral Clustering/Perona_Freeman.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/simple Spectral Clustering/Scott_Longuet_Higgins.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="clustering_spettrale/simple Spectral Clustering/Shi_Malik.m"
+            ex="true"
+            tool="0"
+            flavor="0">
+      </item>
+      <item path="codice_hashing/GeneralHashFunctions.cpp"
+            ex="true"
+            tool="1"
+            flavor="0">
+      </item>
+      <item path="codice_hashing/GeneralHashFunctions.h"
+            ex="true"
+            tool="3"
+            flavor="0">
+      </item>
+      <item path="codice_hashing/HashTest.cpp" ex="true" tool="1" flavor="0">
+      </item>
+      <item path="codice_hashing/MurmurHash3.cpp" ex="true" tool="1" flavor="0">
+      </item>
+      <item path="codice_hashing/MurmurHash3.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="codice_hashing/hashtest2.cpp" ex="true" tool="1" flavor="0">
+      </item>
+      <item path="dati_base/carica_in_matlab.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="dati_base/cluster_count.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="h1n1_nih/cluster_count.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="h1n1_nih/draw_ready_clustering.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="h1n1_nih/spectral_clustering.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="h3n2_gisaid/carica_in_matlab.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="h3n2_gisaid/cluster_count.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="h3n2_gisaid/cluster_stagionali.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="h3n2_nih/HA/cluster_count.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="h3n2_nih/HA/pconfronto.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="h3n2_nih/NA/cluster_count.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="h3n2_nih/cluster_count.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="h3n2_nih/draw_ready_clustering.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="h3n2_nih/spectral_clustering.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="old_versions/init_functions2.cpp" ex="true" tool="1" flavor="0">
+      </item>
+      <item path="old_versions/init_functions3.cpp" ex="true" tool="1" flavor="0">
+      </item>
+      <item path="old_versions/main-0.5.cpp" ex="true" tool="1" flavor="0">
+      </item>
+      <item path="old_versions/main-1.0.cpp" ex="true" tool="1" flavor="0">
+      </item>
+      <item path="old_versions/main2.cpp" ex="true" tool="1" flavor="0">
+      </item>
+      <item path="old_versions/main3.cpp" ex="true" tool="1" flavor="0">
+      </item>
+      <item path="old_versions/newfile.cpp" ex="true" tool="1" flavor="0">
+      </item>
+      <item path="old_versions/old_distance_program.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="old_versions/partizioni3.cpp" ex="true" tool="1" flavor="0">
+      </item>
+      <item path="old_versions/rand55.c" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="old_versions/rand55.h" ex="true" tool="3" flavor="0">
+      </item>
+      <item path="old_versions/simple_partition.cpp" ex="true" tool="1" flavor="0">
+      </item>
+      <item path="old_versions/strutture2.h" ex="true" tool="3" flavor="0">
       </item>
       <item path="old_versions/strutture3.h" ex="true" tool="3" flavor="0">
       </item>
-      <item path="partizioni.cpp" ex="false" tool="1" flavor="0">
-        <ccTool>
-          <preprocessorList>
-            <Elem>_OPENMP=200505</Elem>
-          </preprocessorList>
-        </ccTool>
+      <item path="old_versions/translation.cpp" ex="true" tool="1" flavor="0">
+      </item>
+      <item path="utility/carica_in_matlab.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="utility/cluster_count.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="utility/cluster_stagionali.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="utility/confronta_distanze.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="utility/disegna_distanze.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="utility/disegna_laplaciano.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="utility/draw_ready_clustering.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="utility/load_sierpinski.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="utility/partitioning_code.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="utility/pconfronto.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="utility/rotateticklabel.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="utility/sierpinski.cpp" ex="true" tool="1" flavor="0">
+      </item>
+      <item path="utility/spectral_clustering.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="utility/visualizza_riduzione.m" ex="true" tool="0" flavor="0">
+      </item>
+      <item path="utility/xticklabel_rotate.m" ex="true" tool="0" flavor="0">
       </item>
     </conf>
   </confs>
