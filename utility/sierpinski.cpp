@@ -4,16 +4,30 @@
 #include <cassert>
 #include <map>
 
-std::vector<int> *vicini;
+template <int max>
+class memory {
+public:
+	int quanti;
+	int elementi[max];
+        
+        memory(){
+            quanti=0;
+        }
+        
+        void add(int i){
+            if (quanti>=max)
+                return;
+            elementi[quanti]=i;
+            quanti++;
+        }
+};
+
+memory<3> *vicini;
+
 
 void addneigh(int sito, int vicino) {
-    vicini[sito].push_back(vicino);
-    vicini[vicino].push_back(sito);
-}
-
-struct {
-	int quanti;
-	int elementi[3];
+    vicini[sito].add(vicino);
+    vicini[vicino].add(sito);
 }
 
 int main(int argc, char** argv) {
@@ -39,7 +53,7 @@ int main(int argc, char** argv) {
     int maxsite=1;
     for (int i=0;i<potenza;i++)
         maxsite *=3;    
-    vicini = new std::vector<int>[maxsite];
+    vicini = new memory<3>[maxsite];
     
     fprintf(stderr,"\nTriangolo Sierpinski, generazione %d: %d siti nonnulli\n", potenza,maxsite);
 
@@ -89,21 +103,26 @@ int main(int argc, char** argv) {
     }
     
     fprintf(stderr,"Scrittura vettori sparse\n");
-    int *vectemp1=new int[maxsite*3];
-    int *vectemp2=new int[maxsite*3];
+    int chunk=500000;
+    
+    int *vectemp1=new int[11*chunk/10];
+    int *vectemp2=new int[11*chunk/10];
     int scritti=0;
-    for (int i=0; i<sitecount; i++){
-        std::vector<int>::const_iterator ii;
-        int quanti=vicini[i].size();
-        
-        for(int j=0; j<quanti; j++){
+    int totale=0;
+    for (int i=0; i<sitecount; i++){        
+                
+        for(int j=0; j<vicini[i].quanti; j++){
             vectemp1[scritti+j]=i+1;
-            vectemp2[scritti+j]=vicini[i][j]+1;
+            vectemp2[scritti+j]=vicini[i].elementi[j]+1;
         }        
-        scritti+=quanti;
+        scritti+=vicini[i].quanti;
+        totale+=vicini[i].quanti;
+        if(scritti > chunk){            
+               fwrite(vectemp1,sizeof(int),scritti,vec1);
+               fwrite(vectemp2,sizeof(int),scritti,vec2);
+               scritti=0;
+        }
     }
-    fwrite(vectemp1,sizeof(int),scritti,vec1);
-    fwrite(vectemp2,sizeof(int),scritti,vec2);
-    fprintf(stderr,"%d elementi nonnulli della matrice di adiacenza\n",scritti);
+    fprintf(stderr,"%d elementi nonnulli della matrice di adiacenza\n",totale);
     
 }
