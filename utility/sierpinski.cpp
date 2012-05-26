@@ -123,6 +123,8 @@ int main(int argc, char** argv) {
                scritti=0;
         }
     }
+    fwrite(vectemp1,sizeof(int),scritti,vec1);
+    fwrite(vectemp2,sizeof(int),scritti,vec2);
     fprintf(stderr,"%d elementi nonnulli della matrice di adiacenza\n",totale);
     
 }
