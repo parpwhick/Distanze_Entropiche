@@ -121,6 +121,8 @@ public:
     }
 };
 
+class neigh_factory;
+
 class general_partition : public basic_partition {
 public:
     //labels identify generic atoms across the partition
@@ -141,6 +143,7 @@ public:
     template <typename T> void from_square_lattice(const T* val, int lato, int dim);
     void trivial(int len);
     void from_nnb(int **NNB, int dim);
+    void from_nnb(neigh_factory get_neigh);
 
     void from_atom(int *label, const int which, const int set_to);
     general_partition(int len = 0);
