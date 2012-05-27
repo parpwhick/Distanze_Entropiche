@@ -169,17 +169,19 @@
         <in>pconfronto.m</in>
         <in>rotateticklabel.m</in>
         <in>sierpinski.cpp</in>
+        <in>sierpinski.m</in>
         <in>spectral_clustering.m</in>
         <in>visualizza_riduzione.m</in>
         <in>xticklabel_rotate.m</in>
       </df>
+      <in>adj_handler.cpp</in>
+      <in>adj_handler.h</in>
       <in>distanze.cpp</in>
       <in>init_functions.cpp</in>
       <in>main.cpp</in>
       <in>partizioni.cpp</in>
       <in>rand55.cpp</in>
       <in>rand55.h</in>
-      <in>sierpinski.m</in>
       <in>strutture.h</in>
     </df>
     <logicalFolder name="ExternalFiles"

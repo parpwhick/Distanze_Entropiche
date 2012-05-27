@@ -1,10 +1,9 @@
 #include <cstdlib>
 #include <cstdio>
-#include <string>
 #include <cassert>
 
 #include "strutture.h"
-
+#include "adj_handler.h"
 
 extern options opts;
 extern double *mylog;
@@ -453,58 +452,6 @@ int findroot(int i,int *ptr)
   return ptr[i] = findroot(ptr[i],ptr);
 }
 
-class neigh_factory{
-public:
-    int n;    
-    int buffer[1000];
-    int *vicinato[2];
-    int *configuration;
-    int **adiacenza;
-    int siti;
-    int z;
-
-    void f1(int site){
-        n=2;
-        buffer[0]=vicinato[0][site];
-        buffer[1]=vicinato[1][site];
-    }
-    
-    void f2(int site){
-        n=0;
-        for (int i=0; i<z; i++){
-            int s1=adiacenza[site][i];
-            if(s1 < 0 || s1==site || configuration[site]!=configuration[s1])
-                continue;
-            buffer[n++]=s1;
-        }            
-    }
-    void (neigh_factory::*fetch)(int);
-    
-    int operator[](int i){
-        return buffer[i];
-    }
-    
-    void operator()(int site){
-        (this->*fetch)(site);
-    }
-    
-    void init(const general_partition &p1, const general_partition &p2) {
-        n = 2;
-        vicinato[0] = p1.prev_site;
-        vicinato[1] = p2.prev_site;
-        fetch=&neigh_factory::f1;
-    }
-    
-    void init(int *valori_siti, int **adj, int N, int nmax) {
-        configuration=valori_siti;
-        adiacenza=adj;
-        siti=N;
-        z=nmax;
-        fetch=&neigh_factory::f2;
-    }
-};
-
-
 void general_partition::linear_intersection(const general_partition &p1, const general_partition &p2){
     lato=p1.lato;
     allocate(p1.N);
@@ -537,12 +484,11 @@ void general_partition::from_nnb(neigh_factory get_neigh){
     }  
  
     // percolazione e primi labels
-    for (s1 = 0; s1 < N; s1++) {
+    for (s1 = get_neigh.site(); s1 >=0 ; s1 = get_neigh.next()) {
         int r2;
         int r1=findroot(s1,labels);
 
-        get_neigh(s1);
-        for (int j = 0; j < get_neigh.n; j++) {            
+        for (int j = 0; j < get_neigh.length(); j++) {            
             s2 = get_neigh[j];
             r2 = findroot(s2, labels);
             if (r1 != r2) {

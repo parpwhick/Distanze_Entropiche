@@ -5,12 +5,17 @@
  * Created on January 13, 2012, 10:51 PM
  */
 
+#ifndef STRUTTURE_H
+#define	STRUTTURE_H
+
 #include "rand55.h"
+#include <string>
 #include <stdint.h>
 
 typedef uint32_t u_int32_t;
 typedef uint64_t u_int64_t;
 #define FORCE_INLINE __attribute__((always_inline))
+class neigh_factory;
 
 enum algorithm {
     NORMAL,
@@ -120,8 +125,6 @@ public:
         start = 0;
     }
 };
-
-class neigh_factory;
 
 class general_partition : public basic_partition {
 public:
@@ -265,3 +268,5 @@ template <typename T, typename U> void ppmout2(const T *grid1, const U* grid2, i
 
 void calcola_matrice_distanze(linear_partition *X, general_partition *Z, std::string *char_entries);
 void print_array(int *array, int len, const char *nome);
+
+#endif

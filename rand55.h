@@ -1,3 +1,7 @@
+#ifndef RAND55_H
+#define	RAND55_H
+
+
 typedef struct Lnk_List *Lnk_List_Ptr;
 
 struct Lnk_List {
@@ -50,3 +54,4 @@ public:
 long xrand();
 void xrandinit(long seed);
 
+#endif
