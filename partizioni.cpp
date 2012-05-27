@@ -453,15 +453,66 @@ int findroot(int i,int *ptr)
   return ptr[i] = findroot(ptr[i],ptr);
 }
 
+class neigh_factory{
+public:
+    int n;    
+    int buffer[1000];
+    int *vicinato[2];
+    int *configuration;
+    int **adiacenza;
+    int siti;
+    int z;
+
+    void f1(int site){
+        n=2;
+        buffer[0]=vicinato[0][site];
+        buffer[1]=vicinato[1][site];
+    }
+    
+    void f2(int site){
+        n=0;
+        for (int i=0; i<z; i++){
+            int s1=adiacenza[site][i];
+            if(s1 < 0 || s1==site || configuration[site]!=configuration[s1])
+                continue;
+            buffer[n++]=s1;
+        }            
+    }
+    void (neigh_factory::*fetch)(int);
+    
+    int operator[](int i){
+        return buffer[i];
+    }
+    
+    void operator()(int site){
+        (this->*fetch)(site);
+    }
+    
+    void init(const general_partition &p1, const general_partition &p2) {
+        n = 2;
+        vicinato[0] = p1.prev_site;
+        vicinato[1] = p2.prev_site;
+        fetch=&neigh_factory::f1;
+    }
+    
+    void init(int *valori_siti, int **adj, int N, int nmax) {
+        configuration=valori_siti;
+        adiacenza=adj;
+        siti=N;
+        z=nmax;
+        fetch=&neigh_factory::f2;
+    }
+};
+
+
 void general_partition::linear_intersection(const general_partition &p1, const general_partition &p2){
-    int *vicinato[2 * p1.dim];
     lato=p1.lato;
     allocate(p1.N);
     
-    vicinato[0]=p1.prev_site;
-    vicinato[1]=p2.prev_site;
+    neigh_factory get_neigh;
+    get_neigh.init(p1,p2);
     // Calcolo a partire dall'insieme dei vicini    
-    from_nnb(vicinato, 2 ); 
+    from_nnb(get_neigh); 
 
     // Grafico il reticolo risultante, se richiesto
     if (opts.graphics && (opts.topologia & RETICOLO)) {
@@ -474,6 +525,75 @@ void general_partition::linear_intersection(const general_partition &p1, const g
         sprintf(filename, "comune%03d.ppm", imagecount);
         ppmout(labels, lato, filename);
     }
+}
+
+
+void general_partition::from_nnb(neigh_factory get_neigh){
+    int s1, s2;
+    int i;
+    
+    for (i = 0; i < N; i++) {
+        labels[i] = -1;
+    }  
+ 
+    // percolazione e primi labels
+    for (s1 = 0; s1 < N; s1++) {
+        int r2;
+        int r1=findroot(s1,labels);
+
+        get_neigh(s1);
+        for (int j = 0; j < get_neigh.n; j++) {            
+            s2 = get_neigh[j];
+            r2 = findroot(s2, labels);
+            if (r1 != r2) {
+                if (labels[r1] >= labels[r2]) {
+                    labels[r2] += labels[r1];
+                    labels[r1] = r2;
+                    r1 = r2;
+                } else {
+                    labels[r1] += labels[r2];
+                    labels[r2] = r1;
+                }
+            }
+        }
+    }
+    int *new_label=new int[N];
+    entropia_shannon=0;
+    n=0;
+    
+    // 1-creazione array atomi
+    // 2-inizializzazione ogni elemento
+    // 3-creazione indice (label atomo) <--> root
+    // 4-calcolo entropia a partire dai size nei root
+    #define ATOMO atomi[n]
+    for(i=0;i<N;i++){
+        if(labels[i]<0){
+            entropia_shannon+= -labels[i]*mylog[-labels[i]];
+            ATOMO.size=-labels[i];
+            ATOMO.end=i;
+            ATOMO.start=i;
+            new_label[i]=n;
+            prev_site[i]=i;
+            n++;
+        } else{
+            prev_site[i]=findroot(i,labels);
+            new_label[i]=prev_site[i];
+        }
+    }
+ 
+    entropia_topologica=mylog[n];
+    entropia_shannon= -entropia_shannon/N+mylog[N];    
+    // 1-relabeling secondo l'indice dell'atomo, non del sito di appartenenza
+    // 2-hashing
+    // 3-creazione del collegamento prev_site e atom.end
+    for(i=0;i<N;i++){
+        int atom_pos=new_label[prev_site[i]];
+        labels[i]=atom_pos;
+        prev_site[i]=std::min(atomi[atom_pos].end,i);
+        atomi[atom_pos].end=i;      
+    }
+    
+    delete []new_label;        
 }
 
 
@@ -491,7 +611,7 @@ void general_partition::from_nnb(int **neighbors, int dimensione){
         int r2;
         int r1=findroot(s1,labels);
 
-        for (int j = 0; j < dim; j++) {
+        for (int j = 0; j < dim; j++) {            
             s2 = neighbors[j][s1];
             if (s1 == s2 || s2 < 0)
                 continue;

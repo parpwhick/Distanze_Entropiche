@@ -179,6 +179,7 @@
       <in>partizioni.cpp</in>
       <in>rand55.cpp</in>
       <in>rand55.h</in>
+      <in>sierpinski.m</in>
       <in>strutture.h</in>
     </df>
     <logicalFolder name="ExternalFiles"
