@@ -22,6 +22,11 @@
  * gli elementi negativi marcano l'inizio di un altro sito
  */
 
+typedef struct {
+    int *adj;
+    int *index;
+} adj_struct;
+
 class neigh_factory{
 private:
     int n;  
@@ -30,6 +35,7 @@ private:
     int *vicinato[2];
     const int *configuration;
     const int *adj;
+    const int *adj_index;
     // indice del sito corrente
     int _site;
     // indice degli elementi del vettore di adiacenza corrispondenti a site
@@ -38,6 +44,7 @@ private:
     void (neigh_factory::*fetch)(void);
     void f1();
     void f2();
+    void f3();
     
 public:    
     int operator[](int i) const {
@@ -60,6 +67,13 @@ public:
     void init(const general_partition &p1, const general_partition &p2);
     
     void init(const int *valori_siti, const int *adj1, int N1);
+    
+    void init_square(const int* valori_siti, int lato);
+    void init_line(const int* valori_siti, int L);
+    void init_fuzzy(const int* valori_siti, int L);
+    void init_sierpinski(const int* valori_siti, int potenza);
+    
+    
 };
 
 #endif	/* ADJ_HANDLER_H */

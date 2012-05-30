@@ -1,81 +1,90 @@
-function adiacenza=sierpinski(potenza)
-% adiacenza = sierpinski(N)
-%
-% Restituisce la matrice di adiacenza simmetrica sparse, per il triangolo di Sierpinski di generazione N.
+function [adiacenza,nn]=sierpinski(gen)
 
 if(nargin<1)
-    potenza=12;
+    gen=10;
 end
 
-% rimuovere il controllo se si ha RAM a sufficienza
-if(~(potenza > 0 && potenza<18))
-    disp('Probabilmente la generazione richiesta e` troppo grande, troncamento a 13')
-    potenza=13;
+total_size = 6;
+size = 6;
+
+for g=2:gen
+    total_size = 3 * total_size - 3;
 end
 
-% lato massimo del triangolo
-N=2^potenza;
-% numero di siti nonnulli
-siti=3^potenza;
+disp(['Generazione ' num2str(gen) ', size ' num2str(total_size)])
 
-% informazioni
-disp(['Triangolo sierpinski, generazione ' num2str(potenza) ', siti ' num2str(siti)])
-disp(['Elementi nonnulli matrice di adiacenza(simm) ' num2str((siti-1)*3)])
+z = zeros(total_size,1);
+nn = zeros(total_size,4);
 
-% l1: riga 'precedente' nell'iterazione
-% l2: riga 'corrente'
-l1=zeros(N,1);
-l2=zeros(N,1);
-l1(1)=1;
-l2(1)=1;
-% etichette degli elementi nonnulli interazione precedente
-etichette1=l1;
+% vettore di numeri di coordinazione
+% e struttura dei vicini
+% per il triangolo di generazione 1
+z(1:6)=[2,4,4,2,4,2];
+nn(1,:)=[2,3,0,0];
+nn(2,:)=[3,1,4,5];
+nn(3,:)=[1,2,5,6];
+nn(4,:)=[2,5,0,0];
+nn(5,:)=[4,2,3,6];
+nn(6,:)=[3,5,0,0];
 
-%trivettore minimo di adiacenza
-adiacenza=zeros(siti,3);
+%angoli
+a0 = 1;
+a1 = 4;
+a2 = 6;
 
-%disegno=zeros(N);
-%disegno(1,:)=l1;
-nonnulli=1;
-for i=2:N
-    l2(2:i)=mod(l1(2:i)+l1(1:(i-1)) , 2);
-    da_numerare=find(l2);
-    quanti=length(da_numerare);
+% costruzione iterativa gen successive
+for g = 2:gen
     
-    % etichette iterazione corrente
-    etichette2=zeros(N,1);
-    % si assegnano etichette crescenti ai nonnulli
-    new_labels=(nonnulli+1):(nonnulli+quanti);
-    etichette2(da_numerare)=new_labels;
-    % conto progressivo dei nonnulli
-    nonnulli=nonnulli+quanti;
-        
-    % escludiamo il primo elemento, che e' 1, non avendo vicini a sinistra
-    % lo trattiamo separatamente 
-    da_numerare2=da_numerare(2:end);
-    adiacenza(new_labels(1),:)=[etichette1(1),0,0];
+    %triangolo 1
+    %nulla da copiare
     
-    % i possibili vicini sono 1-in alto a sinistra, 2-in alto, 3-a sinistra
-    adiacenza(new_labels(2:end),:)= [etichette1(da_numerare2-1), ...
-                                etichette1(da_numerare2), ...
-                                etichette2(da_numerare2-1)];
+    %triangolo 2
+    i=2:(size-1);
+    nn(i+size-1,:) = nn(i,:) + size-1;
+    z(i+size-1)=z(i);
+    %correzioni
+    [corr_i,corr_j]=find(nn(1:size,:)==a0);
+    for i=1:length(corr_i)
+        nn(corr_i(i)+size-1,corr_j(i))=a1;
+    end
+    [corr_i,corr_j]=find(nn(1:size,:)==a2);
+    for i=1:length(corr_i)
+        nn(corr_i(i)+size-1,corr_j(i))=a1+2*size-3;
+    end
     
-    %disegno(i,:)=l2;
+    %triangolo 3
+    i=2:size;
+    z(i+2*size-3)=z(i);
+    nn(i+2*size-3,:) = nn(i,:) + 2*size - 3;
+    %correzioni
+    [corr_i,corr_j]=find(nn(1:size,:)==a0);
+    for i=1:length(corr_i)
+        nn(corr_i(i)+2*size-3,corr_j(i))=a2;
+    end
     
-    %iterazione corrente diventa precedente
-    l1=l2;
-    etichette1=etichette2;
+    %correzioni dei bordi incollati
+    z(a1)=4;
+    nn(a1,3:4)= [size+1, size+2];
+    z(a1+2*size-3)=4;
+    nn(a1+2*size-3,3:4) = nn(a2,1:2) + size -1;
+    z(a2)=4;
+    nn(a2,3:4)=[2*size-1,2*size];
+    
+    %nuovi siti di angolo
+    a1 = a1 + size - 1;
+    a2 = a2 + 2* size -3;
+    
+    %aggiornamento dimensione prossima iterazione
+    size= 3*size-3;
+    
 end
-%disp(nonnulli)
-%imagesc(disegno);
-disp(' ')
-disp('Calcolo completato, compilazione matrice sparse');
 
-% costruzione della matrice di adiacenza propriamente detta
-[indici_riga,~,indici_colonna]=find(adiacenza);
-clear adiacenza;
-adiacenza=sparse(indici_riga,indici_colonna,1,siti,siti,(siti-1)*3);
+%rimozione link inesistenti, prima di costruire la matrice
+nn(z==2,3:4)=0;
 
-% commentare la riga se si vuole solo una matrice lower triangular
-adiacenza=adiacenza+adiacenza';
+%estrazioni vettori di indici dei siti nonnulli
+[indici_riga,~,indici_colonna]=find(nn);
+
+%costruzione matrice vera e propria
+adiacenza=sparse(indici_riga,indici_colonna,1,total_size,total_size);
 end

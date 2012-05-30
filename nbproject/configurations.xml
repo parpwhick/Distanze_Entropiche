@@ -138,6 +138,7 @@
       <df name="h3n2_vac">
       </df>
       <df name="old_versions">
+        <in>adj_handler-minimum_memory.cpp</in>
         <in>init_functions2.cpp</in>
         <in>init_functions3.cpp</in>
         <in>main-0.5.cpp</in>
@@ -168,6 +169,7 @@
         <in>partitioning_code.m</in>
         <in>pconfronto.m</in>
         <in>rotateticklabel.m</in>
+        <in>sierp-carpet.cpp</in>
         <in>sierpinski.cpp</in>
         <in>sierpinski.m</in>
         <in>spectral_clustering.m</in>

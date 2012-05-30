@@ -14,25 +14,25 @@ extern options opts;
 #define nnl(i) (i+N-lato)%N
 #define nnr(i) (i+N+lato)%N
 
-typedef struct {
-    int *adj;
-    int *index;
-} adj_struct;
-
-int *adiacenza_square_lattice(int lato){    
+adj_struct *adiacenza_square_lattice(int lato){    
     int N=lato*lato;
 
     int *adj=new int[2*N+1];
+    int *index=new int[N+1];
     for (int i=0; i<N; i++){
-        adj[2*i]   = -nnu(i);
+        adj[2*i]   =  nnu(i);
         adj[2*i+1] =  nnl(i);
+        index[i]=2*i;
     }
     adj[2*N]=LEAST;
-
-    return(adj);
+    
+    adj_struct temp;
+    temp.adj=adj
+    temp.index=index;
+    return(temp);
 }
 
-int *adiacenza_sierpinski(int potenza) {
+adj_struct *adiacenza_sierpinski(int potenza) {
     int N = 1 << potenza; // lunghezza del lato del triangolo piu grosso = 2^potenza 
     int *line1 = new int[N];
     int *labels1 = new int[N];
@@ -45,6 +45,7 @@ int *adiacenza_sierpinski(int potenza) {
         maxsite *= 3;
 
     int *adj = new int[(maxsite - 1)*3+1];
+    int *index = new int[maxsite];
     int adj_count = 0;
 
     for (int i = 0; i < N; i++)
@@ -60,29 +61,25 @@ int *adiacenza_sierpinski(int potenza) {
         // labelling dei siti nonnulli
         for (int j = 0; j < i + 1; j++) {
             if (line2[j]) {
-                int sign = -1;
                 labels2[j] = sitecount;
+                index[sitecount]=adj_count;
                 sitecount++;
                
-                if (i == 0)
+                if (i == 0){
+                    adj[adj_count]=LEAST;
                     continue;
+                }           
                 //aggiungi all'elenco dei vicini
                 if (j) {
-                    if (line1[j - 1]) {
-                        adj[adj_count++] = sign * labels1[j - 1];
-                        sign = 1;
-                    }
-                    if (line1[j]) {
-                        adj[adj_count++] = sign * labels1[j];
-                        sign = 1;
-                    }
-                    if (line2[j-1]) {
-                        adj[adj_count++] = sign * labels2[j-1];
-                        sign = 1;
-                    }
+                    if (line1[j - 1]) 
+                        adj[adj_count++] = labels1[j - 1];
+                    if (line1[j]) 
+                        adj[adj_count++] = labels1[j];
+                    if (line2[j-1]) 
+                        adj[adj_count++] = labels2[j-1];
                 } else {
                     if (line1[j])
-                        adj[adj_count++] = -labels1[j];
+                        adj[adj_count++] = labels1[j];
                 }
 
             }
@@ -91,26 +88,40 @@ int *adiacenza_sierpinski(int potenza) {
         std::swap(labels1, labels2);
     }
     adj[(maxsite-1)*3]=LEAST;
-    return(adj);
+    
+    adj_struct temp;
+    temp.adj=adj
+    temp.index=index;
+    return(temp);
 }
 
 int *adiacenza_simple_line(int N){ 
     int *adj=new int[N+1];
+    int *index=new int[N];
     
     adj[0]=LEAST;
-    for (int i=1; i<N; i++)
+    index[0]=0;
+    for (int i=1; i<N; i++){
         adj[i]=i-1;
+        index[i]=i;
+    }
     adj[N]=LEAST;
 
-    return(adj);
+    adj_struct temp;
+    temp.adj=adj
+    temp.index=index;
+    return(temp);
 }
 
 int *adiacenza_fuzzy_line(int N){
     int *adj=new int[(opts.fuzzy+1)*N];
+    int *index=new int[N];
     int adj_count=0;
     
     adj[0]=LEAST;
+    index[0]=0;
     for (int i=1; i<N; i++){
+        index[i]=adj_count;
         adj[adj_count++]=-(i-1);
     
         for(int j=2; i-j>=0 && j<=opts.fuzzy+1; j++)
@@ -118,7 +129,10 @@ int *adiacenza_fuzzy_line(int N){
     }
     adj[N]=LEAST;
 
-    return(adj);
+    adj_struct temp;
+    temp.adj=adj
+    temp.index=index;
+    return(temp);
 }
 
 
@@ -133,6 +147,29 @@ void neigh_factory::f1() {
 }
 
 void neigh_factory::f2() {
+    n = 0;
+    int s1;
+    int quanti = 1;
+    if (adj[adj_counter] == LEAST)
+        quanti = 0;
+
+    while (adj[adj_counter + quanti + 1] > 0)
+        quanti++;
+    for (int i = 0; i < quanti; i++) {
+        s1 = adj[adj_counter++];
+        if (i == 0)
+            s1 = -s1;
+        //if(s1 < 0 || s1==site || 
+        if (configuration[_site] != configuration[s1])
+            continue;
+        buffer[n++] = s1;
+    }
+    _site++;
+    if (_site >= N)
+        _site = -1;
+}
+
+void neigh_factory::f3() {
     n = 0;
     int s1;
     int quanti = 1;
