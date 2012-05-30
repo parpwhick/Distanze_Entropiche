@@ -1,14 +1,15 @@
 /*
-  Name: contagio_sierp
   Date: 06/03/06 11:33
   Description: Generazione matrice di adiacenza per gasket di sierpinski a generazione g = GEN. 
- */
+
+  Versione 2, 31/05/2013, Dawid Crivelli
+  -update in place
+  -utilizzo memoria ottimale
+*/
 
 
-#include <iostream>
+#include <cstdio>
 #include <cstdlib>
-#include <cmath>
-#include <fstream>
 #include <cstring>
 
 template <int cols>
@@ -171,6 +172,16 @@ int main(int argc, char **argv) {
     } //chiudo ciclo g
 
     /* Creazione vettori di adiacenza per matrice sparse in stile Matlab */
+    /* La funzione per caricare i dati cosi creati e':
+    -------------------------------
+    function adiacenza=load_sierpinski()
+	indici_riga=fread(fopen('vector1.bin','r'),inf,'int32');
+	indici_colonna=fread(fopen('vector2.bin','r'),inf,'int32');
+	N=max(max(indici_riga),max(indici_colonna));
+	adiacenza=sparse(indici_riga,indici_colonna,1,N,N);
+    end
+    ******************************/
+
     int write = 1;
     if (write) {
         // scrittura in blocchi di lunghezza chunk, per alleggerire le operazioni
