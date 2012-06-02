@@ -8,7 +8,8 @@
 #ifndef ADJ_HANDLER_H
 #define	ADJ_HANDLER_H
 
-#include "strutture.h"
+#include <cstdio>
+#include <cstdlib>
 
 #define LEAST -2147483648
 
@@ -22,59 +23,26 @@
  * gli elementi negativi marcano l'inizio di un altro sito
  */
 
-typedef struct {
+class adj_struct {
+public:
     int *adj;
     int *index;
-} adj_struct;
-
-class neigh_factory{
-private:
-    int n;  
+    int *adi;
     int N;
-    int buffer[1000];
-    int *vicinato[2];
-    const int *configuration;
-    const int *adj;
-    const int *adj_index;
-    // indice del sito corrente
-    int _site;
-    // indice degli elementi del vettore di adiacenza corrispondenti a site
-    int adj_counter;
-
-    void (neigh_factory::*fetch)(void);
-    void f1();
-    void f2();
-    void f3();
+    int n_link;
+    int n;
+    int *vicini;
+    int zmax;
     
-public:    
-    int operator[](int i) const {
-        return buffer[i];
+    int fetch(int site){
+        if(site>=N)
+            return 0;
+        n=index[site+1]-index[site];
+        vicini=adj+index[site];
+        return(n);
     }
-    
-    int next(){
-        (this->*fetch)();
-        return (this->_site);
-    }
-    
-    int site(){
-        return this->_site;
-    }
-    
-    int length(){
-        return this->n;
-    }
-    
-    void init(const general_partition &p1, const general_partition &p2);
-    
-    void init(const int *valori_siti, const int *adj1, int N1);
-    
-    void init_square(const int* valori_siti, int lato);
-    void init_line(const int* valori_siti, int L);
-    void init_fuzzy(const int* valori_siti, int L);
-    void init_sierpinski(const int* valori_siti, int potenza);
-    
-    
 };
 
+adj_struct adiacenza_from_file(FILE *vec1, FILE *vec2, int N);
 #endif	/* ADJ_HANDLER_H */
 

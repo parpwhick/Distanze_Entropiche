@@ -4,9 +4,9 @@
 #include "rand55.h"
 
 #ifdef __i386
-    #define Norm_Factor   2.328306437080797e-10
+#define Norm_Factor   2.328306437080797e-10
 #elif __amd64__
-	#define Norm_Factor   5.421010862427522170037264e-20 // 1/__UINT_MAX__ 
+#define Norm_Factor   5.421010862427522170037264e-20 // 1/__UINT_MAX__ 
 #endif
 
 #define std_correction 1.414213562373095 // sqrt(2)
@@ -27,12 +27,13 @@ unsigned long rand55::rand_long() {
     return (n1->Y);
 }
 //generatore di numeri gaussiani positivi
+
 double rand55::semi_norm() {
     if (have_next_normal) {
         have_next_normal = 0;
         return (next_normal);
     }
-    double u1=0, u2=0, s=0;
+    double u1 = 0, u2 = 0, s = 0;
 
     // s = R^2 = u1^2 + u2^2
     while (s >= 1 || s < 1e-15) {
@@ -132,4 +133,3 @@ void xrandinit(long seed) {
     for (i = 0; i < 10 * SIZE; ++i)
         xrand();
 }
-

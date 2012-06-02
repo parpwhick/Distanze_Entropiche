@@ -170,6 +170,8 @@
         <in>pconfronto.m</in>
         <in>rotateticklabel.m</in>
         <in>sierp-carpet.cpp</in>
+        <in>sierpinski-dawid.cpp</in>
+        <in>sierpinski-dawid.m</in>
         <in>sierpinski.cpp</in>
         <in>sierpinski.m</in>
         <in>spectral_clustering.m</in>

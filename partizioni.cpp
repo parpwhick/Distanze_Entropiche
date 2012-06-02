@@ -431,7 +431,7 @@ void general_partition::reduce(const general_partition &p1, const general_partit
         
         // uguaglianza "fuzzy" tra atomi, a meno di 'tol' siti
         // similmente, se sono 'uguali', salto l'atomo nella partizione risultante
-        if(symmetric_difference(ii,p2.begin(atomo2),end,0)     )
+        if(  symmetric_difference(ii,p2.begin(atomo2),end,0)  )
             continue;
         
         // altrimenti interseca il fattore dicotomico con i precedenti
@@ -444,23 +444,16 @@ void general_partition::reduce(const general_partition &p1, const general_partit
     this->sort_entropy();
 }
 
-
-
-int findroot(int i,int *ptr)
-{
-  if (ptr[i]<0) return i;
-  return ptr[i] = findroot(ptr[i],ptr);
-}
-
-void general_partition::linear_intersection(const general_partition &p1, const general_partition &p2){
+void general_partition::linear_intersection(const general_partition &p1, const general_partition &p2){    
+    int *vicinato[2 * p1.dim];
     lato=p1.lato;
     allocate(p1.N);
     
-    neigh_factory get_neigh;
-    get_neigh.init(p1,p2);
+    vicinato[0]=p1.prev_site;
+    vicinato[1]=p2.prev_site;
     // Calcolo a partire dall'insieme dei vicini    
-    from_nnb(get_neigh); 
-
+    from_nnb(vicinato); 
+    
     // Grafico il reticolo risultante, se richiesto
     if (opts.graphics && (opts.topologia & RETICOLO)) {
         static int imagecount=0;     
@@ -475,22 +468,36 @@ void general_partition::linear_intersection(const general_partition &p1, const g
 }
 
 
-void general_partition::from_nnb(neigh_factory get_neigh){
+int findroot(int i,int *ptr)
+{
+  if (ptr[i]<0) return i;
+  return ptr[i] = findroot(ptr[i],ptr);
+}
+
+void general_partition::from_configuration(int *configuration, adj_struct adj){
     int s1, s2;
-    int i;
+    int r1, r2;
+    int z;
     
-    for (i = 0; i < N; i++) {
+    for (int i = 0; i < N; i++) {
         labels[i] = -1;
     }  
  
     // percolazione e primi labels
-    for (s1 = get_neigh.site(); s1 >=0 ; s1 = get_neigh.next()) {
-        int r2;
-        int r1=findroot(s1,labels);
+    for (s1 = 0; s1 < N ; s1++) {
+        r1=findroot(s1,labels);
 
-        for (int j = 0; j < get_neigh.length(); j++) {            
-            s2 = get_neigh[j];
+        z=adj.fetch(s1);
+        for (int j = 0; j < z; j++) {            
+            //select next neighbor
+            s2 = adj.vicini[j];
+            
+            //check them for being in the same cluster, skip when they're not
+            if(s2>=s1 || s2<0 || configuration[s1]!=configuration[s2])
+                continue;
+            
             r2 = findroot(s2, labels);
+            // attribution to proper tree root
             if (r1 != r2) {
                 if (labels[r1] >= labels[r2]) {
                     labels[r2] += labels[r1];
@@ -501,8 +508,15 @@ void general_partition::from_nnb(neigh_factory get_neigh){
                     labels[r2] = r1;
                 }
             }
+            //next neightbor
         }
+        //next site
     }
+    
+    this->relabel();
+}
+
+void general_partition::relabel(){
     int *new_label=new int[N];
     entropia_shannon=0;
     n=0;
@@ -512,7 +526,7 @@ void general_partition::from_nnb(neigh_factory get_neigh){
     // 3-creazione indice (label atomo) <--> root
     // 4-calcolo entropia a partire dai size nei root
     #define ATOMO atomi[n]
-    for(i=0;i<N;i++){
+    for(int i=0;i<N;i++){
         if(labels[i]<0){
             entropia_shannon+= -labels[i]*mylog[-labels[i]];
             ATOMO.size=-labels[i];
@@ -532,7 +546,7 @@ void general_partition::from_nnb(neigh_factory get_neigh){
     // 1-relabeling secondo l'indice dell'atomo, non del sito di appartenenza
     // 2-hashing
     // 3-creazione del collegamento prev_site e atom.end
-    for(i=0;i<N;i++){
+    for(int i=0;i<N;i++){
         int atom_pos=new_label[prev_site[i]];
         labels[i]=atom_pos;
         prev_site[i]=std::min(atomi[atom_pos].end,i);
@@ -543,12 +557,11 @@ void general_partition::from_nnb(neigh_factory get_neigh){
 }
 
 
-void general_partition::from_nnb(int **neighbors, int dimensione){
+void general_partition::from_nnb(int **neighbors){
     int s1, s2;
-    int i;
-    dim=dimensione;
+    dim=2;
     
-    for (i = 0; i < N; i++) {
+    for (int i = 0; i < N; i++) {
         labels[i] = -1;
     }  
  
@@ -574,41 +587,7 @@ void general_partition::from_nnb(int **neighbors, int dimensione){
             }
         }
     }
-    int *new_label=new int[N];
-    entropia_shannon=0;
-    n=0;
+        
+    this->relabel();
     
-    // 1-creazione array atomi
-    // 2-inizializzazione ogni elemento
-    // 3-creazione indice (label atomo) <--> root
-    // 4-calcolo entropia a partire dai size nei root
-    #define ATOMO atomi[n]
-    for(i=0;i<N;i++){
-        if(labels[i]<0){
-            entropia_shannon+= -labels[i]*mylog[-labels[i]];
-            ATOMO.size=-labels[i];
-            ATOMO.end=i;
-            ATOMO.start=i;
-            new_label[i]=n;
-            prev_site[i]=i;
-            n++;
-        } else{
-            prev_site[i]=findroot(i,labels);
-            new_label[i]=prev_site[i];
-        }
-    }
- 
-    entropia_topologica=mylog[n];
-    entropia_shannon= -entropia_shannon/N+mylog[N];    
-    // 1-relabeling secondo l'indice dell'atomo, non del sito di appartenenza
-    // 2-hashing
-    // 3-creazione del collegamento prev_site e atom.end
-    for(i=0;i<N;i++){
-        int atom_pos=new_label[prev_site[i]];
-        labels[i]=atom_pos;
-        prev_site[i]=std::min(atomi[atom_pos].end,i);
-        atomi[atom_pos].end=i;      
-    }
-    
-    delete []new_label;        
 }

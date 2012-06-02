@@ -9,6 +9,7 @@
 #define	STRUTTURE_H
 
 #include "rand55.h"
+#include "adj_handler.h"
 #include <string>
 #include <stdint.h>
 
@@ -66,6 +67,7 @@ typedef struct {
 
     int da_calcolare;
 
+    double beta;
 } options;
 
 typedef struct {
@@ -145,8 +147,9 @@ public:
     template <typename T> void from_linear_sequence(const T* seq, int len);
     template <typename T> void from_square_lattice(const T* val, int lato, int dim);
     void trivial(int len);
-    void from_nnb(int **NNB, int dim);
-    void from_nnb(neigh_factory get_neigh);
+    void from_nnb(int **NNB);
+    void from_configuration(int *configuration, adj_struct adj);
+    void relabel();
 
     void from_atom(int *label, const int which, const int set_to);
     general_partition(int len = 0);

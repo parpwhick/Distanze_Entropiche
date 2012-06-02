@@ -19,12 +19,15 @@ class memory {
     int total;
 public:
 
-    memory(int rows = 0) {
+    memory(int rows = 0, int fill=0) {
         total = rows*cols;
         nrows = rows;
         if (nrows) {
             fprintf(stderr, "Requested allocation space of %lu kbytes\n", (sizeof (int) *total) >> 10);
-            buffer = new int[total];  
+            buffer = new int[total];
+            if(fill) 
+                for (int i=0; i<total ;i++)
+                        buffer[i]=fill;
         }
     }
 
@@ -78,7 +81,7 @@ int main(int argc, char **argv) {
     // vettore di coordinazione
     memory < 1 > z  = *new memory < 1 > (total_size);
     // matrice (n,4) nearest neighbour
-    memory < 4 > nn = *new memory < 4 > (total_size);
+    memory < 4 > nn = *new memory < 4 > (total_size, -1);
     
     
 

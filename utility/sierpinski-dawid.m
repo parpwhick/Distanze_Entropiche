@@ -1,4 +1,4 @@
-function adiacenza=sierpinski(potenza)
+function [adiacenza,vicini]=sierpinski_dawid(potenza)
 % adiacenza = sierpinski(N)
 %
 % Restituisce la matrice di adiacenza simmetrica sparse, per il triangolo di Sierpinski di generazione N.
@@ -37,7 +37,6 @@ vicini=zeros(siti,3);
 disegno=zeros(N);
 disegno(1,:)=l1;
 nonnulli=1;
-colonna=0:(N-1);
 for i=2:N
     l2(2:i)=mod(l1(2:i)+l1(1:(i-1)) , 2);
     %l2=bitand(colonna,i)==2;
@@ -75,7 +74,7 @@ disp('Calcolo completato, compilazione matrice sparse');
 
 % costruzione della matrice di adiacenza propriamente detta
 [indici_riga,~,indici_colonna]=find(vicini);
-clear vicini;
+%clear vicini;
 adiacenza=sparse(indici_riga,indici_colonna,1,siti,siti,(siti-1)*3);
 
 % commentare la riga se si vuole solo una matrice lower triangular
