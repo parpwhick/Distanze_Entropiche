@@ -212,6 +212,7 @@ void generate_next_sequence(std::string &entry){
             entry[j]= (rand() % opts.n_symbols );
 }
 
+
 void load_lattices_from_file(options &opts, int **num_entries){
     static FILE* in=fopen(opts.filename,"r");
     int *temp=new int[opts.seq_len];

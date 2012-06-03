@@ -16,7 +16,6 @@
 typedef uint32_t u_int32_t;
 typedef uint64_t u_int64_t;
 #define FORCE_INLINE __attribute__((always_inline))
-class neigh_factory;
 
 enum algorithm {
     NORMAL,
@@ -147,11 +146,12 @@ public:
     template <typename T> void from_linear_sequence(const T* seq, int len);
     template <typename T> void from_square_lattice(const T* val, int lato, int dim);
     void trivial(int len);
-    void from_nnb(int **NNB);
+    
+    void from_nnb(int **NNB, int dim=2);
     void from_configuration(int *configuration, adj_struct adj);
     void relabel();
 
-    void from_atom(int *label, const int which, const int set_to);
+    //void from_atom(int *label, const int which, const int set_to);
     general_partition(int len = 0);
     void sort_entropy();
     void reduce(const general_partition &ridurre, const general_partition &common);

@@ -557,9 +557,9 @@ void general_partition::relabel(){
 }
 
 
-void general_partition::from_nnb(int **neighbors){
+void general_partition::from_nnb(int **neighbors, int dim1){
     int s1, s2;
-    dim=2;
+    dim=dim1;
     
     for (int i = 0; i < N; i++) {
         labels[i] = -1;

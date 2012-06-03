@@ -1,12 +1,18 @@
-COPTS= -O3 
+COPTS= -O3
 #COPTS= -g
 COPTS += -Wall -fopenmp
 files=*.cpp *.h Makefile2
 file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
 
-OBJ_LIST= main.o init_functions.o distanze.o partizioni.o rand55.o adj_handler.o
-distanze: ${OBJ_LIST}
-	g++ -o distanze ${OBJ_LIST} -lm -lgomp 
+OBJ_LIST= init_functions.o distanze.o partizioni.o rand55.o adj_handler.o
+
+ALL: distanze_generiche distanze_lineari
+
+distanze_generiche: general_distance.o ${OBJ_LIST}
+	g++ -o distanze_generiche general_distance.o ${OBJ_LIST} -lm -lgomp 
+
+distanze_lineari: linear_distance.o ${OBJ_LIST}
+	g++ -o distanze_lineari linear_distance.o ${OBJ_LIST} -lm -lgomp 
 
 rand55.o: rand55.cpp rand55.h
 	g++ ${COPTS} -c rand55.cpp
@@ -14,8 +20,8 @@ rand55.o: rand55.cpp rand55.h
 ising.o: ising.cpp strutture.h
 	g++ ${COPTS} -c ising.cpp
 
-main.o: main.cpp strutture.h 
-	g++ ${COPTS} -c main.cpp
+general_distance.o: general_distance.cpp strutture.h 
+	g++ ${COPTS} -c general_distance.cpp
 
 translation.o: strutture.h translation.cpp
 	g++ ${COPTS} -c translation.cpp

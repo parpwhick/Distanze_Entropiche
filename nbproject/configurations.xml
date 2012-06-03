@@ -169,6 +169,7 @@
         <in>partitioning_code.m</in>
         <in>pconfronto.m</in>
         <in>rotateticklabel.m</in>
+        <in>save_adiacenza.m</in>
         <in>sierp-carpet.cpp</in>
         <in>sierpinski-dawid.cpp</in>
         <in>sierpinski-dawid.m</in>
@@ -181,8 +182,9 @@
       <in>adj_handler.cpp</in>
       <in>adj_handler.h</in>
       <in>distanze.cpp</in>
+      <in>general_distance.cpp</in>
       <in>init_functions.cpp</in>
-      <in>main.cpp</in>
+      <in>linear_distance.cpp</in>
       <in>partizioni.cpp</in>
       <in>rand55.cpp</in>
       <in>rand55.h</in>
