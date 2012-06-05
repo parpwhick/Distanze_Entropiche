@@ -100,7 +100,7 @@ adj_struct adiacenza_fuzzy_line(int N){
 }
 
 
-adj_struct adiacenza_from_file(char *name_vec1, char *name_vec2, int N){
+adj_struct adiacenza_from_file(char *name_vec1, char *name_vec2, int & N){
     FILE *vec1=fopen(name_vec1,"rb");
     FILE *vec2=fopen(name_vec2,"rb");
     if(vec1==0 || vec2==0){
@@ -147,16 +147,8 @@ adj_struct adiacenza_from_file(char *name_vec1, char *name_vec2, int N){
     }
     
     //try detecting number of sites
-    int N1=tmp_index[M-1]-offset+1;
-    if(N==0){
-        N=N1;
-        fprintf(stderr,"ADJ READ Info: Reading vectors for %d elements, %ld nonempty links\n",N,M);
-    }
-    
-    if(N1!=N){
-                fprintf(stderr,"ADJ READ Error: Index expected to be for %d elements, found %d\n",N,N1);
-                exit(1);
-    }
+    N=tmp_index[M-1]-offset+1;
+    fprintf(stderr,"ADJ READ Info: Reading vectors for %d elements, %ld nonempty links\n",N,M);
     int *index=new int[N+1];    
     
     index[0]=0;

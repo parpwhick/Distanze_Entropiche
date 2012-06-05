@@ -47,6 +47,6 @@ void ising_metropolis(adj_struct NN, double beta);
 adj_struct adiacenza_fuzzy_line(int N);
 adj_struct adiacenza_simple_line(int N);
 adj_struct adiacenza_square_lattice(int lato);
-adj_struct adiacenza_from_file(char *name_vec1, char *name_vec2, int N);
+adj_struct adiacenza_from_file(char *name_vec1, char *name_vec2, int & N);
 #endif	/* ADJ_HANDLER_H */
 

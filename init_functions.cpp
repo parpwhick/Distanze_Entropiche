@@ -99,6 +99,7 @@ void set_program_options(options &opts, int argc, char**argv) {
                 
                 strncpy(opts.adj_vec_1, argv[read_argvs++], 255);
                 strncpy(opts.adj_vec_2, argv[read_argvs++], 255);
+                opts.topologia = FROM_FILE;
             }else if (input == "-seqlength") {
                 if (argc - read_argvs < 1)
                     error("Need to specify sequence length\n");
