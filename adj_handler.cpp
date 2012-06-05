@@ -100,7 +100,9 @@ adj_struct adiacenza_fuzzy_line(int N){
 }
 
 
-adj_struct adiacenza_from_file(FILE *vec1, FILE *vec2, int N){
+adj_struct adiacenza_from_file(char *name_vec1, char *name_vec2, int N){
+    FILE *vec1=fopen(name_vec1,"rb");
+    FILE *vec2=fopen(name_vec2,"rb");
     if(vec1==0 || vec2==0){
         fprintf(stderr,"ADJ READ: Error reading adjacency vectors\n");
         exit(1);
@@ -203,6 +205,9 @@ adj_struct adiacenza_from_file(FILE *vec1, FILE *vec2, int N){
     temp.n_link=M;
     temp.N=N;
     temp.zmax=zmax;
+    
+    fclose(vec1);
+    fclose(vec2);
     return(temp);
 }
 

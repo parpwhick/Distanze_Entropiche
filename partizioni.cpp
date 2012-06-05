@@ -7,8 +7,9 @@
 
 extern options opts;
 extern double *mylog;
-extern int *colore;
+int *colore;
 
+static rand55 gen;
 
 void print_array(int *array, int len, const char *nome) {
     printf("%s [%3d", nome, array[0]);
@@ -36,7 +37,7 @@ void ppmout(const T *grid1, int sz, const char *filename) {
     if(colore==0){
         colore = new int[COL_MAX];
         for (int i = 0; i < COL_MAX; i++) {
-            colore[i] = xrand();
+            colore[i] = gen.rand_long();
         }
         colore[0] = 0x0F5A3A1F; // blue almost black
     }
@@ -68,7 +69,7 @@ void ppmout2(const T *grid1, const U* grid2, int sz, const char *filename) {
     if(colore==0){
         colore = new int[COL_MAX];
         for (int i = 0; i < COL_MAX; i++) {
-            colore[i] = xrand();
+            colore[i] = gen.rand_long();
         }
         colore[0] = 0x0F5A3A1F; // blue almost black
     }
@@ -455,7 +456,7 @@ void general_partition::linear_intersection(const general_partition &p1, const g
     from_nnb(vicinato); 
     
     // Grafico il reticolo risultante, se richiesto
-    if (opts.graphics && (opts.topologia & RETICOLO)) {
+    if (opts.graphics && (opts.topologia & RETICOLO_2D)) {
         static int imagecount=0;     
         char filename[255];
         imagecount++;
@@ -474,10 +475,13 @@ int findroot(int i,int *ptr)
   return ptr[i] = findroot(ptr[i],ptr);
 }
 
-void general_partition::from_configuration(int *configuration, adj_struct adj){
+void general_partition::from_configuration(int *configuration, adj_struct adj, int N1){
     int s1, s2;
     int r1, r2;
     int z;
+    
+    N=N1;
+    allocate(N);
     
     for (int i = 0; i < N; i++) {
         labels[i] = -1;

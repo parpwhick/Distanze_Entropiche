@@ -6,7 +6,7 @@ file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
 
 OBJ_LIST= init_functions.o distanze.o partizioni.o rand55.o adj_handler.o
 
-ALL: distanze_generiche distanze_lineari
+ALL: distanze_generiche #distanze_lineari
 
 distanze_generiche: general_distance.o ${OBJ_LIST}
 	g++ -o distanze_generiche general_distance.o ${OBJ_LIST} -lm -lgomp 

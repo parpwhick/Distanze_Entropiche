@@ -38,10 +38,11 @@ enum DISTANZE {
 };
 
 enum source {
-    LINEARE = 1,
-    RETICOLO = 1 << 1,
-    RANDOM = 1 << 2,
-    FROM_FILE = 1 << 3
+    LINEARE,
+    RETICOLO_2D,
+    FUZZY,
+    RANDOM,
+    FROM_FILE,
 };
 
 typedef struct {
@@ -51,7 +52,9 @@ typedef struct {
 
     source letto_da;
     source topologia;
-    char filename[255];
+    char state_filename[255];
+    char adj_vec_1[255];
+    char adj_vec_2[255];
     bool write;
     bool distance;
 
@@ -148,7 +151,7 @@ public:
     void trivial(int len);
     
     void from_nnb(int **NNB, int dim=2);
-    void from_configuration(int *configuration, adj_struct adj);
+    void from_configuration(int *configuration, adj_struct adj, int N1);
     void relabel();
 
     //void from_atom(int *label, const int which, const int set_to);
@@ -264,12 +267,14 @@ void set_program_options(options &opt, int argc, char**argv);
 template <typename T> double entropy_binary_partition(const T *p, int n);
 void fill_entries_randomly(const options opts, std::string *entries);
 void fill_seq_from_file(options &opts, std::string* entries);
-void generate_next_sequence(std::string &entry);
+void generate_next_sequence(int *num_entry);
 void load_lattices_from_file(options &opts, int** num_entries);
+int load_config(options &opts, int *num_entry);
 template <typename T> void ppmout(const T *grid, int sz, const char *filename);
 template <typename T, typename U> void ppmout2(const T *grid1, const U* grid2, int sz, const char *filename);
 
-void calcola_matrice_distanze(linear_partition *X, general_partition *Z, std::string *char_entries);
+void calcola_matrice_distanze(linear_partition *X);
+void calcola_matrice_distanze(general_partition *Z);
 void print_array(int *array, int len, const char *nome);
 
 #endif

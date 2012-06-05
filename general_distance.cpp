@@ -56,7 +56,6 @@
 
 extern options opts;
 double *mylog=0;
-int *colore=0;
 
 
 void print_partition_stats(general_partition *X, const char* name){
@@ -75,7 +74,7 @@ void print_partition_stats(general_partition *X, const char* name){
     std /= opts.n_seq;
     std = std - mean*mean;
     
-    fprintf(stderr,"Partizioni %9s: nr. frammenti tra [%d,%d], ",name,min,max);
+    fprintf(stderr,"Partizioni: nr. frammenti tra [%d,%d], ",min,max);
     fprintf(stderr,"media %.2f con %.2f siti/atomo\n",mean,opts.seq_len/mean);
     
 }
@@ -84,16 +83,30 @@ int main(int argc, char** argv) {
             
     set_program_options(opts,argc,argv);
     
-    int &da_calcolare=opts.da_calcolare;
-        
-    //random number initialization
-    srand(time(0));
-    xrandinit(time(0));    
+    int &da_calcolare=opts.da_calcolare;        
     
     //
     //  ALLOCATION OF MEMORY AND INITIALIZATION
     //
-    general_partition *Z = new general_partition[opts.n_seq];
+    general_partition *Z = new general_partition[opts.n_seq];    
+    
+    
+    adj_struct topologia;
+    switch (opts.topologia) {
+        case(RETICOLO_2D):        
+            topologia = adiacenza_square_lattice(opts.lato);        
+            break;
+        case(FUZZY):
+            topologia = adiacenza_fuzzy_line(opts.seq_len);
+            break;
+        case(LINEARE):
+            topologia = adiacenza_simple_line(opts.seq_len);
+            break;
+        default:
+        case(FROM_FILE):
+            topologia = adiacenza_from_file(opts.adj_vec_1, opts.adj_vec_2, opts.seq_len);
+            break;
+    }
     
     //logarithm lookup table, 6x program speedup
     int lunghezza=std::max(opts.seq_len, opts.n_seq) + 10;
@@ -102,23 +115,18 @@ int main(int argc, char** argv) {
         mylog[i] = log(i);
     mylog[0]=0;    
     
-    std::string *char_entries=new std::string[opts.n_seq];
-    int **num_entries=new int*[opts.n_seq];
-
-    if (opts.letto_da == FROM_FILE ) {
-        load_lattices_from_file(opts, num_entries);
-
-        for (int i = 0; i < opts.n_seq; i++)
-            Z[i].from_square_lattice(num_entries[i], opts.lato, 2);
-    }
-
-    if (opts.letto_da== RANDOM) {
-        for (int i = 0; i < opts.n_seq; i++) {
-            generate_next_sequence(char_entries[0]);
-            if (opts.topologia == RETICOLO) {
-                Z[i].from_square_lattice(char_entries[0].data(), opts.lato, 2);
-            }
+    int *num_buffer=new int[opts.seq_len];
+    for (int i = 0; i < opts.n_seq; i++) {
+        
+        if (opts.letto_da == FROM_FILE){
+            int result=load_config(opts, num_buffer);
+            if (!result)
+                break;
         }
+        if (opts.letto_da == RANDOM)
+            generate_next_sequence(num_buffer);
+
+        Z[i].from_configuration(num_buffer, topologia, opts.seq_len);
     }
 
     printf("Loaded %d sequences long %d\n", opts.n_seq, opts.seq_len);
@@ -126,20 +134,18 @@ int main(int argc, char** argv) {
         print_partition_stats(Z, "");
     printf("\n");
 
-
     //
     //  DISTANCE MEASUREMENTS
     //
     if (opts.distance == false)
         exit(0);
 
-    calcola_matrice_distanze(Z, char_entries);
+    calcola_matrice_distanze(Z);
     //
     //  PROGRAM EXIT
     //
     delete []Z;
     delete []mylog;
-    delete []char_entries;
-    delete []num_entries;
+    delete []num_buffer;
     return 0;
 }

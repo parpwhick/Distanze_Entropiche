@@ -51,7 +51,6 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.n_symbols = 2;
     opts.topologia = LINEARE ;
     opts.letto_da = RANDOM;
-    opts.seed = 37337;
     opts.translate = false;
     opts.graphics=false;
     opts.verbose = 0;
@@ -61,7 +60,7 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.threads=2;
     opts.da_calcolare= 0
 		         //       |SHAN | SHAN_TOP 
-                       | RID //| RID_TOP 
+                       //| RID //| RID_TOP 
                        | GENERAL | GENERAL_TOP 
                       | GENERAL_RID | GENERAL_RID_TOP
             ;
@@ -82,18 +81,25 @@ void set_program_options(options &opts, int argc, char**argv) {
                 if (argv[read_argvs][0] == '-') 
                     error("Expecting argument, not another option\n");
                 
-                strncpy(opts.filename, argv[read_argvs++], 255);
-                fprintf(stderr, "Reading from filename: %s\n", opts.filename);
+                strncpy(opts.state_filename, argv[read_argvs++], 255);
+                fprintf(stderr, "Reading from filename: %s\n", opts.state_filename);
                 opts.letto_da = FROM_FILE;
             } else if (input == "-lattice") {
                 fprintf(stderr, "Analysing 2d lattice\n");
-                opts.topologia= RETICOLO;
+                opts.topologia= RETICOLO_2D;
                 
             } else if (input == "-sequence") {
-                fprintf(stderr, "Analysing 1d sequences\n");
-                
+                fprintf(stderr, "Analyzing 1d sequences\n");                
                 opts.topologia = LINEARE;
-            } else if (input == "-seqlength") {
+            } else if (input == "-adiacenza") {
+                if (argc - read_argvs < 2)
+                    error("Need to specify two vector files\n");
+                if (argv[read_argvs][0] == '-')
+                    error("Expecting argument, not another option\n");
+                
+                strncpy(opts.adj_vec_1, argv[read_argvs++], 255);
+                strncpy(opts.adj_vec_2, argv[read_argvs++], 255);
+            }else if (input == "-seqlength") {
                 if (argc - read_argvs < 1)
                     error("Need to specify sequence length\n");
                 if (argv[read_argvs][0] == '-')
@@ -125,6 +131,10 @@ void set_program_options(options &opts, int argc, char**argv) {
                     error("Expecting argument, not another option\n");
 
                 opts.fuzzy = atoi(argv[read_argvs++]);
+                if(opts.fuzzy > 0)
+                    opts.topologia=FUZZY;
+                else
+                    opts.topologia=LINEARE;
                 fprintf(stderr, "Fuzziness degree set to: %d\n", opts.fuzzy);
             } else if (input == "-v") {
                 opts.verbose++;
@@ -154,14 +164,6 @@ void set_program_options(options &opts, int argc, char**argv) {
                 
                 opts.n_symbols = atoi(argv[read_argvs++]);
                 fprintf(stderr, "Number of letters limited to: %d\n", opts.n_symbols);
-            } else if (input == "-seed") {
-                if (argc - read_argvs < 1)
-                    error("Expecting random number generation seed\n");
-                if (argv[read_argvs][0] == '-')
-                    error("Expecting argument, not another option\n");
-
-                opts.seed = atoi(argv[read_argvs++]);
-                fprintf(stderr, "Seed set to: %d\n", opts.seed);
             } else if (input == "-threads") {
                 if (argc - read_argvs < 1)
                     error("Expecting thread number\n");                            
@@ -188,9 +190,7 @@ void set_program_options(options &opts, int argc, char**argv) {
     if(killswitch)
         exit(0);
     
-    srand(opts.seed);
-    
-    if(opts.topologia == RETICOLO){
+    if(opts.topologia == RETICOLO_2D){
         opts.seq_len = opts.lato * opts.lato;
         opts.da_calcolare = ~(SHAN | SHAN_TOP | RID | RID_TOP);
     }
@@ -199,22 +199,23 @@ void set_program_options(options &opts, int argc, char**argv) {
 
 }
 
+static rand55 gen;
+
 void fill_entries_randomly(const options opts, std::string *entries){
 for (int i = 0; i < opts.n_seq; i++) 
         for (int j = 0; j < opts.seq_len; j++)
-            entries[i]+= (rand() % opts.n_symbols );//+ 'A');
+            entries[i]+= (gen.rand_long() % opts.n_symbols );//+ 'A');
 
 }    
 
-void generate_next_sequence(std::string &entry){
-    entry.reserve(opts.seq_len);
+void generate_next_sequence(int *entry){
     for (int j = 0; j < opts.seq_len; j++)
-            entry[j]= (rand() % opts.n_symbols );
+            entry[j]= (gen.rand_long() % opts.n_symbols );
 }
 
 
 void load_lattices_from_file(options &opts, int **num_entries){
-    static FILE* in=fopen(opts.filename,"r");
+    static FILE* in=fopen(opts.state_filename,"r");
     int *temp=new int[opts.seq_len];
     int cur_lat=0;
     while(1){
@@ -234,17 +235,72 @@ void load_lattices_from_file(options &opts, int **num_entries){
     opts.n_seq=cur_lat;
 }
 
+int load_config(options &opts, int *num_entry) {
+    static FILE* in = 0;
+    static int full_configs = 0;
+    static int read_count = 0;
+    static int finished = 0;
 
+    //if they've already been all loaded, do nothing
+    if (finished)
+        return 0;
 
+    //on the first call, open the file, calculate how many configurations to read
+    if (in == 0) {
+        in = fopen(opts.state_filename, "r");
+        if (in == 0) {
+            fprintf(stderr, "LATTICE LOAD: Error opening file %s\n", opts.state_filename);
+            exit(2);
+        }
+        long M;
+        (void) fseek(in, 0L, SEEK_END);
+        M = ftell(in);
+        rewind(in);
+
+        M /= sizeof (int32_t);
+        full_configs = M / opts.seq_len;
+        if (M % opts.seq_len)
+            fprintf(stderr, "LATTICE LOAD: Warning, found only %d full configurations, %d integers left\n", full_configs, (int) M % opts.seq_len);
+
+        if (full_configs <= opts.n_seq)
+            opts.n_seq = full_configs;
+        else {
+            fprintf(stderr, "LATTICE LOAD: Full %d configurations, %d requested\n", full_configs, opts.n_seq);
+            full_configs = opts.n_seq;
+        }
+    }
+
+    //try reading, and if all goes well, return
+    int read = fread(num_entry, sizeof (int32_t), opts.seq_len, in);
+    if (feof(in)) { //read < opts.seq_len){
+        fprintf(stderr, "LATTICE LOAD: Warning, unexpected end of file\n");
+        opts.n_seq = read_count;
+        finished = 1;
+        return 0;
+    } else if (read < opts.seq_len) {
+        fprintf(stderr, "LATTICE LOAD: Read too little on configuration %d\n", read_count + 1);
+        opts.n_seq = read_count;
+        finished = 1;
+        return 0;
+    } else
+        read_count++;
+
+    if (read_count == full_configs){
+        fclose(in);
+        finished = 1;
+    }
+
+    return (1);
+}
 
 void fill_seq_from_file(options &opts, std::string *sequenze) {
     int max_length = 0;
     string buffer;
     buffer.reserve(150);
     
-    ifstream in(opts.filename);
+    ifstream in(opts.state_filename);
     if (!in) {
-        fprintf(stderr, "Can't open file %s\n", opts.filename);
+        fprintf(stderr, "Can't open file %s\n", opts.state_filename);
         exit(2);
     }
 
