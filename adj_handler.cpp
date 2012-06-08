@@ -9,7 +9,7 @@
 #include "strutture.h"
 #include <cmath>
 
-#ifndef TEST
+#ifndef STANDALONE
 extern 
 #endif 
 options opts;
@@ -100,7 +100,7 @@ adj_struct adiacenza_fuzzy_line(int N){
 }
 
 
-adj_struct adiacenza_from_file(char *name_vec1, char *name_vec2, int & N){
+adj_struct adiacenza_from_file(const char *name_vec1,const char *name_vec2, int & N){
     FILE *vec1=fopen(name_vec1,"rb");
     FILE *vec2=fopen(name_vec2,"rb");
     if(vec1==0 || vec2==0){
@@ -227,163 +227,181 @@ void neigh_factory::f3() {
         _site = -1;
 }
  */
+//Attenzione, generatore numeri casuali globale, bisogna prestare attenzione a 
+//race conditions e rendere il tutto thread-safe innanzitutto!
+rand55 generatore;
 
+void metropolis_step(int * &config, adj_struct NN, double beta) {
+    static double *myexp = 0;
+    int s,z,somma_vicini,dH;
 
-void ising_metropolis(adj_struct NN, double beta) { //, general_partition *partitions) {
-    int N = NN.N;
+    if (config == 0) {
+        config = new int [NN.N];
+        for (int i = 0; i < NN.N; i++)
+            config[i] = generatore.rand_long() % NN.N;
+    }
+    
+    if (myexp == 0) {
+        myexp = new double[NN.zmax + 2];
+        for (int i = 0; i <= NN.zmax + 1; i++)
+            myexp[i] = exp(-2 * beta * i);
+    }
 
-    int runs = 5;
+    /* Dinamica di Metropolis, 1 passo temporale */
+    for (int j = 0; j < NN.N; j++) {
+        // il generatore di numeri casuali influisce per un 5% sulla performance
+        // totale, in realta' e' l'accesso disordinato alla memoria che 
+        // uccide in confronto con s=j!
+        s = generatore.rand_long() % NN.N;
+        z = NN.fetch(s);
+        somma_vicini = 0;
+        for (int m = 0; m < z; m++)
+            somma_vicini += config[NN.vicini[m]];
 
+        dH = config[s] * somma_vicini;
+        if (dH <= 0 || generatore() < myexp[dH]) // exp(-2 * beta * dH))
+            config[s] = -config[s];
+    }
+}
+
+void microcanonical_step(int * &config, int * &link_energies, adj_struct NN) {
     int dH;
     int somma_vicini;
     int z;
-
-    double prob = 0.5;
-    int flips = 10;
-    int *chain = new int[N];
-    double *myexp = new double[NN.zmax + 2];
-
-    rand55 generatore;
     
-    for (int i = 0; i < N; i++) {
-        chain[i] = 2 * (generatore() > prob) - 1;
+    //generazione dei buffer necessari, se vuoti
+    if (config == 0) {
+        config = new int [NN.N];
+        for (int i = 0; i < NN.N; i++)
+            config[i] = generatore.rand_long() % NN.N;
+    }    
+    if (link_energies == 0) {
+        link_energies = new int [NN.n_link];
+        for (int i = 0; i < NN.n_link; i++)
+            link_energies[i] = generatore.rand_long() & 0xFF;
     }
-
-    for (int i = 0; i <= NN.zmax+1; i++)
-        myexp[i] = exp(-2 * beta * i);
     
-    
-#ifndef METROPOLIS
-    int *link_energies;
-    link_energies= new int [NN.n_link];
-    for(int i=0; i< NN.n_link; i++)
-        link_energies[i]= generatore.rand_long() & 0xFF;
-#endif
-    
-    for (int r = 1; r <= runs; r++) {
-        for (int f = 0; f < flips; f++) {
-            /* loop centrale della simulazione */
+    /* Dinamica Microcanonica, 1 passo temporale */
+    for (int j = 0; j < NN.N/2; j++) {
+        // il generatore di numeri casuali influisce per un 5% sulla performance
+        // totale, in realta' e' l'accesso disordinato alla memoria che 
+        // uccide in confronto con s=j!
+        //int s=generatore.rand_long() % N;
+        uint32_t randnum = generatore.rand_long();
+        int link = randnum % NN.n_link;
+        int accept1 = randnum & (1 << 29);
+        int accept2 = randnum & (1 << 30);
+        int accept12 = accept1 && accept2;
 
-            /* Metropolis Monte Carlo*/
- #ifdef METROPOLIS  
- #warning Chosen Metropolis!
-            for (int j = 0; j < N; j++) {
-                // il generatore di numeri casuali influisce per un 5% sulla performance
-                // totale, in realta' e' l'accesso disordinato alla memoria che 
-                // uccide in confronto con s=j!
-                int s=generatore.rand_long() % N;
-		//int s=j;
-                z = NN.fetch(s);
-                somma_vicini = 0;
-                for (int m = 0; m < z; m++)
-                    somma_vicini += chain[NN.vicini[m]];
-
-                dH = chain[s] * somma_vicini;
-                //if (dH <= 0 || generatore() < myexp[dH]) // exp(-2 * beta * dH))
-                if (dH <= 0 || generatore() < myexp[dH]) // exp(-2 * beta * dH))
-                    chain[s] = -chain[s];
-            }
-#else
-            /* Dinamica Microcanonica*/
-            for (int j = 0; j < N; j++) {
-                // il generatore di numeri casuali influisce per un 5% sulla performance
-                // totale, in realta' e' l'accesso disordinato alla memoria che 
-                // uccide in confronto con s=j!
-                //int s=generatore.rand_long() % N;
-                uint32_t randnum = generatore.rand_long();
-                int link = randnum % NN.n_link;
-                int accept1 = randnum & (1<<29);
-                int accept2 = randnum & (1<<30);
-                int accept12 = accept1 && accept2;
-                
-                //se nessuna mossa e' accettata, salta
-                if(!(accept1 || accept2))
-                    continue;
-                
-                //creazione variabili locali, sperando di aumentare 
-                //il pre-caricamento delle aree di memoria opportune
-                //un 15% di miglioramento solo con la prima
-                //   25% totale, cambiando le posizioni peggiora la performance!
-                int &linkenergy = link_energies[link];
-                int &s1 = NN.adi[link];
-                int &chain1= chain[s1];
-                int &s2 = NN.adj[link];
-                int &chain2= chain[s2];
-                
-                //energia dai vicini di s1, se cambia                
-                if (accept1) {
-                    z = NN.fetch(s1);
-                    somma_vicini = 0;
-                    for (int m = 0; m < z; m++)
-                        somma_vicini += chain[NN.vicini[m]];
-                    dH = 2 * chain1 * somma_vicini;
-                } else
-                    dH = 0;
-                
-                //energia dai vicini di s2, se cambia 
-                if (accept2) {
-                    z = NN.fetch(s2);
-                    somma_vicini = 0;
-                    for (int m = 0; m < z; m++)
-                        somma_vicini += chain[NN.vicini[m]];
-                    dH += 2 * chain2 * somma_vicini;
-                }
-                
-                //energia dal flip simultaneo di s1 e s2
-                if (accept12)
-                    dH -= 4 * chain1 * chain2;
-                
-                //caso dH==0 a parte, 5% di performance in piu
-                if(dH==0){
-                    //flip di s1 o s2
-                    if (accept1) chain1=-chain1;
-                    if (accept2) chain2=-chain2;
-                }
-                else if(dH<0 || linkenergy >= dH){
-                    //dH < 0: l'energia del link e' incrementata
-                    //dH > 0: il link cede energia ai siti
-                    linkenergy -= dH;
-                    
-                    //flip di s1 o s2
-                    if (accept1) chain1=-chain1;
-                    if (accept2) chain2=-chain2;
-                }
-
-            }
-#endif
-        }
-        if (r < 0)
+        //se nessuna mossa e' accettata, salta
+        if (!(accept1 || accept2))
             continue;
-        int M_medio=0;
-        for(int i=0; i < N; i++)
-            M_medio += chain[i];
-        printf("%2d/%d done, M: %g\n", r, runs,(M_medio+0.0)/(N+0.0));
-        //        partitions[i].from_square_lattice(chain, lato, 2);
+
+        //creazione variabili locali, sperando di aumentare 
+        //il pre-caricamento delle aree di memoria opportune
+        //un 15% di miglioramento solo con la prima
+        //   25% totale, cambiando le posizioni peggiora la performance!
+        int &linkenergy = link_energies[link];
+        int &s1 = NN.adi[link];
+        int &chain1 = config[s1];
+        int &s2 = NN.adj[link];
+        int &chain2 = config[s2];
+
+        //energia dai vicini di s1, se cambia                
+        if (accept1) {
+            z = NN.fetch(s1);
+            somma_vicini = 0;
+            for (int m = 0; m < z; m++)
+                somma_vicini += config[NN.vicini[m]];
+            dH = 2 * chain1 * somma_vicini;
+        } else
+            dH = 0;
+
+        //energia dai vicini di s2, se cambia 
+        if (accept2) {
+            z = NN.fetch(s2);
+            somma_vicini = 0;
+            for (int m = 0; m < z; m++)
+                somma_vicini += config[NN.vicini[m]];
+            dH += 2 * chain2 * somma_vicini;
+        }
+
+        //energia dal flip simultaneo di s1 e s2
+        if (accept12)
+            dH -= 4 * chain1 * chain2;
+
+        //caso dH==0 a parte, 5% di performance in piu
+        if (dH == 0) {
+            //flip di s1 o s2
+            if (accept1) chain1 = -chain1;
+            if (accept2) chain2 = -chain2;
+        } else if (dH < 0 || linkenergy >= dH) {
+            //dH < 0: l'energia del link e' incrementata
+            //dH > 0: il link cede energia ai siti
+            linkenergy -= dH;
+
+            //flip di s1 o s2
+            if (accept1) chain1 = -chain1;
+            if (accept2) chain2 = -chain2;
+        }
+
     }
-    delete[]chain;
-    
 }
 
+void ising_simulation(adj_struct NN) { //, general_partition *partitions) {
+    int T=10;
+    int *config=0, *link_energies=0;
+    int N = NN.N;
+        
+/* inizializza i primi due terzi a +1
+   l'ultimo terzo a -1  */    
+    config = new int[N];
+    int N1=N/3;
+    int N2=2*N/3;
+    for (int i=0; i<N1; i++)
+        config[i]=1;
+    for (int i=N1+1; i<N2; i++)
+        config[i]=1;    
+    for (int i=N2; i<N; i++)
+        config[i]=-1;
+    double M1,M2,M3;
 
+    for (int t=0; t< T; t++){
+        
+        M1=M2=M3=0.0;        
+        for (int i=0; i<N1; i++)
+                M1+=(double)config[i];
+        for (int i=N1+1; i<N2; i++)
+                M2+=(double)config[i];  
+        for (int i=N2; i<N; i++)
+                M3+=(double)config[i];
+        M1/=(N1);
+        M2/=(N2-N1-1);
+        M3/=(N-N2);
+        
+        printf("%d %f %f %f\n",t,M1,M2,M3);
+        //printf("%2d/%d done, M: %g\n", t, T, (M_medio + 0.0) / (N + 0.0));
+        //        partitions[i].from_square_lattice(chain, lato, 2);
+        
+        microcanonical_step(config,link_energies,NN);
+        //si scartano i run con indice negativo, per termalizzare il sistema
+        if (t < 0)
+            continue;
+    }
+    delete[]config;
 
-#ifdef TEST
+}
 
-int main(int, char**){
-    adj_struct sierp;
-    FILE *vec1=fopen("vector1.bin","rb");
-    FILE *vec2=fopen("vector2.bin","rb");    
-    sierp=adiacenza_from_file(vec1, vec2, 0);
-    
-//    adj_struct square=adiacenza_square_lattice(200);
+#ifdef STANDALONE
+int main(int, char**) {
+    int N = 0;
+    adj_struct da_file = adiacenza_from_file("vector1.bin", "vector2.bin", N);
+    //adj_struct square=adiacenza_square_lattice(200);
+    //N=square.N;
     
     printf("Loaded ADJ matrix\n");
-//    
-//    int indici[]={118,119,120};
-//    for(int i=0; i<3; i++)
-//        printf("z[%d]=%d\n",indici[i]+1,sierp.fetch(indici[i]));
-//    
-    ising_metropolis(sierp, 0.5);
-      
+    
+    ising_simulation(da_file);    
 }
 
 #endif

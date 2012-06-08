@@ -2,6 +2,10 @@
 <configurationDescriptor version="80">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df name="Distanze_Entropiche" root=".">
+      <df name="bin">
+        <df name="Debug">
+        </df>
+      </df>
       <df name="clustering_spettrale">
         <df name="1SpectralClustering_matlab">
           <in>OneSpectralClustering.m</in>
@@ -65,7 +69,6 @@
       <df name="codice_hashing">
         <in>GeneralHashFunctions.cpp</in>
         <in>GeneralHashFunctions.h</in>
-        <in>HashTest.cpp</in>
         <in>MurmurHash3.cpp</in>
         <in>MurmurHash3.h</in>
         <in>hashtest2.cpp</in>
@@ -93,8 +96,10 @@
       </df>
       <df name="h1n1_nih">
         <df name="HA">
+          <in>carica_in_matlab.m</in>
         </df>
         <df name="NA">
+          <in>carica_in_matlab.m</in>
         </df>
         <in>cluster_count.m</in>
         <in>draw_ready_clustering.m</in>
@@ -103,10 +108,6 @@
       <df name="H3N2">
         <df name="immagini">
         </df>
-        <in>cluster_count.m</in>
-        <in>cluster_stagionali.m</in>
-      </df>
-      <df name="h3n2_gisaid">
         <in>carica_in_matlab.m</in>
         <in>cluster_count.m</in>
         <in>cluster_stagionali.m</in>
@@ -125,10 +126,12 @@
       </df>
       <df name="h3n2_nih">
         <df name="HA">
+          <in>carica_in_matlab.m</in>
           <in>cluster_count.m</in>
           <in>pconfronto.m</in>
         </df>
         <df name="NA">
+          <in>carica_in_matlab.m</in>
           <in>cluster_count.m</in>
         </df>
         <in>cluster_count.m</in>
@@ -136,6 +139,10 @@
         <in>spectral_clustering.m</in>
       </df>
       <df name="h3n2_vac">
+      </df>
+      <df name="obj">
+        <df name="Debug">
+        </df>
       </df>
       <df name="old_versions">
         <in>adj_handler-minimum_memory.cpp</in>
@@ -481,8 +488,6 @@
             tool="3"
             flavor="0">
       </item>
-      <item path="codice_hashing/HashTest.cpp" ex="true" tool="1" flavor="0">
-      </item>
       <item path="codice_hashing/MurmurHash3.cpp" ex="true" tool="1" flavor="0">
       </item>
       <item path="codice_hashing/MurmurHash3.h" ex="true" tool="3" flavor="0">
@@ -498,12 +503,6 @@
       <item path="h1n1_nih/draw_ready_clustering.m" ex="true" tool="0" flavor="0">
       </item>
       <item path="h1n1_nih/spectral_clustering.m" ex="true" tool="0" flavor="0">
-      </item>
-      <item path="h3n2_gisaid/carica_in_matlab.m" ex="true" tool="0" flavor="0">
-      </item>
-      <item path="h3n2_gisaid/cluster_count.m" ex="true" tool="0" flavor="0">
-      </item>
-      <item path="h3n2_gisaid/cluster_stagionali.m" ex="true" tool="0" flavor="0">
       </item>
       <item path="h3n2_nih/HA/cluster_count.m" ex="true" tool="0" flavor="0">
       </item>

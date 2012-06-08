@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 #include "rand55.h"
 
 #ifdef __i386
@@ -67,6 +68,7 @@ void rand55::rand_init(long idum) {
     (Ran + 54)->next = Ran;
 
     if (idum == -1) {
+#ifdef __linux__
         FILE *out = fopen("/dev/urandom", "r");
         int bytes_read = fread(&idum, sizeof (long), 1, out);
         if (!bytes_read) {
@@ -74,6 +76,9 @@ void rand55::rand_init(long idum) {
             exit(1);
         }
         fclose(out);
+#else
+        idum=time(0);
+#endif
     }
 
     tmp = Seed + idum;
