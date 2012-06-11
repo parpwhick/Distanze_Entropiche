@@ -2,10 +2,6 @@
 <configurationDescriptor version="80">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df name="Distanze_Entropiche" root=".">
-      <df name="bin">
-        <df name="Debug">
-        </df>
-      </df>
       <df name="clustering_spettrale">
         <df name="1SpectralClustering_matlab">
           <in>OneSpectralClustering.m</in>
@@ -140,10 +136,6 @@
       </df>
       <df name="h3n2_vac">
       </df>
-      <df name="obj">
-        <df name="Debug">
-        </df>
-      </df>
       <df name="old_versions">
         <in>adj_handler-minimum_memory.cpp</in>
         <in>init_functions2.cpp</in>
@@ -152,6 +144,8 @@
         <in>main-1.0.cpp</in>
         <in>main2.cpp</in>
         <in>main3.cpp</in>
+        <in>mtrand.cpp</in>
+        <in>mtrand.h</in>
         <in>newfile.cpp</in>
         <in>old_distance_program.c</in>
         <in>partizioni3.cpp</in>
@@ -195,6 +189,8 @@
       <in>partizioni.cpp</in>
       <in>rand55.cpp</in>
       <in>rand55.h</in>
+      <in>rand_marsenne.cpp</in>
+      <in>rand_marsenne.h</in>
       <in>strutture.h</in>
     </df>
     <logicalFolder name="ExternalFiles"

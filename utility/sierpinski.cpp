@@ -23,7 +23,7 @@ public:
         total = rows*cols;
         nrows = rows;
         if (nrows) {
-            fprintf(stderr, "Requested allocation space of %lu kbytes\n", (sizeof (int) *total) >> 10);
+            fprintf(stderr, "Requested allocation space of %u kbytes\n", ((sizeof (int)) * total) >> 10);
             buffer = new int[total];
             if(fill) 
                 for (int i=0; i<total ;i++)
@@ -132,7 +132,8 @@ int main(int argc, char **argv) {
         //triangolo 1 - copia identica
         //nulla da fare
         
-        //triangolo 2
+        //triangolo 2, dimensione: oldsize-2
+        //for (int n=oldsize; n<2*oldsize-2; n++)
         for (int n = 1; n < old_size - 1; n++) {
             z(n + old_size - 1) = z(n);
             for (int m = 0; m < z(n + old_size - 1); m++) {
@@ -143,7 +144,8 @@ int main(int argc, char **argv) {
                 else nn(n + old_size - 1, m) = nn(n, m) + old_size - 1;
             }
         }
-        //triangolo 3
+        //triangolo 3, dimensione: oldsize-1
+        //for (int n=2*oldsize-2; n<3*oldsize-3; i++)
         for (int n = 1; n < old_size; n++) {
             z(n + 2 * old_size - 3) = z(n);
             for (int m = 0; m < z(n + 2 * old_size - 3); m++) {

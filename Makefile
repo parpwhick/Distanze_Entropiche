@@ -6,7 +6,7 @@ file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
 
 OBJ_LIST= init_functions.o distanze.o partizioni.o rand55.o adj_handler.o
 
-ALL: distanze_generiche #distanze_lineari
+ALL: distanze_generiche ising #distanze_lineari
 
 distanze_generiche: general_distance.o ${OBJ_LIST}
 	g++ -o distanze_generiche general_distance.o ${OBJ_LIST} -lm -lgomp 
@@ -17,8 +17,8 @@ distanze_lineari: linear_distance.o ${OBJ_LIST}
 rand55.o: rand55.cpp rand55.h
 	g++ ${COPTS} -c rand55.cpp
 
-ising: adj_handler.cpp adj_handler.h rand55.o
-	g++ ${COPTS} -o ising -DSTANDALONE adj_handler.cpp rand55.o
+ising: adj_handler.cpp adj_handler.h rand_marsenne.cpp 
+	g++ ${COPTS} -o ising -DSTANDALONE adj_handler.cpp rand_marsenne.cpp 
 
 general_distance.o: general_distance.cpp strutture.h 
 	g++ ${COPTS} -c general_distance.cpp
