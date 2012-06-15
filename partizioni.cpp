@@ -11,12 +11,13 @@ int *colore;
 
 static rand55 gen;
 
-void print_array(int *array, int len, const char *nome) {
+template <typename pointer_t> void print_array(const pointer_t *array, int len, const char *nome) {
     printf("%s [%3d", nome, array[0]);
     for (int i = 1; i < len; i++)
         printf(",%3d", array[i]);
     printf("]\n");
 }
+template void print_array(const label_t *grid, int sz, const char *filename);
 
 template <typename T>
 void print_square_lattice(const T* valori, int lato){
@@ -171,7 +172,6 @@ void linear_partition::fill(const T* seq, int len) {
 }
 template void linear_partition::fill(const char *, int);
 
-
 /************************************************
  ************************************************
  *            PARTIZIONI COMPLESSE              *
@@ -180,20 +180,41 @@ template void linear_partition::fill(const char *, int);
  */
 
 
-void general_partition::allocate(int len){
-    assert(len !=0);
-    N=len;
+void general_partition::allocate(label_t len) {
+    assert(len != 0);
+    N = len;
+
+    try {
+        if (!labels)
+            labels = new label_t[N];
+        if (!prev_site)
+            prev_site = new label_t[N];
+        //    if (!atomi)
+        //        atomi = new atom[N];
+    }    catch (std::bad_alloc &e) {
+        fprintf(stderr, "Error allocating new partition: %s\n", e.what());
+        exit(1);
+    }
+}
+
+void general_partition::allocate_atoms(label_t n1) {
     
-    if (!labels)
-        labels = new int[N];
-    if (!prev_site)
-        prev_site = new int[N];
-    if (!atomi)
-        atomi = new atom[N];
+    try {
+        if (atomi && n1 <=allocated_n )
+            return;
+        if(atomi)
+            delete []atomi;
+        allocated_n = (12*n1) / 10;
+        atomi = new atom[allocated_n];
+    }    catch (std::bad_alloc &e) {
+        fprintf(stderr, "Error allocating new partition: %s\n", e.what());
+        exit(1);
+    }
 }
 
 general_partition::general_partition(int len) {
     n = 0;
+    allocated_n = 0;
     N = len;
     entropia_topologica = 0;
     entropia_shannon = 0;
@@ -230,7 +251,7 @@ general_partition::general_partition(const T* seq, int len) {
 void general_partition::trivial(int len){
     N=len;
     int *vuoto=new int[N];
-    for(int i=0; i< N; i++)
+    for(label_t i=0; i< N; i++)
         vuoto[i]=0;
     
     from_linear_sequence(vuoto,N);
@@ -240,8 +261,8 @@ void general_partition::trivial(int len){
 
 template <typename T>
 void general_partition::from_linear_sequence(const T* seq, int len) {
-    int i, j;
-    int last_good;
+    label_t i, j;
+    label_t last_good;
     
     allocate(len);    
     dim=1;
@@ -264,7 +285,7 @@ void general_partition::from_linear_sequence(const T* seq, int len) {
                 last_good=j;
             }
     }
-    NNB=new int*[dim];
+    NNB=new label_t*[dim];
     NNB[0]=prev_site;
     
     from_nnb(NNB,dim); 
@@ -293,12 +314,12 @@ void general_partition::from_square_lattice(const T* valori, int L,int) {
     dim=2;
     allocate(N);
 
-    NNB=new int*[dim];
+    NNB=new label_t*[dim];
     for(int j=0;j<dim;j++)
-        NNB[j]=new int[N];
+        NNB[j]=new label_t[N];
 
     // Ho due tipi di vicini, quello Up e quello Left
-    for (int i = 0; i < N; i++) {
+    for (label_t i = 0; i < N; i++) {
         NNB[0][i] = (valori[i] == valori[nnu]) ? nnu : i;
         NNB[1][i] = (valori[i] == valori[nnl]) ? nnl : i;
     }  
@@ -324,16 +345,15 @@ inline int compare (const void * a, const void * b){
 }
 
 void general_partition::sort_entropy(){
-    int i;
     int label_count = 0;
     double H = 0;
     int mu;
     int begin;
     
-    int *temp=new int32_t[N];
+    label_t *temp=new label_t[N];
     allocate(N);
     
-    for(int i=0; i<N;i++)
+    for(label_t i=0; i<N;i++)
         temp[i]=labels[i];
     
     qsort(temp,N,sizeof(temp[0]),compare);
@@ -343,7 +363,7 @@ void general_partition::sort_entropy(){
     label_count=1;
     int old_val=temp[0];
         
-    for (i = 1; i < N; i++) {      
+    for (label_t i = 1; i < N; i++) {      
         //whenever we find a new atom
         if (temp[i]!=old_val) {
             //a new atom starts
@@ -412,11 +432,11 @@ void general_partition::reduce(const general_partition &p1, const general_partit
     lato=p1.lato;
     allocate(p1.N);
   
-    for(int i=0;i<N;i++)
+    for(label_t i=0;i<N;i++)
         labels[i]=1;
     
     //per ogni atomo
-    for (int which = 0; which < p1.n; which++) {
+    for (label_t which = 0; which < p1.n; which++) {
         // Considero l'atomo n-esimo del primo
         // Trovo l'atomo che corrisponde nella seconda partizione
         //  attraverso il primo sito in comune
@@ -446,7 +466,7 @@ void general_partition::reduce(const general_partition &p1, const general_partit
 }
 
 void general_partition::linear_intersection(const general_partition &p1, const general_partition &p2){    
-    int *vicinato[2 * p1.dim];
+    label_t *vicinato[2 * p1.dim];
     lato=p1.lato;
     allocate(p1.N);
     
@@ -469,21 +489,21 @@ void general_partition::linear_intersection(const general_partition &p1, const g
 }
 
 
-int findroot(int i,int *ptr)
+template <typename pointer_t> int findroot(int i,pointer_t *ptr)
 {
   if (ptr[i]<0) return i;
   return ptr[i] = findroot(ptr[i],ptr);
 }
 
 void general_partition::from_configuration(int *configuration, adj_struct adj, int N1){
-    int s1, s2;
-    int r1, r2;
+    label_t s1, s2;
+    label_t r1, r2;
     int z;
     
     N=N1;
     allocate(N);
     
-    for (int i = 0; i < N; i++) {
+    for (label_t i = 0; i < N; i++) {
         labels[i] = -1;
     }  
  
@@ -521,16 +541,21 @@ void general_partition::from_configuration(int *configuration, adj_struct adj, i
 }
 
 void general_partition::relabel(){
-    int *new_label=new int[N];
+    label_t *new_label=new label_t[N];
     entropia_shannon=0;
     n=0;
     
+    // 0-conto nr. atomi diversi per il solo scopo di allocare ottimalmente
+    for(label_t i=0; i<N; i++)
+        n+= labels[i]<0;
+    allocate_atoms(n);
+    n=0;
     // 1-creazione array atomi
     // 2-inizializzazione ogni elemento
     // 3-creazione indice (label atomo) <--> root
     // 4-calcolo entropia a partire dai size nei root
     #define ATOMO atomi[n]
-    for(int i=0;i<N;i++){
+    for(label_t i=0;i<N;i++){
         if(labels[i]<0){
             entropia_shannon+= -labels[i]*mylog[-labels[i]];
             ATOMO.size=-labels[i];
@@ -550,7 +575,7 @@ void general_partition::relabel(){
     // 1-relabeling secondo l'indice dell'atomo, non del sito di appartenenza
     // 2-hashing
     // 3-creazione del collegamento prev_site e atom.end
-    for(int i=0;i<N;i++){
+    for(label_t i=0;i<N;i++){
         int atom_pos=new_label[prev_site[i]];
         labels[i]=atom_pos;
         prev_site[i]=std::min(atomi[atom_pos].end,i);
@@ -561,11 +586,11 @@ void general_partition::relabel(){
 }
 
 
-void general_partition::from_nnb(int **neighbors, int dim1){
-    int s1, s2;
+void general_partition::from_nnb(label_t **neighbors, int dim1){
+    label_t s1, s2;
     dim=dim1;
     
-    for (int i = 0; i < N; i++) {
+    for (label_t i = 0; i < N; i++) {
         labels[i] = -1;
     }  
  

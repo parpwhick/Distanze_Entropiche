@@ -59,7 +59,7 @@ double *mylog=0;
 
 
 void print_partition_stats(general_partition *X, const char* name){
-    int min=X[0].N*20, max=0;
+    label_t min=X[0].N*20, max=0;
     double mean=0, std=0;
     for(int i=0; i<opts.n_seq; i++){
 	if(X[i].n < 10)
@@ -126,6 +126,8 @@ int main(int argc, char** argv) {
         if (opts.letto_da == RANDOM)
             generate_next_sequence(num_buffer);
 
+        if(opts.verbose)
+            fprintf(stderr,"Loaded sequence %d, analysing\n",i+1);
         Z[i].from_configuration(num_buffer, topologia, opts.seq_len);
     }
 

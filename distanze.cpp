@@ -20,7 +20,7 @@ void distance::allocate(int n) {
         reduced2 = new int[n];
         product_reduced = new int[n];
     }
-    product = new u_int64_t[n];
+    product = new uint64_t[n];
 }
 
 distance::distance(int n) {
@@ -61,7 +61,7 @@ void distance::fill(const general_partition& e1, const general_partition& e2) {
 
      
         if(opts.verbose>2){
-        int quanto=std::min(e1.N,50);
+        label_t quanto=std::min(e1.N, (label_t) 50);
         print_array(partizione_comune.labels,quanto,"lbls comune");
         print_array(e1.labels,quanto,               "lbls e1    ");
         print_array(ridotto1.labels,quanto,         "lbls ridot1");
@@ -216,7 +216,7 @@ void distance::binary_partition(const linear_partition &first, const linear_part
 
 
 inline int compare (const void * a, const void * b){
-  return ( *(u_int64_t*)a - *(u_int64_t*)b );
+  return ( *(uint64_t*)a - *(uint64_t*)b );
 }
 
 
@@ -228,8 +228,8 @@ void distance::linear_product_sorted(const general_partition &p1,const  general_
     int begin;
 
     for (i = 0; i < N; i++){
-        u_int64_t temp1=p1.labels[i];
-        u_int64_t temp2=p2.labels[i];
+        uint64_t temp1=p1.labels[i];
+        uint64_t temp2=p2.labels[i];
     
         product[i] = (temp1<<32) | temp2;
     }
@@ -245,12 +245,12 @@ void distance::linear_product_sorted(const general_partition &p1,const  general_
           ppmout(product,p1.lato,filename);
       }
     
-    qsort(product,N,sizeof(u_int64_t),compare);
+    qsort(product,N,sizeof(uint64_t),compare);
 
     //the first position always starts an atom
     begin = 0;
     label_count=1;
-    u_int64_t old_val=product[0];
+    uint64_t old_val=product[0];
     for (i = 1; i < N; i++) {
         //whenever we find 1 (a new atom)
         if (product[i]!=old_val) {

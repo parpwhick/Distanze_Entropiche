@@ -24,24 +24,25 @@ void print_help() {
     fprintf(stderr,
             "Usage: distanze [-option1 [arg]] [-option2 [arg]]...\n"
             "\n"
-            "Option list for this program:\n"
-            "  -random          Turns on random string generation [on]\n"
-            "  -file FILENAME   Read sequences from FILENAME [off]\n"
-            "  -seqnum N        Limits the number of sequences to N [2550]\n"
-            "  -seqlength N     Limits sequence length to N [600]\n"
-            "  -nodistance      Doesn't calculate any distance matrix\n"
-            "  -fuzzy N         Set degree of fuzziness in partitioning the sequence [2]\n"
-            "  -translate       Translate protein sequence into reduced 10 letter code [off]\n"
+            "General option list for this program:\n"
+            "  -random          Turns on random generation [on]\n"
+            "  -file FILENAME   Read configurations from FILENAME [off]\n"
+            "  -num N           Limits the number of configurations to N [2550]\n"
+            "  -length N        Limits configuration length to N [600]\n"
+            "  -nodistance      Doesn't calculate any distance matrix\n"            
             "  -symbols N       Generate random strings with N symbols [2]\n"
-            "  -write           Write the distance matrices [off]\n"
+            "  -nowrite         Don't write the distance matrices [off]\n"
             "  -threads N       Use N threads to calculate distance matrix [1]\n"
-            "  -seed N          Random number generator seed [37337]\n"
-            "  -sorted          Use sorted general partition distance algorithm [auto]\n"
-            "  -pmatrix         Use pmatrix general partition distance algorithm [auto]\n"
-            "  -lato L          Generate random Ising lattice with side L\n"
-            "  -standard        Use standard general partition distance algorithm [auto]\n"
+//          "  -translate       Translate protein sequence into reduced 10 letter code [off]\n"
             "  -v [-v -v]       Turns on increasingly verbose messages to stderr [off]\n"
             "  -help            Shows this message\n"
+            "  \n"
+            "Options for particular structures:\n"
+            "  -sequence        Linear open sequence topology with 2 nearest neighbours\n"
+            "  -fuzzy N         Linear open sequence with N nearest neighbours [0]\n"
+            "  -square L        The configuration is from a square of side L\n"
+            "  -adj rows cols   The files encode a generic adiacency matrix by its\n"
+            "                   nonzero elements, with entries in 'rows' and 'cols'\n"
             );
 }
 void set_program_options(options &opts, int argc, char**argv) {
@@ -54,9 +55,9 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.translate = false;
     opts.graphics=false;
     opts.verbose = 0;
-    opts.write=false;
+    opts.write=true;
     opts.distance=true;
-    opts.fuzzy=2;
+    opts.fuzzy=0;
     opts.threads=2;
     opts.da_calcolare= 0
 		         //       |SHAN | SHAN_TOP 
@@ -84,14 +85,10 @@ void set_program_options(options &opts, int argc, char**argv) {
                 strncpy(opts.state_filename, argv[read_argvs++], 255);
                 fprintf(stderr, "Reading from filename: %s\n", opts.state_filename);
                 opts.letto_da = FROM_FILE;
-            } else if (input == "-lattice") {
-                fprintf(stderr, "Analysing 2d lattice\n");
-                opts.topologia= RETICOLO_2D;
-                
             } else if (input == "-sequence") {
                 fprintf(stderr, "Analyzing 1d sequences\n");                
                 opts.topologia = LINEARE;
-            } else if (input == "-adiacenza") {
+            } else if (input == "-adj") {
                 if (argc - read_argvs < 2)
                     error("Need to specify two vector files\n");
                 if (argv[read_argvs][0] == '-')
@@ -100,7 +97,7 @@ void set_program_options(options &opts, int argc, char**argv) {
                 strncpy(opts.adj_vec_1, argv[read_argvs++], 255);
                 strncpy(opts.adj_vec_2, argv[read_argvs++], 255);
                 opts.topologia = FROM_FILE;
-            }else if (input == "-seqlength") {
+            }else if (input == "-length") {
                 if (argc - read_argvs < 1)
                     error("Need to specify sequence length\n");
                 if (argv[read_argvs][0] == '-')
@@ -108,16 +105,17 @@ void set_program_options(options &opts, int argc, char**argv) {
                 
                 opts.seq_len = atoi(argv[read_argvs++]);
                 fprintf(stderr, "Sequence length limited to %d\n", opts.seq_len);
-            } else if (input == "-lato") {
+            } else if (input == "-square") {
                 if (argc - read_argvs < 1)
                     error("Need to specify lattice side length\n");
                 if (argv[read_argvs][0] == '-')
                     error("Expecting argument, not another option\n");
                 
+                opts.topologia= RETICOLO_2D;
                 opts.lato = atoi(argv[read_argvs++]);
-                fprintf(stderr, "Lattice side set to %d\n", opts.lato);
+                fprintf(stderr, "Using square lattice topology, with side %d\n", opts.lato);
             } 
-            else if (input == "-seqnum") {
+            else if (input == "-num") {
                 if (argc - read_argvs < 1)
                     error("Missing max number of sequences to read\n");
                 if (argv[read_argvs][0] == '-')
@@ -146,14 +144,12 @@ void set_program_options(options &opts, int argc, char**argv) {
             }   else if (input == "-hamming") {
                 opts.da_calcolare |= HAMM;
 				fprintf(stderr, "Hamming distance\n");
-            }         
-                   
-            else if (input == "-translate") {
-                opts.translate = true;
-                fprintf(stderr, "Simplifying sequence alphabet\n");
-            } else if (input == "-write") {
-                opts.write = true;
-                fprintf(stderr, "Writing out the distance matrices\n");
+//            }else if (input == "-translate") {
+//                opts.translate = true;
+//                fprintf(stderr, "Simplifying sequence alphabet\n");
+            } else if (input == "-nowrite") {
+                opts.write = false;
+                fprintf(stderr, "Not writing out the distance matrices\n");
             } else if (input == "-nodistance") {
                 opts.distance = false;
                 fprintf(stderr, "Not calculating the distance matrix\n");

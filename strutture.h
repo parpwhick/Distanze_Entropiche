@@ -77,12 +77,14 @@ typedef struct {
     int pos;
 } labelled_array;
 
+typedef int32_t label_t;
+
 class basic_partition {
 public:
     //number of atoms found
-    int n;
+    label_t n;
     //total length of the partition
-    int N;
+    label_t N;
 
     double entropia_shannon;
     double entropia_topologica;
@@ -119,9 +121,9 @@ public:
 
 class atom {
 public:
-    int size;
-    int start;
-    int end;
+    label_t size;
+    label_t start;
+    label_t end;
 
     atom() {
         size = 0;
@@ -131,26 +133,31 @@ public:
 };
 
 class general_partition : public basic_partition {
+private:
+    //nr. di atomi allocati per questa partizione (ottimizzazione)
+    label_t allocated_n;
+    
+    void allocate(label_t len);
+    void allocate_atoms(label_t n1);
 public:
     //labels identify generic atoms across the partition
-    int *labels;
+    label_t *labels;
     //nearest neighbors
-    int *prev_site;
+    label_t *prev_site;
 
     atom * atomi;
     int lato;
 
     int dim;
-    int **NNB;
+    label_t **NNB;
 
-    void allocate(int len);
     template <typename T> general_partition(const T* seq, int len);
     template <typename T> void fill(const T* seq, int len);
     template <typename T> void from_linear_sequence(const T* seq, int len);
     template <typename T> void from_square_lattice(const T* val, int lato, int dim);
     void trivial(int len);
     
-    void from_nnb(int **NNB, int dim=2);
+    void from_nnb(label_t **NNB, int dim=2);
     void from_configuration(int *configuration, adj_struct adj, int N1);
     void relabel();
 
@@ -170,12 +177,12 @@ public:
 
     class Iterator {
     private:
-        int _site;
-        const int *_next;
+        label_t _site;
+        const label_t *_next;
 
     public:
 
-        Iterator(int dove, const int *vicini) : _site(dove), _next(vicini) {
+        Iterator(int dove, const label_t *vicini) : _site(dove), _next(vicini) {
         };
 
         int operator*() {
@@ -226,7 +233,7 @@ private:
     int *common_factor;
     int *reduced1;
     int *reduced2;
-    u_int64_t *product;
+    uint64_t *product;
     int *product_reduced;
     int *labels;
     short *pmatrix;
@@ -275,6 +282,6 @@ template <typename T, typename U> void ppmout2(const T *grid1, const U* grid2, i
 
 void calcola_matrice_distanze(linear_partition *X);
 void calcola_matrice_distanze(general_partition *Z);
-void print_array(int *array, int len, const char *nome);
+template <typename pointer_t> void print_array(const pointer_t *array, int len, const char *nome);
 
 #endif

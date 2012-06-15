@@ -185,6 +185,7 @@
       <in>distanze.cpp</in>
       <in>general_distance.cpp</in>
       <in>init_functions.cpp</in>
+      <in>ising_simulation.cpp</in>
       <in>linear_distance.cpp</in>
       <in>partizioni.cpp</in>
       <in>rand55.cpp</in>
@@ -216,7 +217,7 @@
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
           <buildCommand>${MAKE} -f Makefile</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
-          <executablePath></executablePath>
+          <executablePath>distanze_generiche.exe</executablePath>
           <ccTool>
             <preprocessorList>
               <Elem>_OPENMP=200505</Elem>

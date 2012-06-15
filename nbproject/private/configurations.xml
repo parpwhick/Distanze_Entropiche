@@ -5,7 +5,7 @@
     <conf name="Default" type="0">
       <toolsSet>
         <developmentServer>localhost</developmentServer>
-        <platform>2</platform>
+        <platform>3</platform>
       </toolsSet>
       <dbx_gdbdebugger version="1">
         <gdb_pathmaps>
@@ -25,8 +25,10 @@
       <runprofile version="9">
         <runcommandpicklist>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"/distanze_generiche.exe -random -adiacenza vector1.bin vector2.bin -seqnum 3</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -random -adiacenza vector1.bin vector2.bin -seqnum 3</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}"</runcommand>
+        <runcommand>"${OUTPUT_PATH}" -random -adiacenza vector1.bin vector2.bin -seqnum 3</runcommand>
         <rundir>.</rundir>
         <buildfirst>true</buildfirst>
         <terminal-type>0</terminal-type>

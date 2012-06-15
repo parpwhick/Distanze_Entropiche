@@ -5,12 +5,6 @@
 // Takuji Nishimura (who had suggestions from Topher Cooper and Marc Rieffel in
 // July-August 1997).
 //
-// Effectiveness of the recoding (on Goedel2.math.washington.edu, a DEC Alpha
-// running OSF/1) using GCC -O3 as a compiler: before recoding: 51.6 sec. to
-// generate 300 million random numbers; after recoding: 24.0 sec. for the same
-// (i.e., 46.5% of original time), so speed is now about 12.5 million random
-// number generations per second on this machine.
-//
 // According to the URL <http://www.math.keio.ac.jp/~matumoto/emt.html>
 // (and paraphrasing a bit in places), the Mersenne Twister is ``designed
 // with consideration of the flaws of various existing generators,'' has
@@ -33,50 +27,31 @@
 // received a copy of the GNU Library General Public License along with this
 // library; if not, write to the Free Software Foundation, Inc., 59 Temple
 // Place, Suite 330, Boston, MA 02111-1307, USA.
-//
-// The code as Shawn received it included the following notice:
-//
-//   Copyright (C) 1997 Makoto Matsumoto and Takuji Nishimura.  When
-//   you use this, send an e-mail to <matumoto@math.keio.ac.jp> with
-//   an appropriate reference to your work.
-//
-// It would be nice to CC: <Cokus@math.washington.edu> when you write.
-//
-// RandMT class created by Paul Gresham <gresham@mediavisual.com>
-// There seems to be a slight performance deficit in process creation
-// however I've not profiled the class to compare it with the straight
-// C code.
-//
-// Use of a class removes many C nasties and also allows you to easily 
-// create multiple generators.
-// To compile on GNU a simple line is:
-// g++ -O3 RandMT.cc -o RandMT
-//
 
 #include "rand_marsenne.h"
 #include "time.h"
 
 RandMT::RandMT() {
-      uint32 seed;      
-      #ifdef __linux__
-        FILE *out = fopen("/dev/urandom", "r");
-        int bytes_read = fread(&seed, sizeof (long), 1, out);
-        if (!bytes_read) {
-            printf("Failed reading the seed, which wasn't provided\n");
-            exit(1);
-        }
-        fclose(out);
+    uint32 seed;
+#ifdef __linux__
+    FILE *out = fopen("/dev/urandom", "r");
+    int bytes_read = fread(&seed, sizeof (long), 1, out);
+    if (!bytes_read) {
+        printf("Failed reading the seed, which wasn't provided\n");
+        exit(1);
+    }
+    fclose(out);
 #else
-        seed=time(0);
+    seed = time(0);
 #endif
-        seedMT(seed);
-  }
-
-  RandMT::RandMT(uint32 seed) {
     seedMT(seed);
-  }
+}
 
-  void RandMT::seedMT(uint32 seed) {
+RandMT::RandMT(uint32 seed) {
+    seedMT(seed);
+}
+
+void RandMT::seedMT(uint32 seed) {
     //
     // We initialize state[0..(N-1)] via the generator
     //
@@ -125,66 +100,66 @@ RandMT::RandMT() {
     initseed = seed;
 
     register uint32 x = (seed | 1U) & 0xFFFFFFFFU, *s = state;
-    register int    j;
+    register int j;
     left = 0;
-    for(*s++=x, j=N; --j; *s++ = (x*=69069U) & 0xFFFFFFFFU);
-  }
+    for (*s++ = x, j = N; --j; *s++ = (x *= 69069U) & 0xFFFFFFFFU);
+}
 
-  uint32 RandMT::reloadMT(void) {
-    register uint32 *p0=state, *p2=state+2, *pM=state+M, s0, s1;
-    register int    j;
+uint32 RandMT::reloadMT(void) {
+    register uint32 *p0 = state, *p2 = state + 2, *pM = state + M, s0, s1;
+    register int j;
 
-    if(left < -1)
+    if (left < -1)
         seedMT(initseed);
 
-    left=N-1, next=state+1;
+    left = N - 1, next = state + 1;
 
-    for(s0=state[0], s1=state[1], j=N-M+1; --j; s0=s1, s1=*p2++)
+    for (s0 = state[0], s1 = state[1], j = N - M + 1; --j; s0 = s1, s1 = *p2++)
         *p0++ = *pM++ ^ (mixBits(s0, s1) >> 1) ^ (loBit(s1) ? K : 0U);
 
-    for(pM=state, j=M; --j; s0=s1, s1=*p2++)
+    for (pM = state, j = M; --j; s0 = s1, s1 = *p2++)
         *p0++ = *pM++ ^ (mixBits(s0, s1) >> 1) ^ (loBit(s1) ? K : 0U);
 
-    s1=state[0], *p0 = *pM ^ (mixBits(s0, s1) >> 1) ^ (loBit(s1) ? K : 0U);
+    s1 = state[0], *p0 = *pM ^ (mixBits(s0, s1) >> 1) ^ (loBit(s1) ? K : 0U);
     s1 ^= (s1 >> 11);
-    s1 ^= (s1 <<  7) & 0x9D2C5680U;
+    s1 ^= (s1 << 7) & 0x9D2C5680U;
     s1 ^= (s1 << 15) & 0xEFC60000U;
-    return(s1 ^ (s1 >> 18));
-  }
+    return (s1 ^ (s1 >> 18));
+}
 
-
-  uint32 RandMT::rand_int32(void) {
+uint32 RandMT::rand_int32(void) {
     uint32 y;
 
-    if(--left < 0)
-        return(reloadMT());
+    if (--left < 0)
+        return (reloadMT());
 
-    y  = *next++;
+    y = *next++;
     y ^= (y >> 11);
-    y ^= (y <<  7) & 0x9D2C5680U;
+    y ^= (y << 7) & 0x9D2C5680U;
     y ^= (y << 15) & 0xEFC60000U;
-    return(y ^ (y >> 18));
-  }
+    return (y ^ (y >> 18));
+}
 
 #ifdef RANDOM_TEST
 #include <cstdio>
 // A simple test
+
 int main(void) {
     int j;
-    unsigned long l=0;
-    double l2=0;
+    unsigned long l = 0;
+    double l2 = 0;
 
     RandMT r(4357U);
-   
+
     // you can seed with any uint32, but the best are odds in 0..(2^32 - 1)
-    
+
     // Run this 400 million times
-    for(j=400000000; j>0 ; --j) {
-        l+=r.get_int();
+    for (j = 400000000; j > 0; --j) {
+        l += r.get_int();
     }
-    printf("control value: %lu\n",l);
+    printf("control value: %lu\n", l);
     //printf("control value: %g\n",l2);
-    return(0);
+    return (0);
 }
 
 #endif
