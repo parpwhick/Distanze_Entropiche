@@ -28,14 +28,16 @@
 // library; if not, write to the Free Software Foundation, Inc., 59 Temple
 // Place, Suite 330, Boston, MA 02111-1307, USA.
 
-#include "rand_marsenne.h"
-#include "time.h"
+#include "rand_mersenne.h"
+#include <time.h>
+#include <cstdio>
+#include <cstdlib>
 
 RandMT::RandMT() {
-    uint32 seed;
+    uint32_t seed;
 #ifdef __linux__
     FILE *out = fopen("/dev/urandom", "r");
-    int bytes_read = fread(&seed, sizeof (long), 1, out);
+    int bytes_read = fread(&seed, sizeof (uint32_t), 1, out);
     if (!bytes_read) {
         printf("Failed reading the seed, which wasn't provided\n");
         exit(1);
@@ -47,11 +49,11 @@ RandMT::RandMT() {
     seedMT(seed);
 }
 
-RandMT::RandMT(uint32 seed) {
+RandMT::RandMT(uint32_t seed) {
     seedMT(seed);
 }
 
-void RandMT::seedMT(uint32 seed) {
+void RandMT::seedMT(uint32_t seed) {
     //
     // We initialize state[0..(N-1)] via the generator
     //
@@ -99,14 +101,14 @@ void RandMT::seedMT(uint32 seed) {
     //
     initseed = seed;
 
-    register uint32 x = (seed | 1U) & 0xFFFFFFFFU, *s = state;
+    register uint32_t x = (seed | 1U) & 0xFFFFFFFFU, *s = state;
     register int j;
     left = 0;
     for (*s++ = x, j = N; --j; *s++ = (x *= 69069U) & 0xFFFFFFFFU);
 }
 
-uint32 RandMT::reloadMT(void) {
-    register uint32 *p0 = state, *p2 = state + 2, *pM = state + M, s0, s1;
+uint32_t RandMT::reloadMT(void) {
+    register uint32_t *p0 = state, *p2 = state + 2, *pM = state + M, s0, s1;
     register int j;
 
     if (left < -1)
@@ -127,19 +129,6 @@ uint32 RandMT::reloadMT(void) {
     return (s1 ^ (s1 >> 18));
 }
 
-uint32 RandMT::rand_int32(void) {
-    uint32 y;
-
-    if (--left < 0)
-        return (reloadMT());
-
-    y = *next++;
-    y ^= (y >> 11);
-    y ^= (y << 7) & 0x9D2C5680U;
-    y ^= (y << 15) & 0xEFC60000U;
-    return (y ^ (y >> 18));
-}
-
 #ifdef RANDOM_TEST
 #include <cstdio>
 // A simple test
@@ -151,7 +140,7 @@ int main(void) {
 
     RandMT r(4357U);
 
-    // you can seed with any uint32, but the best are odds in 0..(2^32 - 1)
+    // you can seed with any uint32_t, but the best are odds in 0..(2^32 - 1)
 
     // Run this 400 million times
     for (j = 400000000; j > 0; --j) {

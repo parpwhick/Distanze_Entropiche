@@ -1,8 +1,9 @@
 /*
   Date: 06/03/06 11:33
   Description: Generazione matrice di adiacenza per gasket di sierpinski a generazione g = GEN. 
-
-  Versione 2, 31/05/2013, Dawid Crivelli
+  Autore: Elena Agliari
+ 
+  Versione 2, 31/05/2012, Dawid Crivelli
   -update in place
   -utilizzo memoria ottimale
 */
@@ -23,7 +24,7 @@ public:
         total = rows*cols;
         nrows = rows;
         if (nrows) {
-            fprintf(stderr, "Requested allocation space of %u kbytes\n", ((sizeof (int)) * total) >> 10);
+            fprintf(stderr, "Requested allocation space of %d kbytes\n", (((int)sizeof (int)) * total) >> 10);
             buffer = new int[total];
             if(fill) 
                 for (int i=0; i<total ;i++)

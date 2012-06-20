@@ -98,6 +98,27 @@ adj_struct adiacenza_fuzzy_line(int N){
     return(temp);
 }
 
+/*
+char *colori=new char[total_size];
+    colori[0]=1;
+    
+    for (int i=1; i<total_size; i++){
+        int min_col=1;
+    
+        for(int j=0; j<4;j++)
+                if(nn(i,j) != -1 && colori[nn(i,j)] == min_col) min_col++ ;
+        colori[i]=min_col;        
+    }
+    int popcol[4];
+    for(int i=0; i<4;i++) popcol[i]=0;
+    
+    for (int i=0; i<total_size; i++)
+        popcol[colori[i]-1]++;
+    
+    for(int i=0; i<4;i++) 
+        printf("Popolazione di %d: %.2f%%\n",i+1,(popcol[i]*100.0)/total_size);
+*/  
+
 #include <iostream>
 adj_struct adiacenza_from_file(const char *name_vec1,const char *name_vec2, int & N){
     FILE *vec1=fopen(name_vec1,"rb");

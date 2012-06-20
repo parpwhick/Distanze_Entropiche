@@ -4,7 +4,7 @@ COPTS += -Wall -fopenmp
 files=*.cpp *.h Makefile2
 file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
 
-OBJ_LIST= init_functions.o distanze.o partizioni.o rand55.o adj_handler.o rand_marsenne.o
+OBJ_LIST= init_functions.o distanze.o partizioni.o rand55.o adj_handler.o rand_mersenne.o
 
 ALL: distanze_generiche #ising #distanze_lineari
 
@@ -38,8 +38,8 @@ partizioni.o: strutture.h partizioni.cpp adj_handler.h
 adj_handler.o: adj_handler.cpp adj_handler.h
 	g++ ${COPTS} -c adj_handler.cpp
 	
-rand_marsenne.o: rand_marsenne.cpp rand_marsenne.h
-	g++ ${COPTS} -c rand_marsenne.cpp
+rand_mersenne.o: rand_mersenne.cpp rand_mersenne.h
+	g++ ${COPTS} -c rand_mersenne.cpp
 	
 simple_partition.o: strutture.h simple_partition.cpp
 	g++ ${COPTS} -c simple_partition.cpp

@@ -43,7 +43,6 @@ public:
     }
 };
 
-void ising_simulation(adj_struct NN);
 adj_struct adiacenza_fuzzy_line(int N);
 adj_struct adiacenza_simple_line(int N);
 adj_struct adiacenza_square_lattice(int lato);

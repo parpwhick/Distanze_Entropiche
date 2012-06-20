@@ -92,10 +92,8 @@
       </df>
       <df name="h1n1_nih">
         <df name="HA">
-          <in>carica_in_matlab.m</in>
         </df>
         <df name="NA">
-          <in>carica_in_matlab.m</in>
         </df>
         <in>cluster_count.m</in>
         <in>draw_ready_clustering.m</in>
@@ -104,7 +102,6 @@
       <df name="H3N2">
         <df name="immagini">
         </df>
-        <in>carica_in_matlab.m</in>
         <in>cluster_count.m</in>
         <in>cluster_stagionali.m</in>
       </df>
@@ -122,12 +119,10 @@
       </df>
       <df name="h3n2_nih">
         <df name="HA">
-          <in>carica_in_matlab.m</in>
           <in>cluster_count.m</in>
           <in>pconfronto.m</in>
         </df>
         <df name="NA">
-          <in>carica_in_matlab.m</in>
           <in>cluster_count.m</in>
         </df>
         <in>cluster_count.m</in>
