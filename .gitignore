@@ -3,6 +3,11 @@ h3n2_gisaid/
 
 distanze
 distanze_*
+ising
+
 *.o
-.fuse*
 *.bin
+*.gcda
+*.gcno
+
+.fuse*

@@ -8,10 +8,7 @@
 #include "adj_handler.h"
 #include "strutture.h"
 
-#ifndef STANDALONE
-extern 
-#endif 
-options opts;
+extern options opts;
 
 #define nnu(i) (i - (i % lato)+ ((i+lato-1)%lato))
 #define nnd(i) ((i/lato)*lato + ((i+lato+1)%lato))

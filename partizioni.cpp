@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cassert>
+#include <vector>
 
 #include "strutture.h"
 #include "adj_handler.h"
@@ -182,6 +183,10 @@ template void linear_partition::fill(const char *, int);
 
 void general_partition::allocate(label_t len) {
     assert(len != 0);
+    if(labels && N!=len){
+        fprintf(stderr,"Allocating again for a different length without freeing first\n");
+        exit(1);
+    }
     N = len;
 
     try {
@@ -191,7 +196,7 @@ void general_partition::allocate(label_t len) {
             prev_site = new label_t[N];
         //    if (!atomi)
         //        atomi = new atom[N];
-    }    catch (std::bad_alloc &e) {
+    } catch (std::bad_alloc &e) {
         fprintf(stderr, "Error allocating new partition: %s\n", e.what());
         exit(1);
     }
@@ -218,6 +223,9 @@ general_partition::general_partition(int len) {
     N = len;
     entropia_topologica = 0;
     entropia_shannon = 0;
+    prev_site=0;
+    atomi=0;
+    labels=0;
 
     if (N)
         allocate(N);
@@ -225,7 +233,6 @@ general_partition::general_partition(int len) {
         labels = 0;
         prev_site = 0;
         atomi = 0;
-        NNB = 0;
     }    
 }
 
@@ -235,109 +242,7 @@ general_partition::~general_partition(){
         delete []prev_site;
         delete []atomi;
     }    
-    if(NNB)
-        delete []NNB;
 }
-
-
-template <typename T>
-general_partition::general_partition(const T* seq, int len) {
-    labels=0;
-    N=0;
-    prev_site=0;
-    this->from_linear_sequence(seq,len);
-}
-
-void general_partition::trivial(int len){
-    N=len;
-    int *vuoto=new int[N];
-    for(label_t i=0; i< N; i++)
-        vuoto[i]=0;
-    
-    from_linear_sequence(vuoto,N);
-    delete []vuoto;
-    
-}
-
-template <typename T>
-void general_partition::from_linear_sequence(const T* seq, int len) {
-    label_t i, j;
-    label_t last_good;
-    
-    allocate(len);    
-    dim=1;
-    
-    //presetting labels for this partition to 0
-    for (i=0;i<N;i++)
-        prev_site[i]=-1;
-     
-    for (i=0;i<N;i++){
-        //if the site was already "colored" check the next one
-        if (prev_site[i] != -1)
-            continue;     
-        last_good=i;
-        prev_site[i]=i;
-        
-        for(j=i+1; j<last_good+opts.fuzzy+2 && j<N; j++)
-            //if it belongs to the same cluster...
-            if(seq[j]==seq[i]){                
-                prev_site[j]=last_good;
-                last_good=j;
-            }
-    }
-    NNB=new label_t*[dim];
-    NNB[0]=prev_site;
-    
-    from_nnb(NNB,dim); 
-    
-    if (opts.graphics && (opts.topologia & LINEARE)){
-        static int imagenr=0; 
-        char filename[255];
-        imagenr++;
-        sprintf(filename, "sequenza%03d.ppm", imagenr);
-        ppmout(labels, N, filename);
-    }
-}
-template void general_partition::from_linear_sequence(const char *,int);
-template void general_partition::from_linear_sequence(const int *,int);
-
-
-#define nnu (i - (i % lato)+ ((i+lato-1)%lato))
-#define nnd ((i/lato)*lato + ((i+lato+1)%lato))
-#define nnl (i+N-lato)%N
-#define nnr (i+N+lato)%N
-
-template <typename T>
-void general_partition::from_square_lattice(const T* valori, int L,int) {    
-    lato=L;
-    N=L*L;
-    dim=2;
-    allocate(N);
-
-    NNB=new label_t*[dim];
-    for(int j=0;j<dim;j++)
-        NNB[j]=new label_t[N];
-
-    // Ho due tipi di vicini, quello Up e quello Left
-    for (label_t i = 0; i < N; i++) {
-        NNB[0][i] = (valori[i] == valori[nnu]) ? nnu : i;
-        NNB[1][i] = (valori[i] == valori[nnl]) ? nnl : i;
-    }  
-    //Calcola la partizione, a partire dalla mappa dei vicini
-    from_nnb(NNB, dim);
-
-    if (opts.graphics) {
-        static int imagenr = 0;
-        char filename[255];
-        imagenr++;
-        sprintf(filename, "reticolo%03d.ppm", imagenr);
-        ppmout2(valori, labels, L, filename);
-    }
-
-}
-template void general_partition::from_square_lattice(const int*, int, int);
-template void general_partition::from_square_lattice(const char*, int, int);
-
 
 
 inline int compare (const void * a, const void * b){
@@ -466,7 +371,7 @@ void general_partition::reduce(const general_partition &p1, const general_partit
 }
 
 void general_partition::linear_intersection(const general_partition &p1, const general_partition &p2){    
-    label_t *vicinato[2 * p1.dim];
+    label_t *vicinato[2];
     lato=p1.lato;
     allocate(p1.N);
     
@@ -500,8 +405,8 @@ void general_partition::from_configuration(int *configuration, adj_struct adj, i
     label_t r1, r2;
     int z;
     
+    allocate(N1);
     N=N1;
-    allocate(N);
     
     for (label_t i = 0; i < N; i++) {
         labels[i] = -1;
@@ -586,9 +491,9 @@ void general_partition::relabel(){
 }
 
 
-void general_partition::from_nnb(label_t **neighbors, int dim1){
+void general_partition::from_nnb(label_t **neighbors){
     label_t s1, s2;
-    dim=dim1;
+    const int dim=2;
     
     for (label_t i = 0; i < N; i++) {
         labels[i] = -1;
@@ -617,6 +522,59 @@ void general_partition::from_nnb(label_t **neighbors, int dim1){
         }
     }
         
-    this->relabel();
-    
+    this->relabel();    
+}
+
+void general_partition::print_cluster_adjacency(){
+    //label_t e' definito in strutture.h come int32
+    std::vector<label_t> riga;
+    std::vector<label_t> colonna;
+    int totale=0;
+    FILE *vec1 = fopen("vector1.bin", "wb");
+    FILE *vec2 = fopen("vector2.bin", "wb");
+    //per ogni sito
+    for (label_t which = 0; which <N; which++) {
+        /* Per ogni sito appartenente al reticolo, recupero le informazioni
+           sul cluster di appartenenza (atomo in questa nomenclatura).
+           Cio' e' necessario per ottenere tutti i siti (ordinati) del cluster
+	   cercato con efficienza massima. */
+	const atom &atomo = atomi[labels[which]];
+        int quanti=atomo.size;
+        riga.reserve(quanti);
+        colonna.reserve(quanti);
+            
+        int sito=0;
+        //scorro tutti i siti appartenenti allo stesso atomo, 
+        //con l'iteratore ii. Il sito corrispondente e'  *ii
+        for (Iter_t ii = this->begin(atomo); ii != this->end(); ii++){
+            /* gli elementi nonnulli della matrice di adiacenza A(i,j)
+               sono in (which, *ii), salvo i valori delle righe e delle colonne
+	       corrispondenti in due vettori */
+            
+            //salto elemento diagonale
+            if(which==*ii)
+                continue;
+            riga[sito]=which+1;
+            colonna[sito]=*ii+1;
+            sito+=1;
+        }       
+        //stampa i vettori cosi costruiti!!!!!!!!!!
+        fwrite(&riga[0], sizeof (label_t), sito, vec1);
+        fwrite(&colonna[0], sizeof (label_t), sito, vec2);
+        totale+=sito;
+        
+    /* Creazione vettori di adiacenza per matrice sparse in stile Matlab */
+    /* La funzione per caricare i dati cosi creati e':
+    -------------------------------
+    function adiacenza=load_sierpinski()
+	indici_riga=fread(fopen('vector1.bin','r'),inf,'int32');
+	indici_colonna=fread(fopen('vector2.bin','r'),inf,'int32');
+	N=max(max(indici_riga),max(indici_colonna));
+	adiacenza=sparse(indici_riga,indici_colonna,1,N,N);
+    end
+    ******************************/
+    }   
+    fclose(vec1);
+    fclose(vec2);
+    printf("Elementi nonnulli della matrice di adiacenza: %d\n",totale);
 }

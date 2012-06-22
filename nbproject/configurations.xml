@@ -185,8 +185,8 @@
       <in>partizioni.cpp</in>
       <in>rand55.cpp</in>
       <in>rand55.h</in>
-      <in>rand_marsenne.cpp</in>
-      <in>rand_marsenne.h</in>
+      <in>rand_mersenne.cpp</in>
+      <in>rand_mersenne.h</in>
       <in>strutture.h</in>
     </df>
     <logicalFolder name="ExternalFiles"

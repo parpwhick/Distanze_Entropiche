@@ -340,3 +340,46 @@ void distance::linear_product_pmatrix(const linear_partition &p1, const linear_p
 //    this->dist_fuzzy_t = 2 * mylog[label_count] - t1 - t2;
 //}
 
+
+
+template <typename T>
+void general_partition::from_linear_sequence(const T* seq, int len) {
+    label_t i, j;
+    label_t last_good;
+    
+    allocate(len);    
+    dim=1;
+    
+    //presetting labels for this partition to 0
+    for (i=0;i<N;i++)
+        prev_site[i]=-1;
+     
+    for (i=0;i<N;i++){
+        //if the site was already "colored" check the next one
+        if (prev_site[i] != -1)
+            continue;     
+        last_good=i;
+        prev_site[i]=i;
+        
+        for(j=i+1; j<last_good+opts.fuzzy+2 && j<N; j++)
+            //if it belongs to the same cluster...
+            if(seq[j]==seq[i]){                
+                prev_site[j]=last_good;
+                last_good=j;
+            }
+    }
+    NNB=new label_t*[dim];
+    NNB[0]=prev_site;
+    
+    from_nnb(NNB,dim); 
+    
+    if (opts.graphics && (opts.topologia & LINEARE)){
+        static int imagenr=0; 
+        char filename[255];
+        imagenr++;
+        sprintf(filename, "sequenza%03d.ppm", imagenr);
+        ppmout(labels, N, filename);
+    }
+}
+template void general_partition::from_linear_sequence(const char *,int);
+template void general_partition::from_linear_sequence(const int *,int);

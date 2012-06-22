@@ -13,10 +13,6 @@
 #include <string>
 #include <stdint.h>
 
-typedef uint32_t u_int32_t;
-typedef uint64_t u_int64_t;
-#define FORCE_INLINE __attribute__((always_inline))
-
 enum algorithm {
     NORMAL,
     SORTED,
@@ -88,8 +84,6 @@ public:
 
     double entropia_shannon;
     double entropia_topologica;
-
-
 };
 
 class linear_partition : public basic_partition {
@@ -139,41 +133,31 @@ private:
     
     void allocate(label_t len);
     void allocate_atoms(label_t n1);
-public:
-    //labels identify generic atoms across the partition
-    label_t *labels;
+    void sort_entropy();
+    void relabel();
     //nearest neighbors
     label_t *prev_site;
-
-    atom * atomi;
-    int lato;
-
-    int dim;
-    label_t **NNB;
-
-    template <typename T> general_partition(const T* seq, int len);
-    template <typename T> void fill(const T* seq, int len);
-    template <typename T> void from_linear_sequence(const T* seq, int len);
-    template <typename T> void from_square_lattice(const T* val, int lato, int dim);
-    void trivial(int len);
     
-    void from_nnb(label_t **NNB, int dim=2);
+    atom * atomi;
+public:
+    int lato;
+    //labels identify generic atoms across the partition
+    label_t *labels;
+    
+    void from_nnb(label_t **NNB);
     void from_configuration(int *configuration, adj_struct adj, int N1);
-    void relabel();
 
-    //void from_atom(int *label, const int which, const int set_to);
     general_partition(int len = 0);
-    void sort_entropy();
+    ~general_partition();
     void reduce(const general_partition &ridurre, const general_partition &common);
     void linear_intersection(const general_partition &p1, const general_partition &p2);
+    
     void print();
+    void print_cluster_adjacency();
 
     atom& find_atom(const atom &atomo1) const {
         return atomi[labels[atomo1.start]];
     }
-
-
-    ~general_partition();
 
     class Iterator {
     private:
@@ -254,8 +238,6 @@ public:
     double dist_fuzzy_t;
     double dist_fuzzy_r;
     double dist_fuzzy_r_t;
-
-
 
     void binary_partition(const linear_partition &first, const linear_partition &second, int ridotta = 1);
     void linear_product_sorted(const general_partition &p1, const general_partition &p2);

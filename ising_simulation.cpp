@@ -1,8 +1,10 @@
 #include "adj_handler.h"
 #include "strutture.h"
-#include "rand_marsenne.h"
+#include "rand_mersenne.h"
 #include "rand55.h"
 #include <cmath>
+
+options opts;
 
 enum types {
     METROPOLIS,
@@ -67,7 +69,7 @@ void ising_simulation::metropolis_step() {
             somma_vicini += config[NN.vicini[m]];
 
         dH = config[s] * somma_vicini;
-        if (dH <= 0 || random.get_float() < myexp[dH]) // exp(-2 * beta * dH))
+        if (dH <= 0 || random.get_double() < myexp[dH]) // exp(-2 * beta * dH))
             config[s] = -config[s];
     }
 }
@@ -158,7 +160,7 @@ void ising_simulation::microcanonical_step() {
 
 void ising_simulation::measure() {
     static int t = 0;
-    double M1, M2, M3;
+    double M1=0, M2=0, M3=0;
     int size = N / 3 + 1;
 
     for (int i = 0; i < size; i++)
