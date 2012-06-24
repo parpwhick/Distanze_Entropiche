@@ -6,13 +6,8 @@
 
 options opts;
 
-enum types {
-    METROPOLIS,
-    MICROCANONICAL
-};
-
 class ising_simulation {
-    types simulation_type;
+    simulation_type update_rule;
 
     adj_struct NN;
     int N;
@@ -27,7 +22,7 @@ class ising_simulation {
     void metropolis_step();
     void microcanonical_step();
 public:
-    ising_simulation(adj_struct NN1, types TT);
+    ising_simulation(adj_struct NN1, simulation_type TT);
     void measure();
     void step(int steps = 1);
     void init_config();
@@ -160,7 +155,7 @@ void ising_simulation::microcanonical_step() {
 
 void ising_simulation::measure() {
     static int t = 0;
-    double M1=0, M2=0, M3=0;
+    double M1 = 0, M2 = 0, M3 = 0;
     int size = N / 3 + 1;
 
     for (int i = 0; i < size; i++)
@@ -189,7 +184,7 @@ void ising_simulation::init_config() {
         config[i] = -1;
 }
 
-ising_simulation::ising_simulation(adj_struct NN1, types TT) {
+ising_simulation::ising_simulation(adj_struct NN1, simulation_type TT) {
     config = 0;
     link_energies = 0;
     max_link_energy = 4;
@@ -198,7 +193,7 @@ ising_simulation::ising_simulation(adj_struct NN1, types TT) {
     NN = NN1;
     N = NN.N;
 
-    simulation_type = TT;
+    update_rule = TT;
 
     init_config();
     measure();

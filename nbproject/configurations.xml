@@ -181,12 +181,12 @@
       <in>general_distance.cpp</in>
       <in>init_functions.cpp</in>
       <in>ising_simulation.cpp</in>
-      <in>linear_distance.cpp</in>
       <in>partizioni.cpp</in>
       <in>rand55.cpp</in>
       <in>rand55.h</in>
       <in>rand_mersenne.cpp</in>
       <in>rand_mersenne.h</in>
+      <in>simple_partitions.cpp</in>
       <in>strutture.h</in>
     </df>
     <logicalFolder name="ExternalFiles"

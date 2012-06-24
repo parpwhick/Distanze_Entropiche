@@ -3,9 +3,14 @@
  *
  * Started on January 11, 2012, 2:30 PM
  * 
+ * Version: 6.1, 2012/06/21
+ * -Added simulation class
+ * -Improved entropy calculation, 2x speedup
+ * -New random number generator, for simulation use
+ * -Cleanups and memory usage reduction
+ * 
  * Version: 6.0, 2012/06/01
  * -General adjacency vector input
- * -Ising simulation of arbitrary structures
  * -Removed hashing and unused functions
  *   
  * Version: 5.2, 2012/03/22
@@ -48,53 +53,46 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
-#include <cstring>
-#include <vector>
-#include <map>
-#include <time.h>
 #include "strutture.h"
 
 extern options opts;
-double *mylog=0;
+double *mylog = 0;
 
+void print_partition_stats(general_partition *X) {
+    label_t min = X[0].N * 20, max = 0;
+    double mean = 0, std = 0;
+    for (int i = 0; i < opts.n_seq; i++) {
+        if (X[i].n < 10)
+            printf("Pochi atomi in %d\n", i);
+        min = std::min(X[i].n, min);
+        max = std::max(X[i].n, max);
+        mean += X[i].n;
+        std += (X[i].n)*(X[i].n);
 
-void print_partition_stats(general_partition *X, const char* name){
-    label_t min=X[0].N*20, max=0;
-    double mean=0, std=0;
-    for(int i=0; i<opts.n_seq; i++){
-	if(X[i].n < 10)
-		printf("Pochi atomi in %d\n",i);
-        min=std::min(X[i].n,min);
-        max=std::max(X[i].n,max);
-        mean+=X[i].n;
-        std+=(X[i].n)*(X[i].n);
-        
     }
     mean /= opts.n_seq;
     std /= opts.n_seq;
     std = std - mean*mean;
-    
-    fprintf(stderr,"Partizioni: nr. frammenti tra [%d,%d], ",min,max);
-    fprintf(stderr,"media %.2f con %.2f siti/atomo\n",mean,opts.seq_len/mean);
-    
+
+    fprintf(stderr, "Partizioni: nr. frammenti tra [%d,%d], ", min, max);
+    fprintf(stderr, "media %.2f con %.2f siti/atomo\n", mean, opts.seq_len / mean);
+
 }
 
 int main(int argc, char** argv) {
-            
-    set_program_options(opts,argc,argv);
-    
-    int &da_calcolare=opts.da_calcolare;        
-    
+
+    opts.partition_type = GENERAL_PARTITION;
+    set_program_options(opts, argc, argv);
+
     //
     //  ALLOCATION OF MEMORY AND INITIALIZATION
     //
-    general_partition *Z = new general_partition[opts.n_seq];    
-    
-    
+    general_partition *Z = new general_partition[opts.n_seq];
+
     adj_struct topologia;
     switch (opts.topologia) {
-        case(RETICOLO_2D):        
-            topologia = adiacenza_square_lattice(opts.lato);        
+        case(RETICOLO_2D):
+            topologia = adiacenza_square_lattice(opts.lato);
             break;
         case(FUZZY):
             topologia = adiacenza_fuzzy_line(opts.seq_len);
@@ -107,33 +105,32 @@ int main(int argc, char** argv) {
             topologia = adiacenza_from_file(opts.adj_vec_1, opts.adj_vec_2, opts.seq_len);
             break;
     }
-    
+
     //logarithm lookup table, 6x program speedup
-    int lunghezza=std::max(opts.seq_len, opts.n_seq) + 10;
+    int lunghezza = std::max(opts.seq_len, opts.n_seq) + 10;
     mylog = new double[ lunghezza ];
-    for (int i = 1; i <  lunghezza;  i++)
+    for (int i = 1; i < lunghezza; i++)
         mylog[i] = log(i);
-    mylog[0]=0;    
-    
-    int *num_buffer=new int[opts.seq_len];
+    mylog[0] = 0;
+
+    int *num_buffer = new int[opts.seq_len];
     for (int i = 0; i < opts.n_seq; i++) {
-        
-        if (opts.letto_da == FROM_FILE){
-            int result=load_config(opts, num_buffer);
+
+        if (opts.letto_da == FROM_FILE) {
+            int result = load_config(opts, num_buffer);
             if (!result)
                 break;
         }
         if (opts.letto_da == RANDOM)
             generate_next_sequence(num_buffer);
 
-        if(opts.verbose)
-            fprintf(stderr,"Loaded sequence %d, analysing\n",i+1);
+        if (opts.verbose)
+            fprintf(stderr, "Loaded sequence %d, analysing\n", i + 1);
         Z[i].from_configuration(num_buffer, topologia, opts.seq_len);
     }
 
     printf("Loaded %d sequences long %d\n", opts.n_seq, opts.seq_len);
-    if (da_calcolare & GENERAL)
-        print_partition_stats(Z, "");
+    print_partition_stats(Z);
     printf("\n");
 
     //
