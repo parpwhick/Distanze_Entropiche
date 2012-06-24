@@ -24,13 +24,15 @@
       </nativedebugger>
       <runprofile version="9">
         <runcommandpicklist>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"/distanze_generiche.exe -random -adiacenza vector1.bin vector2.bin -seqnum 3</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -random -adiacenza vector1.bin vector2.bin -seqnum 3</runcommandpicklistitem>
+          <runcommandpicklistitem>time "${OUTPUT_PATH}" >/dev/null</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" -random -adiacenza vector1.bin vector2.bin -seqnum 3</runcommand>
+        <runcommand>"${OUTPUT_PATH}"</runcommand>
         <rundir>.</rundir>
         <buildfirst>true</buildfirst>
+        <console-type>1</console-type>
         <terminal-type>0</terminal-type>
         <remove-instrumentation>0</remove-instrumentation>
         <environment>

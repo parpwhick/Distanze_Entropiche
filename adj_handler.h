@@ -39,6 +39,7 @@ public:
             return 0;
         n=index[site+1]-index[site];
         vicini=adj+index[site];
+        __builtin_prefetch(vicini,0,0);
         return(n);
     }
 };
