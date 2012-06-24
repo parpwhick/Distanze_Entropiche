@@ -33,6 +33,7 @@ void print_help() {
             "  -symbols N       Generate random strings with N symbols [2]\n"
             "  -nowrite         Don't write the distance matrices [off]\n"
             "  -threads N       Use N threads to calculate distance matrix [1]\n"
+            "  -graphics        Make .ppm graphics when using square lattice topology"
 //          "  -translate       Translate protein sequence into reduced 10 letter code [off]\n"
             "  -v [-v -v]       Turns on increasingly verbose messages to stderr [off]\n"
             "  -help            Shows this message\n"

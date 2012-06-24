@@ -11,3 +11,4 @@ ising
 *.gcno
 
 .fuse*
+octave-core

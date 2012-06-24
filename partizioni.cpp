@@ -334,7 +334,6 @@ bool symmetric_difference(Iter_t from1, Iter_t from2, Iter_t to, int tol=10){
 void general_partition::reduce(const general_partition &p1, const general_partition &p2) {
     //inizializzazioni
     int fattori_indipendenti = 0;
-    lato = p1.lato;
     allocate(p1.N);
 
     for (label_t i = 0; i < N; i++)
@@ -381,7 +380,6 @@ void general_partition::reduce(const general_partition &p1, const general_partit
 
 void general_partition::linear_intersection(const general_partition &p1, const general_partition &p2){    
     label_t *vicinato[2];
-    lato=p1.lato;
     allocate(p1.N);
     
     vicinato[0]=p1.prev_site;
@@ -390,15 +388,15 @@ void general_partition::linear_intersection(const general_partition &p1, const g
     from_nnb(vicinato); 
     
     // Grafico il reticolo risultante, se richiesto
-    if (opts.graphics && (opts.topologia & RETICOLO_2D)) {
+    if (opts.graphics && (opts.topologia == RETICOLO_2D)) {
         static int imagecount=0;     
         char filename[255];
         imagecount++;
         sprintf(filename, "comune%03d.ppm", imagecount);
-        ppmout2(p1.labels, p2.labels, lato, filename);
+        ppmout2(p1.labels, p2.labels, opts.lato, filename);
         imagecount++;
         sprintf(filename, "comune%03d.ppm", imagecount);
-        ppmout(labels, lato, filename);
+        ppmout(labels, opts.lato, filename);
     }
 }
 
@@ -420,7 +418,7 @@ void general_partition::from_configuration(int *configuration, adj_struct adj, i
     for (label_t i = 0; i < N; i++) {
         labels[i] = -1;
     }  
- 
+    
     // percolazione e primi labels
     for (s1 = 0; s1 < N ; s1++) {
         r1=findroot(s1,labels);
@@ -452,6 +450,14 @@ void general_partition::from_configuration(int *configuration, adj_struct adj, i
     }
     
     this->relabel();
+    
+    if (opts.graphics && (opts.topologia == RETICOLO_2D)) {
+        static int imagecount=0;     
+        char filename[255];
+        imagecount++;
+        sprintf(filename, "reticolo%03d.ppm", imagecount);
+        ppmout2(configuration, labels, opts.lato, filename);
+    }
 }
 
 void general_partition::relabel(){

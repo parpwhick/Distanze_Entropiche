@@ -80,10 +80,10 @@ void distance::fill(const general_partition& e1, const general_partition& e2) {
             char filename[255];
             imagecount++;
             sprintf(filename, "ridotto%03d.ppm", imagecount);
-            ppmout2(e1.labels, e2.labels, e1.lato, filename);
+            ppmout2(e1.labels, e2.labels, opts.lato, filename);
             imagecount++;
             sprintf(filename, "ridotto%03d.ppm", imagecount);
-            ppmout2(ridotto1.labels, ridotto2.labels, e1.lato, filename);
+            ppmout2(ridotto1.labels, ridotto2.labels, opts.lato, filename);
         }        
     }
 
@@ -239,10 +239,10 @@ void distance::linear_product_sorted(const general_partition &p1,const  general_
     if (opts.graphics && (opts.topologia & RETICOLO_2D)) {
           imagecount++;
           sprintf(filename,"prodotto%03d.ppm",imagecount);
-          ppmout2(p1.labels,p2.labels,p1.lato,filename);
+          ppmout2(p1.labels,p2.labels,opts.lato,filename);
           imagecount++;
           sprintf(filename,"prodotto%03d.ppm",imagecount);
-          ppmout(product,p1.lato,filename);
+          ppmout(product,opts.lato,filename);
       }
     
     qsort(product,N,sizeof(uint64_t),compare);

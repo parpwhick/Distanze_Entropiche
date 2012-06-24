@@ -140,7 +140,6 @@ private:
     
     atom * atomi;
 public:
-    int lato;
     //labels identify generic atoms across the partition
     label_t *labels;
     

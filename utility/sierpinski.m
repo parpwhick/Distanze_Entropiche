@@ -83,7 +83,7 @@ end
 nn(z==2,3:4)=0;
 
 %estrazioni vettori di indici dei siti nonnulli
-[indici_riga,~,indici_colonna]=find(nn);
+[indici_riga,inutile,indici_colonna]=find(nn);
 
 %costruzione matrice vera e propria
 adiacenza=sparse(indici_riga,indici_colonna,1,total_size,total_size);

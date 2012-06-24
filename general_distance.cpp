@@ -63,7 +63,7 @@ void print_partition_stats(general_partition *X, const char* name){
     double mean=0, std=0;
     for(int i=0; i<opts.n_seq; i++){
 	if(X[i].n < 10)
-		printf("Il problema e' in %d\n",i);
+		printf("Pochi atomi in %d\n",i);
         min=std::min(X[i].n,min);
         max=std::max(X[i].n,max);
         mean+=X[i].n;
