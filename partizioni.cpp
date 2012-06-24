@@ -331,43 +331,52 @@ bool symmetric_difference(Iter_t from1, Iter_t from2, Iter_t to, int tol=10){
     }
 }
 
-void general_partition::reduce(const general_partition &p1, const general_partition &p2){
+void general_partition::reduce(const general_partition &p1, const general_partition &p2) {
     //inizializzazioni
-    int fattori_indipendenti=0;
-    lato=p1.lato;
+    int fattori_indipendenti = 0;
+    lato = p1.lato;
     allocate(p1.N);
-  
-    for(label_t i=0;i<N;i++)
-        labels[i]=1;
-    
+
+    for (label_t i = 0; i < N; i++)
+        labels[i] = 1;
+
+    int common_size = N;
     //per ogni atomo
     for (label_t which = 0; which < p1.n; which++) {
         // Considero l'atomo n-esimo del primo
         // Trovo l'atomo che corrisponde nella seconda partizione
         //  attraverso il primo sito in comune
         const atom &atomo1 = p1.atomi[which];
-        const atom &atomo2 = p2.find_atom(atomo1);          
-        
+        const atom &atomo2 = p2.find_atom(atomo1);
+        int size = atomo1.size;
+
         // Se gli atomi sono uguali, l'intersezione delle partizioni dicotomiche
         // non e' banale => salto
-        
+
         // Creazione degli iteratori, per ottenere tutti i siti in atomo1
         Iter_t ii = p1.begin(atomo1);
-        Iter_t end = p1.end();       
-        
+        Iter_t end = p1.end();
+
         // uguaglianza "fuzzy" tra atomi, a meno di 'tol' siti
         // similmente, se sono 'uguali', salto l'atomo nella partizione risultante
-        if(  symmetric_difference(ii,p2.begin(atomo2),end,0)  )
+        if (symmetric_difference(ii, p2.begin(atomo2), end, 0))
             continue;
-        
+
         // altrimenti interseca il fattore dicotomico con i precedenti
-        fattori_indipendenti++;               
-        
+        fattori_indipendenti++;
+        common_size -= size;
+        entropia_shannon += size * mylog[size];
+
         // faccio il prodotto rapido - moltiplico i siti di atomo1 per numero
-        for (; ii != end; ii++) 
-            labels[*ii] *= fattori_indipendenti + 1;           
-    }   
-    this->sort_entropy();
+        for (; ii != end; ii++)
+            labels[*ii] *= fattori_indipendenti + 1;
+    }
+    // si tiene conto dell'atomo sconnesso di background, formato dai pezzi comuni
+    entropia_shannon += common_size * mylog[common_size];
+    entropia_shannon = -entropia_shannon / N + mylog[N];
+    entropia_topologica = mylog[fattori_indipendenti + 1];
+    //this->sort_entropy();
+    //printf("Stima: %g, sicura: %g\n",entropia,entropia_shannon);
 }
 
 void general_partition::linear_intersection(const general_partition &p1, const general_partition &p2){    
