@@ -54,6 +54,7 @@
 #include <cstdio>
 #include <cmath>
 #include "strutture.h"
+#include "ising_simulation.h"
 
 extern options opts;
 double *mylog = 0;
@@ -113,6 +114,17 @@ int main(int argc, char** argv) {
         mylog[i] = log(i);
     mylog[0] = 0;
 
+    //
+    // SIMULATION case
+    //
+    if(opts.letto_da == SIMULATION){
+        time_series(topologia);
+        return(0);
+    }
+    
+    //
+    // RANDOM or FROM_FILE
+    // 
     int *num_buffer = new int[opts.seq_len];
     for (int i = 0; i < opts.n_seq; i++) {
 
@@ -123,7 +135,7 @@ int main(int argc, char** argv) {
         }
         if (opts.letto_da == RANDOM)
             generate_next_sequence(num_buffer);
-
+            
         if (opts.verbose)
             fprintf(stderr, "Loaded sequence %d, analysing\n", i + 1);
         Z[i].from_configuration(num_buffer, topologia, opts.seq_len);
@@ -137,7 +149,7 @@ int main(int argc, char** argv) {
     //  DISTANCE MEASUREMENTS
     //
     if (opts.distance == false)
-        exit(0);
+        return(0);
 
     calcola_matrice_distanze(Z);
     //

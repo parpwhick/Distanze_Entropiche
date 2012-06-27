@@ -397,11 +397,12 @@ template <typename pointer_t> int findroot(int i, pointer_t *ptr) {
     return ptr[i] = findroot(ptr[i], ptr);
 }
 
-void general_partition::from_configuration(int *configuration, adj_struct adj, int N1) {
+void general_partition::from_configuration(const int *configuration, adj_struct adj, int N1) {
     label_t s1, s2;
     label_t r1, r2;
     int z;
 
+    if(N1==0) N1=adj.N;
     allocate(N1);
     N = N1;
 

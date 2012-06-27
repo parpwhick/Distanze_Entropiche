@@ -1,33 +1,15 @@
 #include "adj_handler.h"
 #include "strutture.h"
 #include "rand_mersenne.h"
-#include "rand55.h"
+#include "ising_simulation.h"
 #include <cmath>
 
+#ifndef STANDALONE
+extern
+#endif
 options opts;
 
-class ising_simulation {
-    simulation_type update_rule;
-
-    adj_struct NN;
-    int N;
-    int T;
-    int *config;
-    int *link_energies;
-    int max_link_energy;
-    bool running;
-    double beta;
-    RandMT random;
-
-    void metropolis_step();
-    void microcanonical_step();
-public:
-    ising_simulation(adj_struct NN1, simulation_type TT);
-    void measure();
-    void step(int steps = 1);
-    void init_config();
-    int *copy();
-};
+double *myexp=0;
 
 int* ising_simulation::copy() {
     int *second = new int[N];
@@ -37,16 +19,22 @@ int* ising_simulation::copy() {
 }
 
 void ising_simulation::step(int steps){
+    if(skip){
+        steps+=skip;
+        skip=0;
+    }
+    steps*=steps_per_time;
+    
     if(update_rule==METROPOLIS)
         for(int i=0; i<steps; i++)
             metropolis_step();
+    
     else if(update_rule==MICROCANONICAL)
         for(int i=0; i<steps; i++)
             microcanonical_step();
 }
 
 void ising_simulation::metropolis_step() {
-    static double *myexp = 0;
     int s, z, somma_vicini, dH;
 
     if (config == 0) {
@@ -205,41 +193,71 @@ void ising_simulation::init_config() {
         config[i] = -1;
 }
 
-ising_simulation::ising_simulation(adj_struct NN1, simulation_type TT) {
+ising_simulation::ising_simulation(adj_struct NN1, simulation_t TT,
+        int time_length,int initial_time_skip) {
     config = 0;
     link_energies = 0;
     max_link_energy = 8;
+    beta = 0.45;
     running = false;
-    T=1000;
+    steps_per_time=time_length;
+    skip=initial_time_skip;
 
     NN = NN1;
     N = NN.N;
 
     update_rule = TT;
+}
 
+void ising_simulation::test_run(int T){
     init_config();
     measure();
 
     for (int t = 0; t < T; t++) {
-        //microcanonical_step();
-        metropolis_step();
+        step();
         //si scartano i run con indice negativo, per termalizzare il sistema
         if (t < 0)
             continue;
-        //measure();
+        measure();
     }
     measure();
-    delete[]config;
-
 }
 
+#ifndef STANDALONE
+void time_series(adj_struct adj){
+    general_partition Z1, Z2;
+    distance d(adj.N);
+    
+    ising_simulation sim(adj,opts.simulation_type,1,0);
+    sim.set_beta(opts.beta);
+    sim.set_max_energy(opts.max_energy);
+    sim.init_config();
+    
+    Z1.from_configuration(sim.config_reference(),adj);
+    printf("%%n\tatomi\tentropia\tdist\tdist_ridotta\n");
+    printf("%d\t%d\t%g\t%g\t%g\n",1,Z1.n,Z1.entropia_shannon,0.0,0.0);
+    for(int i=1; i<opts.n_seq; i++){
+        sim.step();
+        if(i%2)
+            Z2.from_configuration(sim.config_reference(),adj);
+        else
+            Z1.from_configuration(sim.config_reference(),adj);
+        d.fill(Z1,Z2);
+        printf("%d\t%d\t%.4f\t%.4f\t%.4f\n",i+1,Z2.n,Z2.entropia_shannon,
+                               // 0.0, 0.0);
+                                d.dist_shan,d.dist_shan_r);
+        //Z1=Z2;
+    }
+}
+#endif
+
+
+#ifdef STANDALONE
 int main(int argc, char** argv) {
     int N = 0;
     int T = 1000;
     int max_link_energy=4;
     adj_struct da_file = adiacenza_from_file("vector1.bin", "vector2.bin", N);
-    //adj_struct square=adiacenza_square_lattice(200);
-    //N=square.N;
 
     fprintf(stderr, "Loaded ADJ matrix\n\n");
 
@@ -250,7 +268,9 @@ int main(int argc, char** argv) {
         max_link_energy = atoi(argv[2]);
     fprintf(stderr, "Max link energy: %d\n", max_link_energy);
     fprintf(stderr, "\n");
-    ising_simulation run(da_file, MICROCANONICAL);
+    ising_simulation sim(da_file, MICROCANONICAL,1,0);
+    sim.set_max_energy(max_link_energy);
+    sim.test_run(T);
 }
-
+#endif
 

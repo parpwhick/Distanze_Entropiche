@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="80">
+<configurationDescriptor version="82">
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="Default" type="0">
@@ -28,8 +28,10 @@
           <runcommandpicklistitem>"${OUTPUT_PATH}" -random -adiacenza vector1.bin vector2.bin -seqnum 3</runcommandpicklistitem>
           <runcommandpicklistitem>time "${OUTPUT_PATH}" >/dev/null</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" 100 10</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -simulation -adj vector?.bin -num 10</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}"</runcommand>
+        <runcommand>"${OUTPUT_PATH}" -simulation -adj vector?.bin -num 10</runcommand>
         <rundir>.</rundir>
         <buildfirst>true</buildfirst>
         <console-type>1</console-type>

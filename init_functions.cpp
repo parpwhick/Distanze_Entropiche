@@ -59,6 +59,8 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.n_symbols = 2;
     opts.topologia = RETICOLO_2D;
     opts.letto_da = RANDOM;
+    opts.beta = 0.44;
+    opts.max_energy = 4;
     //opts.translate = false;
     opts.graphics = false;
     opts.verbose = 0;
@@ -82,6 +84,9 @@ void set_program_options(options &opts, int argc, char**argv) {
             if (input == "-random") {
                 fprintf(stderr, "Specifying random sequence generation\n");
                 opts.letto_da = RANDOM;
+            }else if (input == "-simulation") {
+                fprintf(stderr, "Evolving configurations to analize\n");
+                opts.letto_da = SIMULATION;
             } else if (input == "-file") {
                 if (argc - read_argvs < 1)
                     error("Missing filename to read!\n");

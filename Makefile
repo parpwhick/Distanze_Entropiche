@@ -1,24 +1,24 @@
 COPTS= -O3
 #COPTS= -g3
-COPTS += -Wall -fopenmp
-files=*.cpp *.h Makefile2
+COPTS += -Wall #-fopenmp
+files=*.cpp *.h Makefile
 file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
 
-OBJ_LIST= init_functions.o distanze.o partizioni.o rand55.o adj_handler.o rand_mersenne.o
+OBJ_LIST= init_functions.o distanze.o partizioni.o rand55.o adj_handler.o rand_mersenne.o ising_simulation.o
 
-ALL: distanze_generiche ising distanze_lineari
+ALL: distanze_generiche ising distanze_lineari sierpinski
 
 distanze_generiche: general_distance.o ${OBJ_LIST}
-	g++ ${COPTS} -o distanze_generiche general_distance.o ${OBJ_LIST} -lm -lgomp 
+	g++ ${COPTS} -static -o distanze_generiche general_distance.o ${OBJ_LIST} #-lm -lgomp 
 
 distanze_lineari: simple_partitions.o ${OBJ_LIST}
-	g++ -o distanze_lineari simple_partitions.o ${OBJ_LIST} -lm -lgomp 
-
-rand55.o: rand55.cpp rand55.h
-	g++ ${COPTS} -c rand55.cpp
+	g++ -o distanze_lineari simple_partitions.o ${OBJ_LIST} #-lm -lgomp 
 
 ising: ising_simulation.cpp adj_handler.o adj_handler.h rand_mersenne.o 
 	g++ ${COPTS} -o ising -DSTANDALONE ising_simulation.cpp adj_handler.o rand_mersenne.o 
+
+sierpinski: sierpinski.cpp
+	g++ -o sierpinski -O3 -Wall sierpinski.cpp
 
 general_distance.o: general_distance.cpp strutture.h 
 	g++ ${COPTS} -c general_distance.cpp
@@ -28,6 +28,10 @@ simple_partitions.o: simple_partitions.cpp strutture.h
 
 translation.o: strutture.h translation.cpp
 	g++ ${COPTS} -c translation.cpp
+
+ising_simulation.o: ising_simulation.cpp ising_simulation.h adj_handler.h
+	g++ ${COPTS} -c ising_simulation.cpp
+
 
 init_functions.o: strutture.h init_functions.cpp
 	g++ ${COPTS} -c init_functions.cpp
@@ -43,12 +47,18 @@ adj_handler.o: adj_handler.cpp adj_handler.h
 	
 rand_mersenne.o: rand_mersenne.cpp rand_mersenne.h
 	g++ ${COPTS} -c rand_mersenne.cpp
-	
-simple_partition.o: strutture.h simple_partition.cpp
-	g++ ${COPTS} -c simple_partition.cpp
+
+rand55.o: rand55.cpp rand55.h
+	g++ ${COPTS} -c rand55.cpp
 
 clean:
 	rm -f *.o
 
 zip: ${files} ${file_supporto}
 	zip -9 prog_distanze.zip ${files} ${file_supporto}
+
+arch: ${files}
+	mkdir distanze_entropiche
+	cp ${files} distanze_entropiche
+	tar -cvzf prog_distanze.tar.gz distanze_entropiche
+	rm -fr distanze_entropiche

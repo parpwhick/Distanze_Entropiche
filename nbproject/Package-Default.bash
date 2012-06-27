@@ -12,8 +12,8 @@ CND_DISTDIR=dist
 CND_BUILDDIR=build
 NBTMPDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tmp-packaging
 TMPDIRNAME=tmp-packaging
-OUTPUT_PATH=ising
-OUTPUT_BASENAME=ising
+OUTPUT_PATH=distanze_generiche
+OUTPUT_BASENAME=distanze_generiche
 PACKAGE_TOP_DIR=DistanzeEntropiche/
 
 # Functions

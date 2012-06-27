@@ -373,19 +373,19 @@ void calcola_matrice_distanze(const partition_t* X) {
     if (opts.write == true) {
         int count = 0;
         if (da_calcolare & SHAN)
-            count += WRITE("dist-shan.bin", dist_shan);
+            count += WRITE("output-shan.bin", dist_shan);
 
         if (da_calcolare & RID)
-            count += WRITE("dist-shan_r.bin", dist_shan_r);
+            count += WRITE("output-shan_r.bin", dist_shan_r);
 
         if (da_calcolare & TOP)
-            count += WRITE("dist-top.bin", dist_top);
+            count += WRITE("output-top.bin", dist_top);
 
         if (da_calcolare & RID_TOP)
-            count += WRITE("dist-top_r.bin", dist_top_r);
-
+            count += WRITE("output-top_r.bin", dist_top_r);
+        
         if (da_calcolare & HAMM)
-            count += WRITE("dist-hamm.bin", dist_ham);
+            count += WRITE("output-hamm.bin", dist_ham);
 
         //if (opts.verbose)
         fprintf(stderr, "Written %dx distance matrix\n", count);

@@ -13,7 +13,7 @@
 #include <string>
 #include <stdint.h>
 
-enum simulation_type {
+enum simulation_t {
     METROPOLIS,
     MICROCANONICAL
 };
@@ -37,6 +37,7 @@ enum source {
     FUZZY,
     RANDOM,
     FROM_FILE,
+    SIMULATION,
 };
 
 typedef struct {
@@ -60,10 +61,14 @@ typedef struct {
     bool graphics;
 
     int seed;
+    simulation_t simulation_type;
+    int steps;
+    double beta;
+    int max_energy;
+    
     int verbose;
     //bool translate;
 
-    double beta;
 } options;
 
 typedef struct {
@@ -137,7 +142,7 @@ public:
     label_t *labels;
 
     void from_nnb(label_t **NNB);
-    void from_configuration(int *configuration, adj_struct adj, int N1);
+    void from_configuration(const int *configuration, adj_struct adj, int N1=0);
 
     general_partition(int len = 0);
     ~general_partition();
