@@ -40,7 +40,7 @@ void ising_simulation::metropolis_step() {
     if (config == 0) {
         config = new int [NN.N];
         for (int i = 0; i < NN.N; i++)
-            config[i] = random.get_int() % NN.N;
+            config[i] = 2 * (random.get_double() < 0.5) -1 ;
     }
 
     if (myexp == 0) {
@@ -80,7 +80,7 @@ void ising_simulation::microcanonical_step() {
     if (config == 0) {
         config = new int [NN.N];
         for (int i = 0; i < NN.N; i++)
-            config[i] = random.get_int() % NN.N;
+            config[i] = 2 * (random.get_double() < 0.5) - 1 ;
     }
     if (link_energies == 0) {
         link_energies = new int [NN.n_link];
@@ -92,7 +92,7 @@ void ising_simulation::microcanonical_step() {
     int link = randnum % NN.n_link;
     int s1,s2;
     /* Dinamica Microcanonica, 1 passo temporale */
-    for (int j = 0; j < NN.N / 2; j++) {
+    for (int j = 0; j < NN.N;) {
         // il generatore di numeri casuali influisce per un 5% sulla performance
         // totale, in realta' e' l'accesso disordinato alla memoria che uccide 
         
@@ -106,10 +106,6 @@ void ising_simulation::microcanonical_step() {
         __builtin_prefetch(NN.index+s2,0,0);
         __builtin_prefetch(config+s1,0,0);
         __builtin_prefetch(config+s2,0,0);
-        //creazione variabili locali, sperando di aumentare 
-        //il pre-caricamento delle aree di memoria opportune
-        //un 15% di miglioramento solo con la prima
-        //   25% totale, cambiando le posizioni peggiora la performance!
         int &linkenergy = link_energies[link];        
         
         randnum = random.get_int();
@@ -120,6 +116,8 @@ void ising_simulation::microcanonical_step() {
         
         if (!(accept1 || accept2))
             continue;
+	//se la mossa e' stata accettata, allora contala
+	j++;
 
         //energia dai vicini di s1, se cambia                
         if (accept1) {
@@ -223,30 +221,44 @@ void ising_simulation::test_run(int T){
     measure();
 }
 
+template <typename data_t> void write_binary_array(data_t *array, int N){
+    static FILE *out=0;
+    
+    if(out==0){
+        out=fopen("configurazioni.bin","wb");
+        if(out==0){
+            fprintf(stderr,"Error opening file for writing\n");
+            exit(1);
+        }
+    }
+    fwrite(array,sizeof(data_t),N,out);
+}
+
 #ifndef STANDALONE
 void time_series(adj_struct adj){
     general_partition Z1, Z2;
     distance d(adj.N);
     
-    ising_simulation sim(adj,opts.simulation_type,1,0);
+    ising_simulation sim(adj,opts.simulation_type,10,0);
     sim.set_beta(opts.beta);
-    sim.set_max_energy(opts.max_energy);
+    sim.set_max_energy(opts.max_link_energy);
     sim.init_config();
-    
+    //sim.step();
+       
     Z1.from_configuration(sim.config_reference(),adj);
-    printf("%%n\tatomi\tentropia\tdist\tdist_ridotta\n");
-    printf("%d\t%d\t%g\t%g\t%g\n",1,Z1.n,Z1.entropia_shannon,0.0,0.0);
+    printf("%%t\tatomi\tentropia\tdist\t\tdist_ridotta\n");
+    printf("%d\t%d\t%.6f\t%.6f\t%.6f\n",1,Z1.n,Z1.entropia_shannon, 0.0, 0.0);
     for(int i=1; i<opts.n_seq; i++){
         sim.step();
+        if(opts.graphics)
+            write_binary_array(sim.config_reference(),adj.N);
         if(i%2)
             Z2.from_configuration(sim.config_reference(),adj);
         else
             Z1.from_configuration(sim.config_reference(),adj);
         d.fill(Z1,Z2);
-        printf("%d\t%d\t%.4f\t%.4f\t%.4f\n",i+1,Z2.n,Z2.entropia_shannon,
-                               // 0.0, 0.0);
+        printf("%d\t%d\t%.6f\t%.6f\t%.6f\n",i+1,Z2.n,Z2.entropia_shannon,
                                 d.dist_shan,d.dist_shan_r);
-        //Z1=Z2;
     }
 }
 #endif

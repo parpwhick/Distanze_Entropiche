@@ -1,9 +1,9 @@
 nbproject/
 h3n2_gisaid/
 
-distanze
 distanze_*
 ising
+sierpinski
 
 *.o
 *.bin

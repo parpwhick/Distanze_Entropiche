@@ -24,9 +24,9 @@ class ising_simulation {
     double beta;
     RandMT random;
 
+public:
     void metropolis_step();
     void microcanonical_step();
-public:
     ising_simulation(adj_struct NN1, simulation_t TT, int time_length=1,int initial_time_skip=0);
     ~ising_simulation(){
         if(config) delete config;

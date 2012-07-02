@@ -1,18 +1,19 @@
-COPTS= -O3
+COPTS= -O3 -march=native
 #COPTS= -g3
 COPTS += -Wall #-fopenmp
+LINK_OPTS = -lm -lgomp
 files=*.cpp *.h Makefile
 file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
 
-OBJ_LIST= init_functions.o distanze.o partizioni.o rand55.o adj_handler.o rand_mersenne.o ising_simulation.o
-
+OBJ_LIST= init_functions.o distanze.o partizioni.o rand55.o adj_handler.o rand_mersenne.o 
+DIST_GEN_OBJ = general_distance.o ising_simulation.o
 ALL: distanze_generiche ising distanze_lineari sierpinski
 
-distanze_generiche: general_distance.o ${OBJ_LIST}
-	g++ ${COPTS} -static -o distanze_generiche general_distance.o ${OBJ_LIST} #-lm -lgomp 
+distanze_generiche: ${DIST_GEN_OBJ} ${OBJ_LIST}
+	g++ ${COPTS} -o distanze_generiche ${DIST_GEN_OBJ} ${OBJ_LIST} ${LINK_OPTS}
 
-distanze_lineari: simple_partitions.o ${OBJ_LIST}
-	g++ -o distanze_lineari simple_partitions.o ${OBJ_LIST} #-lm -lgomp 
+distanze_lineari: sequence_partitions.o ${OBJ_LIST}
+	g++ -o distanze_lineari sequence_partitions.o ${OBJ_LIST} ${LINK_OPTS}
 
 ising: ising_simulation.cpp adj_handler.o adj_handler.h rand_mersenne.o 
 	g++ ${COPTS} -o ising -DSTANDALONE ising_simulation.cpp adj_handler.o rand_mersenne.o 
@@ -23,8 +24,8 @@ sierpinski: sierpinski.cpp
 general_distance.o: general_distance.cpp strutture.h 
 	g++ ${COPTS} -c general_distance.cpp
 
-simple_partitions.o: simple_partitions.cpp strutture.h 
-	g++ ${COPTS} -c simple_partitions.cpp
+sequence_partitions.o: sequence_partitions.cpp strutture.h 
+	g++ ${COPTS} -c sequence_partitions.cpp
 
 translation.o: strutture.h translation.cpp
 	g++ ${COPTS} -c translation.cpp

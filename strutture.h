@@ -64,7 +64,7 @@ typedef struct {
     simulation_t simulation_type;
     int steps;
     double beta;
-    int max_energy;
+    int max_link_energy;
     
     int verbose;
     //bool translate;

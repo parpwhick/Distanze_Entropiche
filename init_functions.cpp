@@ -26,6 +26,7 @@ void print_help() {
             "General option list for this program:\n"
             "  -random           Turns on random generation [on]\n"
             "  -file FILENAME    Read configurations from FILENAME [off]\n"
+            "  -simulation       Configurations from temporal evolution\n"
             "  -num N            Limits the number of configurations to N [2550]\n"
             "  -length N         Limits configuration length to N [600]\n"
             "  -nodistance       Doesn't calculate any distance matrix\n"
@@ -39,13 +40,19 @@ void print_help() {
     const char *message2 =
             "  -graphics         Make .ppm graphics when using square lattice topology\n"
             "  \n"
-            "Options for particular structures:\n"
+            "Options the choice of a topology:\n"
             "  -sequence         Linear open sequence topology with 2 nearest neighbours\n"
             "  -fuzzy N          Linear open sequence with N nearest neighbours\n"
             "  -square L         The configuration is from a square of side L [default, 25]\n"
             "  -adj file1 file2  The files encode a generic adiacency matrix by its\n"
-            "                    nonzero elements, with rows and cols in the files:\n"
+            "                    nonzero elements, with rows and cols in the files, eg \n"
             "                    -adj rows.bin cols.bin\n"
+            "\n"
+            "Simulation options:\n"
+            "  -microcanonical   Evolution according to microcanonical law [default]\n"
+            "  -link_energy N    Max of the microcanonical kinetic energy [10]\n"
+            "  -metropolis       Evolution according to Metropolis rule\n"
+            "  -beta B           Floating point beta parameter [0.45]\n"
             ;
     fprintf(stderr, "%s", message);
     if (opts.partition_type == GENERAL_PARTITION)
@@ -59,9 +66,9 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.n_symbols = 2;
     opts.topologia = RETICOLO_2D;
     opts.letto_da = RANDOM;
-    opts.beta = 0.44;
-    opts.max_energy = 4;
-    //opts.translate = false;
+    opts.simulation_type=MICROCANONICAL;
+    opts.beta = 0.45;
+    opts.max_link_energy = 10;
     opts.graphics = false;
     opts.verbose = 0;
     opts.write = true;
@@ -85,7 +92,7 @@ void set_program_options(options &opts, int argc, char**argv) {
                 fprintf(stderr, "Specifying random sequence generation\n");
                 opts.letto_da = RANDOM;
             }else if (input == "-simulation") {
-                fprintf(stderr, "Evolving configurations to analize\n");
+                fprintf(stderr, "Evolving configurations to analyze\n");
                 opts.letto_da = SIMULATION;
             } else if (input == "-file") {
                 if (argc - read_argvs < 1)
@@ -146,6 +153,30 @@ void set_program_options(options &opts, int argc, char**argv) {
                 else
                     opts.topologia = LINEARE;
                 fprintf(stderr, "Fuzziness degree set to: %d\n", opts.fuzzy);
+            }else if (input == "-beta") {
+                if (argc - read_argvs < 1)
+                    error("Missing beta parameter\n");
+                if (argv[read_argvs][0] == '-')
+                    error("Expecting argument, not another option\n");
+
+                opts.beta = atof(argv[read_argvs++]);
+                fprintf(stderr, "Beta set to: %.2f\n", opts.beta);
+            } else if (input == "-link_energy") {
+                if (argc - read_argvs < 1)
+                    error("Missing max link energy\n");
+                if (argv[read_argvs][0] == '-')
+                    error("Expecting argument, not another option\n");
+
+                opts.max_link_energy = atoi(argv[read_argvs++]);
+                fprintf(stderr, "Max link energy set to: %d\n", opts.max_link_energy);
+            } else if (input == "-microcanonical") {
+                fprintf(stderr, "Using microcanonical rule\n");
+                opts.simulation_type = MICROCANONICAL;
+                opts.letto_da = SIMULATION;
+            } else if (input == "-metropolis") {
+                fprintf(stderr, "Using Metropolis rule\n");
+                opts.simulation_type = METROPOLIS;
+                opts.letto_da = SIMULATION;
             } else if (input == "-v") {
                 opts.verbose++;
                 fprintf(stderr, "Verbosity at %d\n", opts.verbose);
@@ -155,9 +186,6 @@ void set_program_options(options &opts, int argc, char**argv) {
             } else if (input == "-hamming") {
                 opts.da_calcolare |= HAMM;
                 fprintf(stderr, "Hamming distance\n");
-                //            }else if (input == "-translate") {
-                //                opts.translate = true;
-                //                fprintf(stderr, "Simplifying sequence alphabet\n");
             } else if (input == "-nowrite") {
                 opts.write = false;
                 fprintf(stderr, "Not writing out the distance matrices\n");
@@ -327,9 +355,5 @@ void fill_seq_from_file(options &opts, std::string *sequenze) {
 
     fprintf(stderr, "Read %d sequences, the longest was %d bytes\n\n", cur_entry, max_length);
     opts.seq_len = max_length;
-
-    //    if (opts.translate)
-    //        for (int i = 0; i < opts.n_seq; i++)
-    //            translate("Murphy10", (char *) sequenze[i].c_str(), sequenze[i].size());
 
 }

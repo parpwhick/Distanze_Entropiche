@@ -1,4 +1,4 @@
-function [adiacenza,nn]=sierpinski(gen)
+function [adiacenza,nn,x,y]=sierpinski(gen)
 
 if(nargin<1)
     gen=10;
@@ -15,6 +15,7 @@ disp(['Generazione ' num2str(gen) ', size ' num2str(total_size)])
 
 z = zeros(total_size,1);
 nn = zeros(total_size,4);
+vertici = zeros(total_size,2);
 
 % vettore di numeri di coordinazione
 % e struttura dei vicini
@@ -26,7 +27,17 @@ nn(3,:)=[1,2,5,6];
 nn(4,:)=[2,5,0,0];
 nn(5,:)=[4,2,3,6];
 nn(6,:)=[3,5,0,0];
+% con angolo retto
+% vertici(1:6,:)=[1,1; 
+%                 2,1; 2,2; 
+%                 3,1;3,2;3,3];
 
+%disteso
+vertici(1:6,:)=[0,0; 
+                -2/3,-1; 2/3,-1; 
+                -3/2,-2;0,-2;3/2,-2];            
+dimensioney=3;
+dimensionex=3;
 %angoli
 a0 = 1;
 a1 = 4;
@@ -42,6 +53,18 @@ for g = 2:gen
     i=2:(size-1);
     nn(i+size-1,:) = nn(i,:) + size-1;
     z(i+size-1)=z(i);
+    
+%     %y, +(dimensione-1)
+%     vertici(i+size-1,1)=vertici(i,1)+dimensione-1;
+%     %x, uguale
+%     vertici(i+size-1,2)=vertici(i,2);
+    
+    %x, a sinistra di dimensione/2
+    vertici(i+size-1,1)=vertici(i,1)-(dimensionex)/2;
+    %y, giu di (dimensione-1) (tutti gli y sono negativi
+    vertici(i+size-1,2)=vertici(i,2)-(dimensioney-1);
+    
+    
     %correzioni
     [corr_i,corr_j]=find(nn(1:size,:)==a0);
     for i=1:length(corr_i)
@@ -56,6 +79,16 @@ for g = 2:gen
     i=2:size;
     z(i+2*size-3)=z(i);
     nn(i+2*size-3,:) = nn(i,:) + 2*size - 3;
+%     %y, +(dimensione-1)
+%     vertici(i+2*size-3,1)=vertici(i,1)+dimensione-1;
+%     %x, uguale
+%     vertici(i+2*size-3,2)=vertici(i,2)+dimensione-1;
+
+    %x, a destra di dimensione/2
+    vertici(i+2*size-3,1)=vertici(i,1)+(dimensionex)/2;
+    %y, giu di (dimensione-1) (tutti gli y sono negativi
+    vertici(i+2*size-3,2)=vertici(i,2)-(dimensioney-1);
+
     %correzioni
     [corr_i,corr_j]=find(nn(1:size,:)==a0);
     for i=1:length(corr_i)
@@ -76,9 +109,14 @@ for g = 2:gen
     
     %aggiornamento dimensione prossima iterazione
     size= 3*size-3;
+    dimensionex = 2 * dimensionex;
+    dimensioney = 2 * dimensioney - 1;
     
 end
-
+pos_max = max(vertici);
+pos_min = min(vertici);
+x =  (vertici(:,1)-pos_min(1)) / (pos_max(1)-pos_min(1));
+y =  (vertici(:,2)-pos_min(2)) / (pos_max(2)-pos_min(2));
 %rimozione link inesistenti, prima di costruire la matrice
 nn(z==2,3:4)=0;
 
