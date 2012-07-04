@@ -4,6 +4,7 @@
 #include "ising_simulation.h"
 #include <cmath>
 
+#undef STANDALONE
 #ifndef STANDALONE
 extern
 #endif
@@ -16,6 +17,42 @@ int* ising_simulation::copy() {
     for (int i = 0; i < N; i++)
         second[i] = config[i];
     return second;
+}
+
+void generate_sierpinski_borders(int N, int * &bsx, int * &bdx){
+    int gen=1;
+    int size=6;
+    int bordersize=2;
+
+    // determine generation and proper dimensions
+    while(size<N){
+	gen+=1;
+	size = 3*size-3;
+	bordersize = 2*bordersize;
+    }
+    
+    bsx = new int[bordersize];
+    bdx = new int[bordersize];
+    bsx[0]=2;
+    bsx[1]=4;
+    bdx[0]=3;
+    bdx[1]=6;
+    
+    // we start over and populate
+    size=6;
+    bordersize=2;
+    // iterate again over generations, to copy from the previous
+    for(int g=2; g <= gen; g++){
+	//copy left border, adding size of left triangle
+	for(int i=0; i < bordersize; i++)
+	    bsx[bordersize+i]=bsx[i]+size-1;
+	//copy right border, adding size of right triangle
+	for(int i=0; i < bordersize; i++)
+	    bdx[bordersize+i]=bdx[i]+2*size-3;
+	
+	size = 3*size -3;
+	bordersize = 2*bordersize;
+    }
 }
 
 void ising_simulation::step(int steps){
@@ -71,6 +108,48 @@ void ising_simulation::metropolis_step() {
     }
 }
 
+void ising_simulation::metropolis_subset(int *subset, int length) {
+    int s, z, somma_vicini, dH;
+      
+    if (myexp == 0) {
+        myexp = new double[NN.zmax + 2];
+        for (int i = 0; i <= NN.zmax + 1; i++)
+            myexp[i] = exp(-2 * beta * i);
+    }
+    
+    /* Dinamica di Metropolis, 1 passo temporale */
+    
+    //update red
+    for (int j = 0; j < length; j+=2) {        
+        s = subset[j];
+        z = NN.fetch(subset[j]);
+        __builtin_prefetch(config+subset[j+2],0,0);
+        __builtin_prefetch(NN.index+subset[j+2],0,0);
+        somma_vicini = 0;
+        for (int m = 0; m < z; m++)
+            somma_vicini += config[NN.vicini[m]];
+
+        dH = config[s] * somma_vicini;
+        if (dH <= 0 || random.get_double() < myexp[dH])
+            config[s] = -config[s];
+    }
+    
+    //update black
+    for (int j = 1; j < length; j+=2) {        
+        s = subset[j];
+        z = NN.fetch(subset[j]);
+        __builtin_prefetch(config+subset[j+2],0,0);
+        __builtin_prefetch(NN.index+subset[j+2],0,0);
+        somma_vicini = 0;
+        for (int m = 0; m < z; m++)
+            somma_vicini += config[NN.vicini[m]];
+
+        dH = config[s] * somma_vicini;
+        if (dH <= 0 || random.get_double() < myexp[dH])
+            config[s] = -config[s];
+    }
+}
+
 void ising_simulation::microcanonical_step() {
     int dH;
     int somma_vicini;
@@ -100,8 +179,18 @@ void ising_simulation::microcanonical_step() {
         int accept2 = randnum & (1 << 30);
         int accept12 = accept1 && accept2;
 
+        // adi e adj forniscono i due siti collegati dal 'link'
         s1 = NN.adi[link];
         s2 = NN.adj[link];
+        
+        /*
+         L'accesso in memoria e' stato attentamente ottimizzato,
+         precaricando i dati necessari all'iterazione corrente, poi generando 
+         il link per l'iterazione successiva e caricando quello che dipende
+         solo dal link prescelto.
+         
+         La differenza e' un 50% di tempo in piu' se si rimuovono i prefetch!
+         */
         __builtin_prefetch(NN.index+s1,0,0);
         __builtin_prefetch(NN.index+s2,0,0);
         __builtin_prefetch(config+s1,0,0);
@@ -121,6 +210,7 @@ void ising_simulation::microcanonical_step() {
 
         //energia dai vicini di s1, se cambia                
         if (accept1) {
+            // z numero dei vicini di s1
             z = NN.fetch(s1);
             somma_vicini = 0;
             for (int m = 0; m < z; m++)
@@ -183,6 +273,7 @@ void ising_simulation::measure() {
 void ising_simulation::init_config() {
     config = new int[N];
     int size = N / 3 + 1;
+    generate_sierpinski_borders(N);
     for (int i = 0; i < size; i++)
         config[i] = +1;
     for (int i = size; i < 2 * size - 2; i++)
@@ -221,16 +312,18 @@ void ising_simulation::test_run(int T){
     measure();
 }
 
-template <typename data_t> void write_binary_array(data_t *array, int N){
-    static FILE *out=0;
+template <typename data_t> void write_binary_array(data_t *array, int N, const char *filename){
+    FILE *out;
+
+    if(filename==0)
+        return;
     
-    if(out==0){
-        out=fopen("configurazioni.bin","wb");
-        if(out==0){
-            fprintf(stderr,"Error opening file for writing\n");
-            exit(1);
-        }
+    out = fopen(filename, "ab");
+    if (out == 0) {
+        fprintf(stderr, "Error opening file for writing\n");
+        exit(1);
     }
+    
     fwrite(array,sizeof(data_t),N,out);
 }
 
@@ -251,9 +344,12 @@ void time_series(adj_struct adj){
     for(int i=1; i<opts.n_seq; i++){
         sim.step();
         if(opts.graphics)
-            write_binary_array(sim.config_reference(),adj.N);
-        if(i%2)
+            write_binary_array(sim.config_reference(),adj.N, "configurazioni.bin");
+        if(i%2){
             Z2.from_configuration(sim.config_reference(),adj);
+            if(opts.graphics)
+            write_binary_array(Z2.labels,adj.N,"partizioni.bin");
+        }
         else
             Z1.from_configuration(sim.config_reference(),adj);
         d.fill(Z1,Z2);

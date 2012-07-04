@@ -23,7 +23,8 @@ class ising_simulation {
     bool running;
     double beta;
     RandMT random;
-
+    
+    void metropolis_subset(int *subset);
 public:
     void metropolis_step();
     void microcanonical_step();

@@ -32,8 +32,10 @@
           <runcommandpicklistitem>"${OUTPUT_PATH}" -simulation -adj vector?.bin -num 10</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" </runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"  -microcanonical -square 100 -num 1000 -link_energy 0</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"  -microcanonical -sierpinski 6 -num 5 -link_energy 5</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"  -microcanonical -sierpinski 3 -num 5 -link_energy 5</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}"  -microcanonical -square 100 -num 1000 -link_energy 0</runcommand>
+        <runcommand>"${OUTPUT_PATH}"  -microcanonical -sierpinski 3 -num 5 -link_energy 5</runcommand>
         <rundir>.</rundir>
         <buildfirst>true</buildfirst>
         <console-type>1</console-type>

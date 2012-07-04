@@ -139,7 +139,6 @@
         <in>main-1.0.cpp</in>
         <in>main2.cpp</in>
         <in>main3.cpp</in>
-        <in>matrix.h</in>
         <in>mtrand.cpp</in>
         <in>mtrand.h</in>
         <in>newfile.cpp</in>
@@ -182,6 +181,7 @@
       <in>init_functions.cpp</in>
       <in>ising_simulation.cpp</in>
       <in>ising_simulation.h</in>
+      <in>matrix.h</in>
       <in>partizioni.cpp</in>
       <in>rand55.cpp</in>
       <in>rand55.h</in>
@@ -256,13 +256,6 @@
       <item path="H3N2_HA+NA/cluster_stagionali.m" ex="true" tool="0" flavor="0">
       </item>
       <item path="H3N2_HA+NA/confronta_distanze.m" ex="true" tool="0" flavor="0">
-      </item>
-      <item path="adj_handler.cpp" ex="false" tool="1" flavor="0">
-        <ccTool>
-          <preprocessorList>
-            <Elem>_OPENMP=200505</Elem>
-          </preprocessorList>
-        </ccTool>
       </item>
       <item path="clustering_spettrale/1SpectralClustering_matlab/OneSpectralClustering.m"
             ex="true"
@@ -494,13 +487,6 @@
       </item>
       <item path="dati_base/cluster_count.m" ex="true" tool="0" flavor="0">
       </item>
-      <item path="distanze.cpp" ex="false" tool="1" flavor="0">
-        <ccTool>
-          <preprocessorList>
-            <Elem>_OPENMP=200505</Elem>
-          </preprocessorList>
-        </ccTool>
-      </item>
       <folder path="Distanze_Entropiche/old_versions">
         <ccTool>
           <preprocessorList>
@@ -515,13 +501,6 @@
           </preprocessorList>
         </ccTool>
       </folder>
-      <item path="general_distance.cpp" ex="false" tool="1" flavor="0">
-        <ccTool>
-          <preprocessorList>
-            <Elem>_OPENMP=200505</Elem>
-          </preprocessorList>
-        </ccTool>
-      </item>
       <item path="h1n1_nih/cluster_count.m" ex="true" tool="0" flavor="0">
       </item>
       <item path="h1n1_nih/draw_ready_clustering.m" ex="true" tool="0" flavor="0">
@@ -540,6 +519,13 @@
       </item>
       <item path="h3n2_nih/spectral_clustering.m" ex="true" tool="0" flavor="0">
       </item>
+      <item path="ising_simulation.cpp" ex="false" tool="1" flavor="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>STANDALONE</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
       <item path="old_versions/init_functions2.cpp" ex="true" tool="1" flavor="0">
       </item>
       <item path="old_versions/init_functions3.cpp" ex="true" tool="1" flavor="0">
@@ -551,8 +537,6 @@
       <item path="old_versions/main2.cpp" ex="true" tool="1" flavor="0">
       </item>
       <item path="old_versions/main3.cpp" ex="true" tool="1" flavor="0">
-      </item>
-      <item path="old_versions/matrix.h" ex="true" tool="3" flavor="0">
       </item>
       <item path="old_versions/newfile.cpp" ex="true" tool="1" flavor="0">
       </item>
@@ -571,13 +555,6 @@
       <item path="old_versions/strutture3.h" ex="true" tool="3" flavor="0">
       </item>
       <item path="old_versions/translation.cpp" ex="true" tool="1" flavor="0">
-      </item>
-      <item path="partizioni.cpp" ex="false" tool="1" flavor="0">
-        <ccTool>
-          <preprocessorList>
-            <Elem>_OPENMP=200505</Elem>
-          </preprocessorList>
-        </ccTool>
       </item>
       <item path="rand55.cpp" ex="false" tool="1" flavor="0">
         <ccTool>

@@ -34,6 +34,7 @@ enum DISTANZE {
 enum source {
     LINEARE,
     RETICOLO_2D,
+    SIERPINSKI,
     FUZZY,
     RANDOM,
     FROM_FILE,
@@ -44,6 +45,7 @@ typedef struct {
     int seq_len;
     int n_seq;
     int lato;
+    int sierpinski_gen;
     int n_symbols;
     part_type partition_type;
 

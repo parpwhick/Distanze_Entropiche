@@ -48,5 +48,6 @@ adj_struct adiacenza_fuzzy_line(int N);
 adj_struct adiacenza_simple_line(int N);
 adj_struct adiacenza_square_lattice(int lato);
 adj_struct adiacenza_from_file(const char *name_vec1, const char *name_vec2, int & N);
+adj_struct adiacenza_sierpinski(int GEN, int &total_size);
 #endif	/* ADJ_HANDLER_H */
 

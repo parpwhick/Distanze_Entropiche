@@ -44,6 +44,7 @@ void print_help() {
             "  -sequence         Linear open sequence topology with 2 nearest neighbours\n"
             "  -fuzzy N          Linear open sequence with N nearest neighbours\n"
             "  -square L         The configuration is from a square of side L [default, 25]\n"
+            "  -sierpinski G     Use the Sierpinski gasket of generation G\n"
             "  -adj file1 file2  The files encode a generic adiacency matrix by its\n"
             "                    nonzero elements, with rows and cols in the files, eg \n"
             "                    -adj rows.bin cols.bin\n"
@@ -132,6 +133,15 @@ void set_program_options(options &opts, int argc, char**argv) {
                 opts.topologia = RETICOLO_2D;
                 opts.lato = atoi(argv[read_argvs++]);
                 fprintf(stderr, "Using square lattice topology, with side %d\n", opts.lato);
+            } else if (input == "-sierpinski") {
+                if (argc - read_argvs < 1)
+                    error("Need to specify generation\n");
+                if (argv[read_argvs][0] == '-')
+                    error("Expecting argument, not another option\n");
+
+                opts.topologia = SIERPINSKI;
+                opts.sierpinski_gen = atoi(argv[read_argvs++]);
+                fprintf(stderr, "Using Sierpinski gasket\n");
             }
             else if (input == "-num") {
                 if (argc - read_argvs < 1)

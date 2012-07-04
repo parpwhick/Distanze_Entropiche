@@ -95,6 +95,9 @@ int main(int argc, char** argv) {
         case(RETICOLO_2D):
             topologia = adiacenza_square_lattice(opts.lato);
             break;
+        case(SIERPINSKI):
+            topologia = adiacenza_sierpinski(opts.sierpinski_gen,opts.seq_len);
+            break;
         case(FUZZY):
             topologia = adiacenza_fuzzy_line(opts.seq_len);
             break;

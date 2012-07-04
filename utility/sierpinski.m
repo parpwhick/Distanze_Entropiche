@@ -1,4 +1,4 @@
-function [adiacenza,nn,x,y]=sierpinski(gen)
+function [adiacenza,nn,x,y,bordo_sx,bordo_dx]=sierpinski(gen)
 
 if(nargin<1)
     gen=10;
@@ -27,17 +27,19 @@ nn(3,:)=[1,2,5,6];
 nn(4,:)=[2,5,0,0];
 nn(5,:)=[4,2,3,6];
 nn(6,:)=[3,5,0,0];
-% con angolo retto
-% vertici(1:6,:)=[1,1; 
-%                 2,1; 2,2; 
-%                 3,1;3,2;3,3];
 
-%disteso
+%posizioni (x,y) dei vertici da disegnare
 vertici(1:6,:)=[0,0; 
                 -2/3,-1; 2/3,-1; 
                 -3/2,-2;0,-2;3/2,-2];            
 dimensioney=3;
 dimensionex=3;
+
+bordo_sx = zeros(2^g,1);
+bordo_dx = zeros(2^g,1);
+border_size=2;
+bordo_sx(1:2) = [2,4];
+bordo_dx(1:2) = [3,6];
 %angoli
 a0 = 1;
 a1 = 4;
@@ -54,16 +56,12 @@ for g = 2:gen
     nn(i+size-1,:) = nn(i,:) + size-1;
     z(i+size-1)=z(i);
     
-%     %y, +(dimensione-1)
-%     vertici(i+size-1,1)=vertici(i,1)+dimensione-1;
-%     %x, uguale
-%     vertici(i+size-1,2)=vertici(i,2);
+    bordo_sx((border_size+1) : (2*border_size)) = bordo_sx(1:border_size) + size-1;
     
     %x, a sinistra di dimensione/2
     vertici(i+size-1,1)=vertici(i,1)-(dimensionex)/2;
     %y, giu di (dimensione-1) (tutti gli y sono negativi
     vertici(i+size-1,2)=vertici(i,2)-(dimensioney-1);
-    
     
     %correzioni
     [corr_i,corr_j]=find(nn(1:size,:)==a0);
@@ -79,6 +77,7 @@ for g = 2:gen
     i=2:size;
     z(i+2*size-3)=z(i);
     nn(i+2*size-3,:) = nn(i,:) + 2*size - 3;
+    bordo_dx((border_size+1) : (2*border_size)) = bordo_dx(1:border_size) + 2*size-3;
 %     %y, +(dimensione-1)
 %     vertici(i+2*size-3,1)=vertici(i,1)+dimensione-1;
 %     %x, uguale
@@ -111,7 +110,7 @@ for g = 2:gen
     size= 3*size-3;
     dimensionex = 2 * dimensionex;
     dimensioney = 2 * dimensioney - 1;
-    
+    border_size = 2 * border_size;
 end
 pos_max = max(vertici);
 pos_min = min(vertici);
