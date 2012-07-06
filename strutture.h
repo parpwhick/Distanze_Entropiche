@@ -144,7 +144,8 @@ public:
     label_t *labels;
 
     void from_nnb(label_t **NNB);
-    void from_configuration(const int *configuration, adj_struct adj, int N1=0);
+    template <typename data_t>
+    void from_configuration(const data_t *configuration, adj_struct adj, int N1=0);
 
     general_partition(int len = 0);
     ~general_partition();

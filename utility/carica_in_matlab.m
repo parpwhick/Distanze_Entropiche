@@ -3,18 +3,16 @@ fclose('all');
 clear fid*;
 
 bins=200;
-r1=dir('output-dist*');
+r1=dir('output*');
 have_simple= ~isempty(r1);
-r2=dir('output-fuzzy*');
-have_fuzzy= ~isempty(r2);
 
 
 if(have_simple)
     n= round(sqrt(r1(2).bytes/8));
-    fid1=fopen('output-distn.bin','r');
-    fid2=fopen('output-distr.bin','r');
-    fid3=fopen('output-distt.bin','r');
-    fid4=fopen('output-distrt.bin','r');
+    fid1=fopen('output-shan.bin','r');
+    fid2=fopen('output-shan_r.bin','r');
+    fid3=fopen('output-top.bin','r');
+    fid4=fopen('output-top_r.bin','r');
     
     %distanze shannon, normali
     dist_n=fread(fid1,[n,n],'double');

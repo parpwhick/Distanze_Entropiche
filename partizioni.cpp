@@ -397,7 +397,8 @@ template <typename pointer_t> int findroot(int i, pointer_t *ptr) {
     return ptr[i] = findroot(ptr[i], ptr);
 }
 
-void general_partition::from_configuration(const int *configuration, adj_struct adj, int N1) {
+template <typename data_t>
+void general_partition::from_configuration(const data_t *configuration, adj_struct adj, int N1) {
     label_t s1, s2;
     label_t r1, r2;
     int z;
@@ -450,6 +451,8 @@ void general_partition::from_configuration(const int *configuration, adj_struct 
         ppmout2(configuration, labels, opts.lato, filename);
     }
 }
+template void general_partition::from_configuration(const int *configuration, adj_struct adj, int N1);
+template void general_partition::from_configuration(const char *configuration, adj_struct adj, int N1);
 
 void general_partition::relabel() {
     label_t *new_label = new label_t[N];

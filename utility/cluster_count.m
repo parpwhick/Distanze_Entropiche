@@ -9,7 +9,7 @@ if(nargin<3)
 end
 Z=linkage(squareform(distanza(1:effettivi,1:effettivi)),'complete');
 
-figure1=figure;
+%figure1=figure;
 %calcolo del vettore entropie h
 if(nargin<2)
     n=choose_cluster_p(M,Z,N);

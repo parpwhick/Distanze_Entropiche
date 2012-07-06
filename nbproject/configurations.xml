@@ -102,6 +102,12 @@
       <df name="H3N2">
         <df name="immagini">
         </df>
+        <in>carica_in_matlab.m</in>
+        <in>cluster_count.m</in>
+        <in>cluster_stagionali.m</in>
+      </df>
+      <df name="h3n2_gisaid">
+        <in>carica_in_matlab.m</in>
         <in>cluster_count.m</in>
         <in>cluster_stagionali.m</in>
       </df>
@@ -518,13 +524,6 @@
       <item path="h3n2_nih/draw_ready_clustering.m" ex="true" tool="0" flavor="0">
       </item>
       <item path="h3n2_nih/spectral_clustering.m" ex="true" tool="0" flavor="0">
-      </item>
-      <item path="ising_simulation.cpp" ex="false" tool="1" flavor="0">
-        <ccTool>
-          <preprocessorList>
-            <Elem>STANDALONE</Elem>
-          </preprocessorList>
-        </ccTool>
       </item>
       <item path="old_versions/init_functions2.cpp" ex="true" tool="1" flavor="0">
       </item>

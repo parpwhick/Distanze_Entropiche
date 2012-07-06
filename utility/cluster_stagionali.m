@@ -24,7 +24,7 @@ if(size(label_anni,1) ~= N_tot)
     %label_anni=label_anni(1:N,:);
 end
 
-for anno=2012:2013
+for anno=1996:2013
     draw_to_season(anno+0.585)
 end
 
@@ -80,7 +80,7 @@ end
                     'filled','MarkerEdgeColor','black');
         set(ggg,'YTick',1:1:n,'Box','on','YGrid','on');
         ylim([0.5,n+0.5]);
-        xlim([floor(min(label_anni(scelti))),ceil(max(label_anni))]);
+        xlim([floor(min(label_anni(scelti))),ceil(max(label_anni(scelti))+0.5)]);
         da=floor(min(label_anni(scelti)));
         for end_season=(da:floor(fino_a))+0.585
             line([end_season,end_season],[0.5,n+0.5],'Color','Blue','LineStyle','--')

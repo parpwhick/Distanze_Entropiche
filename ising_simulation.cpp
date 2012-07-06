@@ -4,7 +4,6 @@
 #include "ising_simulation.h"
 #include <cmath>
 
-#undef STANDALONE
 #ifndef STANDALONE
 extern
 #endif
@@ -12,14 +11,14 @@ options opts;
 
 double *myexp=0;
 
-int* ising_simulation::copy() {
-    int *second = new int[N];
+ising_simulation::config_t* ising_simulation::copy() {
+    config_t *second = new config_t[N];
     for (int i = 0; i < N; i++)
         second[i] = config[i];
     return second;
 }
 
-void generate_sierpinski_borders(int N, int * &bsx, int * &bdx){
+int generate_sierpinski_borders(int N, int * &bsx, int * &bdx){
     int gen=1;
     int size=6;
     int bordersize=2;
@@ -53,6 +52,17 @@ void generate_sierpinski_borders(int N, int * &bsx, int * &bdx){
 	size = 3*size -3;
 	bordersize = 2*bordersize;
     }
+    return bordersize;
+}
+
+int generate_square_border(int lato, int * &bsx){
+    bsx = new int[lato];
+    
+    
+    for(int i=0; i < lato; i++)
+        bsx[i]=i;
+    
+    return(lato);
 }
 
 void ising_simulation::step(int steps){
@@ -67,15 +77,44 @@ void ising_simulation::step(int steps){
             metropolis_step();
     
     else if(update_rule==MICROCANONICAL)
-        for(int i=0; i<steps; i++)
+        for(int i=0; i<steps; i++){
             microcanonical_step();
+            if(border1)
+                metropolis_subset(border1,border_size);
+            if(border2)
+                metropolis_subset(border2,border_size);
+        }
+}
+
+int ising_simulation::energia_cinetica(){
+    int totale = 0;
+    for (int i = 0; i < NN.n_link; i++)
+        totale += link_energies[i];
+    return (totale);
+}
+
+double ising_simulation::magnetizzazione(){
+    int totale = 0;
+    for (int i = 0; i < N; i++)
+        totale += config[i];
+    return ((totale + 0.0)/N);
+}
+
+
+int ising_simulation::energia_magnetica() {
+    int dH=0;
+    // somma su i
+    for (int i = 0; i < NN.n_link; i++)
+        dH += - config[NN.adi[i]] * config[NN.adj[i]];
+    dH /= 2;
+    return(dH);
 }
 
 void ising_simulation::metropolis_step() {
     int s, z, somma_vicini, dH;
 
     if (config == 0) {
-        config = new int [NN.N];
+        config = new config_t [NN.N];
         for (int i = 0; i < NN.N; i++)
             config[i] = 2 * (random.get_double() < 0.5) -1 ;
     }
@@ -157,12 +196,12 @@ void ising_simulation::microcanonical_step() {
 
     //generazione dei buffer necessari, se vuoti
     if (config == 0) {
-        config = new int [NN.N];
+        config = new config_t [NN.N];
         for (int i = 0; i < NN.N; i++)
             config[i] = 2 * (random.get_double() < 0.5) - 1 ;
     }
     if (link_energies == 0) {
-        link_energies = new int [NN.n_link];
+        link_energies = new config_t [NN.n_link];
         for (int i = 0; i < NN.n_link; i++)
             link_energies[i] = random.get_int() % max_link_energy;
     }
@@ -175,8 +214,8 @@ void ising_simulation::microcanonical_step() {
         // il generatore di numeri casuali influisce per un 5% sulla performance
         // totale, in realta' e' l'accesso disordinato alla memoria che uccide 
         
-        int accept1 = randnum & (1 << 29);
-        int accept2 = randnum & (1 << 30);
+        int accept1 = (randnum & (1 << 29)) != 0;
+        int accept2 = (randnum & (1 << 30)) != 0;
         int accept12 = accept1 && accept2;
 
         // adi e adj forniscono i due siti collegati dal 'link'
@@ -195,7 +234,7 @@ void ising_simulation::microcanonical_step() {
         __builtin_prefetch(NN.index+s2,0,0);
         __builtin_prefetch(config+s1,0,0);
         __builtin_prefetch(config+s2,0,0);
-        int &linkenergy = link_energies[link];        
+        config_t &linkenergy = link_energies[link];        
         
         randnum = random.get_int();
         link = randnum % NN.n_link;
@@ -246,7 +285,7 @@ void ising_simulation::microcanonical_step() {
             if (accept1) config[s1] = -config[s1];
             if (accept2) config[s2] = -config[s2];
         }
-
+        
     }
 }
 
@@ -271,9 +310,8 @@ void ising_simulation::measure() {
 }
 
 void ising_simulation::init_config() {
-    config = new int[N];
-    int size = N / 3 + 1;
-    generate_sierpinski_borders(N);
+    config = new config_t[N];
+    int size = N / 3 + 1;    
     for (int i = 0; i < size; i++)
         config[i] = +1;
     for (int i = size; i < 2 * size - 2; i++)
@@ -291,6 +329,9 @@ ising_simulation::ising_simulation(adj_struct NN1, simulation_t TT,
     running = false;
     steps_per_time=time_length;
     skip=initial_time_skip;
+    border_size=0;
+    border1=0;
+    border2=0;
 
     NN = NN1;
     N = NN.N;
@@ -331,16 +372,26 @@ template <typename data_t> void write_binary_array(data_t *array, int N, const c
 void time_series(adj_struct adj){
     general_partition Z1, Z2;
     distance d(adj.N);
+    int E_kin=0, E_mag=0;
+    double mag;
     
-    ising_simulation sim(adj,opts.simulation_type,10,0);
+    ising_simulation sim(adj,opts.simulation_type,1,50000);
     sim.set_beta(opts.beta);
     sim.set_max_energy(opts.max_link_energy);
-    sim.init_config();
-    //sim.step();
+    if(opts.topologia == SIERPINSKI){
+        sim.border_size=generate_sierpinski_borders(adj.N,sim.border1,sim.border2);
+    }
+        
+    //sim.init_config();
+    sim.step();
        
     Z1.from_configuration(sim.config_reference(),adj);
-    printf("%%t\tatomi\tentropia\tdist\t\tdist_ridotta\n");
-    printf("%d\t%d\t%.6f\t%.6f\t%.6f\n",1,Z1.n,Z1.entropia_shannon, 0.0, 0.0);
+    E_kin = sim.energia_cinetica();
+    E_mag = sim.energia_magnetica();
+    mag = sim.magnetizzazione();
+    
+    printf("%%t\tatomi\tentropia\te kin\te mag\tdist\t\tdist_ridotta\n");
+    printf("%d\t%d\t%.6f\t%d\t%d\t%.6f\t%.6f\t%.6f\n",1,Z1.n,Z1.entropia_shannon,E_kin, E_mag, 0.0, 0.0,mag);
     for(int i=1; i<opts.n_seq; i++){
         sim.step();
         if(opts.graphics)
@@ -353,8 +404,11 @@ void time_series(adj_struct adj){
         else
             Z1.from_configuration(sim.config_reference(),adj);
         d.fill(Z1,Z2);
-        printf("%d\t%d\t%.6f\t%.6f\t%.6f\n",i+1,Z2.n,Z2.entropia_shannon,
-                                d.dist_shan,d.dist_shan_r);
+        E_kin = sim.energia_cinetica();
+        E_mag = sim.energia_magnetica();
+        mag = sim.magnetizzazione();
+        printf("%d\t%d\t%.6f\t%d\t%d\t%.6f\t%.6f\t%.6f\n",i+1,Z2.n,Z2.entropia_shannon,E_kin,E_mag,
+                                d.dist_shan,d.dist_shan_r,mag);
     }
 }
 #endif
@@ -362,12 +416,10 @@ void time_series(adj_struct adj){
 
 #ifdef STANDALONE
 int main(int argc, char** argv) {
-    int N = 0;
+//    int N = 0;
     int T = 1000;
     int max_link_energy=4;
-    adj_struct da_file = adiacenza_from_file("vector1.bin", "vector2.bin", N);
-
-    fprintf(stderr, "Loaded ADJ matrix\n\n");
+    adj_struct da_file = adiacenza_square_lattice(50);
 
     if (argc > 1)
         T = atoi(argv[1]);

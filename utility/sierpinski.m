@@ -1,4 +1,4 @@
-function [adiacenza,nn,x,y,bordo_sx,bordo_dx]=sierpinski(gen)
+function [adiacenza,x,y,bordo_sx,bordo_dx]=sierpinski(gen)
 
 if(nargin<1)
     gen=10;

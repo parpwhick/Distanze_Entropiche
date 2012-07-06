@@ -11,20 +11,23 @@
 #include "rand_mersenne.h"
 
 class ising_simulation {
+    typedef char config_t;
+    
     simulation_t update_rule;
 
     adj_struct NN;
     int N;
-    int *config;
-    int *link_energies;
+    config_t *config;
+    config_t *link_energies;
     int steps_per_time;
     int skip;
     int max_link_energy;
+    
     bool running;
     double beta;
     RandMT random;
     
-    void metropolis_subset(int *subset);
+    void metropolis_subset(int *subset, int length);
 public:
     void metropolis_step();
     void microcanonical_step();
@@ -39,9 +42,15 @@ public:
     void step(int steps = 1);
     void test_run(int T);
     void init_config();
-    int *copy();
+    config_t *copy();
     
-    const int *config_reference() { return config;}
+    int *border1;
+    int *border2;
+    int border_size;
+    const config_t *config_reference() { return config;}
+    int energia_cinetica();
+    int energia_magnetica();
+    double magnetizzazione();
 };
 
 void time_series(adj_struct adj);

@@ -76,7 +76,7 @@ void distance::fill(const general_partition& e1, const general_partition& e2) {
         dist_shan_r = dist_shan;
         dist_top_r = dist_top;
         //printf("comune generale: %d, r1: %d/%d, r2: %d/%d, prod: %d\n",partizione_comune.n, ridotto1.n, e1.n, ridotto2.n,e2.n,(int)dist_fuzzy_t);
-        if (opts.graphics && (opts.topologia & RETICOLO_2D)) {
+        if (opts.graphics && (opts.topologia == RETICOLO_2D)) {
             char filename[255];
             imagecount++;
             sprintf(filename, "ridotto%03d.ppm", imagecount);
