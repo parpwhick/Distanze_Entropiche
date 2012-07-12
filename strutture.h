@@ -10,6 +10,7 @@
 
 #include "rand55.h"
 #include "adj_handler.h"
+#include <vector>
 #include <string>
 #include <stdint.h>
 
@@ -48,6 +49,7 @@ typedef struct {
     int sierpinski_gen;
     int n_symbols;
     part_type partition_type;
+    int epsilon;
 
     source letto_da;
     source topologia;
@@ -132,31 +134,30 @@ private:
     label_t allocated_n;
 
     void allocate(label_t len);
-    void allocate_atoms(label_t n1);
     void sort_entropy();
     void relabel();
     //nearest neighbors
-    label_t *prev_site;
-
-    atom * atomi;
+    std::vector<label_t> prev_site;
+    std::vector<atom> atomi;
 public:
     //labels identify generic atoms across the partition
-    label_t *labels;
+    std::vector<label_t> labels;
 
-    void from_nnb(label_t **NNB);
-    template <typename data_t>
-    void from_configuration(const data_t *configuration, adj_struct adj, int N1=0);
+    void from_nnb(const label_t **NNB);
+    template <typename data_t> void from_configuration(const data_t *configuration, const adj_struct & adj, int N1=0);
 
     general_partition(int len = 0);
-    ~general_partition();
     void reduce(const general_partition &ridurre, const general_partition &common);
     void linear_intersection(const general_partition &p1, const general_partition &p2);
 
     void print();
     void print_cluster_adjacency();
 
-    atom& find_atom(const atom &atomo1) const {
+    const atom& find_atom(const atom &atomo1) const {
         return atomi[labels[atomo1.start]];
+    }
+    const atom& find_atom(const label_t inizio) const {
+        return atomi[labels[inizio]];
     }
 
     class Iterator {
@@ -196,15 +197,15 @@ public:
     };
 
     Iterator begin(const int where) const {
-        return Iterator(atomi[where].end, prev_site);
+        return Iterator(atomi[where].end, & prev_site[0]);
     }
 
     Iterator begin(const atom &where) const {
-        return Iterator(where.end, prev_site);
+        return Iterator(where.end, & prev_site[0]);
     }
 
     Iterator end() const {
-        return Iterator(-1, prev_site);
+        return Iterator(-1, 0);
     }
 };
 
@@ -214,11 +215,11 @@ class distance {
 private:
     void allocate(int n);
 
-    int *common_factor;
-    int *reduced1;
-    int *reduced2;
-    int *product_reduced;
-    uint64_t *product;
+    std::vector<int> common_factor;
+    std::vector<int> reduced1;
+    std::vector<int> reduced2;
+    std::vector<int> product_reduced;
+    std::vector<uint64_t> product;
     general_partition ridotto1;
     general_partition ridotto2;
     general_partition partizione_comune;

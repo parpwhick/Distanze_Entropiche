@@ -1,5 +1,6 @@
 COPTS= -O3 -march=native
 #COPTS= -g3
+COPTS+= -pg 
 COPTS += -Wall #-fopenmp
 LINK_OPTS = -lm -lgomp
 files=*.cpp *.h Makefile

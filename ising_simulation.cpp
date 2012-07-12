@@ -18,7 +18,7 @@ ising_simulation::config_t* ising_simulation::copy() {
     return second;
 }
 
-int generate_sierpinski_borders(int N, int * &bsx, int * &bdx){
+int generate_sierpinski_borders(int N, int * &bordo_sinistro, int * &bordo_destro, int * &bordo_sotto){
     int gen=1;
     int size=6;
     int bordersize=2;
@@ -30,12 +30,13 @@ int generate_sierpinski_borders(int N, int * &bsx, int * &bdx){
 	bordersize = 2*bordersize;
     }
     
-    bsx = new int[bordersize];
-    bdx = new int[bordersize];
-    bsx[0]=2;
-    bsx[1]=4;
-    bdx[0]=3;
-    bdx[1]=6;
+    bordo_sinistro = new int[bordersize];
+    bordo_destro = new int[bordersize];
+    bordo_sotto = new int[bordersize];
+    bordo_sinistro[0]=2;
+    bordo_sinistro[1]=4;
+    bordo_destro[0]=3;
+    bordo_destro[1]=6;
     
     // we start over and populate
     size=6;
@@ -44,20 +45,21 @@ int generate_sierpinski_borders(int N, int * &bsx, int * &bdx){
     for(int g=2; g <= gen; g++){
 	//copy left border, adding size of left triangle
 	for(int i=0; i < bordersize; i++)
-	    bsx[bordersize+i]=bsx[i]+size-1;
+	    bordo_sinistro[bordersize+i]=bordo_sinistro[i]+size-1;
 	//copy right border, adding size of right triangle
 	for(int i=0; i < bordersize; i++)
-	    bdx[bordersize+i]=bdx[i]+2*size-3;
+	    bordo_destro[bordersize+i]=bordo_destro[i]+2*size-3;
 	
 	size = 3*size -3;
 	bordersize = 2*bordersize;
     }
+    for(int i=0; i< bordersize; i++)
+        bordo_sotto[i] = N-1-i;
     return bordersize;
 }
 
 int generate_square_border(int lato, int * &bsx){
-    bsx = new int[lato];
-    
+    bsx = new int[lato];    
     
     for(int i=0; i < lato; i++)
         bsx[i]=i;
@@ -83,6 +85,8 @@ void ising_simulation::step(int steps){
                 metropolis_subset(border1,border_size);
             if(border2)
                 metropolis_subset(border2,border_size);
+            if(border3)
+                metropolis_subset(border2,border_size);
         }
 }
 
@@ -97,7 +101,9 @@ double ising_simulation::magnetizzazione(){
     int totale = 0;
     for (int i = 0; i < N; i++)
         totale += config[i];
-    return ((totale + 0.0)/N);
+    double media = totale;
+    media /= N;
+    return (media);
 }
 
 
@@ -320,8 +326,8 @@ void ising_simulation::init_config() {
         config[i] = -1;
 }
 
-ising_simulation::ising_simulation(adj_struct NN1, simulation_t TT,
-        int time_length,int initial_time_skip) {
+ising_simulation::ising_simulation(const adj_struct & NN1, simulation_t TT,
+        int time_length,int initial_time_skip) : NN(NN1) {
     config = 0;
     link_energies = 0;
     max_link_energy = 8;
@@ -332,8 +338,9 @@ ising_simulation::ising_simulation(adj_struct NN1, simulation_t TT,
     border_size=0;
     border1=0;
     border2=0;
+    border3=0;
 
-    NN = NN1;
+    //NN = NN1;
     N = NN.N;
 
     update_rule = TT;
@@ -369,17 +376,17 @@ template <typename data_t> void write_binary_array(data_t *array, int N, const c
 }
 
 #ifndef STANDALONE
-void time_series(adj_struct adj){
+void time_series(const adj_struct &adj){
     general_partition Z1, Z2;
     distance d(adj.N);
     int E_kin=0, E_mag=0;
     double mag;
     
-    ising_simulation sim(adj,opts.simulation_type,1,50000);
+    ising_simulation sim(adj,opts.simulation_type,3,0);
     sim.set_beta(opts.beta);
     sim.set_max_energy(opts.max_link_energy);
     if(opts.topologia == SIERPINSKI){
-        sim.border_size=generate_sierpinski_borders(adj.N,sim.border1,sim.border2);
+        sim.border_size=generate_sierpinski_borders(adj.N,sim.border1,sim.border2,sim.border3);
     }
         
     //sim.init_config();
@@ -390,7 +397,7 @@ void time_series(adj_struct adj){
     E_mag = sim.energia_magnetica();
     mag = sim.magnetizzazione();
     
-    printf("%%t\tatomi\tentropia\te kin\te mag\tdist\t\tdist_ridotta\n");
+    printf("%%t\tatomi\tentropia\te kin\te mag\tdist\t\tdist_ridotta\tmagnetizz\n");
     printf("%d\t%d\t%.6f\t%d\t%d\t%.6f\t%.6f\t%.6f\n",1,Z1.n,Z1.entropia_shannon,E_kin, E_mag, 0.0, 0.0,mag);
     for(int i=1; i<opts.n_seq; i++){
         sim.step();
@@ -399,7 +406,7 @@ void time_series(adj_struct adj){
         if(i%2){
             Z2.from_configuration(sim.config_reference(),adj);
             if(opts.graphics)
-            write_binary_array(Z2.labels,adj.N,"partizioni.bin");
+            write_binary_array(&Z2.labels[0],adj.N,"partizioni.bin");
         }
         else
             Z1.from_configuration(sim.config_reference(),adj);

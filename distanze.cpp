@@ -1,8 +1,9 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
-#include <vector>
 #include <ctime>
+#include <vector>
+#include <algorithm>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -15,12 +16,12 @@ extern double *mylog;
 
 void distance::allocate(int n) {
     if (opts.partition_type == LINEAR_PARTITION) {
-        common_factor = new int[n];
-        reduced1 = new int[n];
-        reduced2 = new int[n];
-        product_reduced = new int[n];
+        common_factor.reserve(n);
+        reduced1.reserve(n);
+        reduced2.reserve(n);
+        product_reduced.reserve(n);
     }
-    product = new uint64_t[n];
+    product.reserve(n);
 }
 
 distance::distance(int n) {
@@ -34,15 +35,6 @@ distance::distance(const distance &d1) {
 }
 
 distance::~distance() {
-    if (N) {
-        if (opts.partition_type == LINEAR_PARTITION) {
-            delete[] common_factor;
-            delete[] reduced1;
-            delete[] reduced2;
-            delete[] product_reduced;
-        }
-        delete[] product;
-    }
     N = 0;
 }
 
@@ -62,11 +54,11 @@ void distance::fill(const general_partition& e1, const general_partition& e2) {
 
         if (opts.verbose > 2) {
             label_t quanto = std::min(e1.N, (label_t) 50);
-            print_array(partizione_comune.labels, quanto, "lbls comune");
-            print_array(e1.labels, quanto, "lbls e1    ");
-            print_array(ridotto1.labels, quanto, "lbls ridot1");
-            print_array(e2.labels, quanto, "lbls e2    ");
-            print_array(ridotto2.labels, quanto, "lbls ridot2");
+            print_array(&partizione_comune.labels[0], quanto, "lbls comune");
+            print_array(&e1.labels[0], quanto, "lbls e1    ");
+            print_array(&ridotto1.labels[0], quanto, "lbls ridot1");
+            print_array(&e2.labels[0], quanto, "lbls e2    ");
+            print_array(&ridotto2.labels[0], quanto, "lbls ridot2");
 
         }
         //        ridotto1.reduce(e1, e2);
@@ -80,10 +72,10 @@ void distance::fill(const general_partition& e1, const general_partition& e2) {
             char filename[255];
             imagecount++;
             sprintf(filename, "ridotto%03d.ppm", imagecount);
-            ppmout2(e1.labels, e2.labels, opts.lato, filename);
+            ppmout2(&e1.labels[0], &e2.labels[0], opts.lato, filename);
             imagecount++;
             sprintf(filename, "ridotto%03d.ppm", imagecount);
-            ppmout2(ridotto1.labels, ridotto2.labels, opts.lato, filename);
+            ppmout2(&ridotto1.labels[0], &ridotto2.labels[0], opts.lato, filename);
         }
     }
 
@@ -129,7 +121,12 @@ double entropy_binary_partition(const T *p, int N) {
     H = -H / N + mylog[N];
     return (H);
 }
-template double entropy_binary_partition(int const*, int);
+template double entropy_binary_partition(const int *, int);
+
+template <typename T>
+inline double entropy_binary_partition(const std::vector<T> &p, int N) {
+    return entropy_binary_partition(&p[0],N);    
+}
 
 template <typename T>
 void distance::hamming_distance(const T* seq1, const T* seq2) {
@@ -214,10 +211,6 @@ void distance::dist(const linear_partition &first, const linear_partition &secon
     //printf("comune semplice: %d, r1: %d/%d, r2: %d/%d, prod: %d\n",coperture_common, coperture1r, coperture1, coperture2r, coperture2, coperture12r);
 }
 
-inline int compare(const void * a, const void * b) {
-    return ( *(uint64_t*) a - *(uint64_t*) b);
-}
-
 void distance::dist(const general_partition &p1, const general_partition &p2) {
     int i;
     int label_count = 0;
@@ -237,13 +230,13 @@ void distance::dist(const general_partition &p1, const general_partition &p2) {
     if (opts.graphics && (opts.topologia == RETICOLO_2D)) {
         imagecount++;
         sprintf(filename, "prodotto%03d.ppm", imagecount);
-        ppmout2(p1.labels, p2.labels, opts.lato, filename);
+        ppmout2(&p1.labels[0], &p2.labels[0], opts.lato, filename);
         imagecount++;
         sprintf(filename, "prodotto%03d.ppm", imagecount);
-        ppmout(product, opts.lato, filename);
+        ppmout(&product[0], opts.lato, filename);
     }
 
-    qsort(product, N, sizeof (uint64_t), compare);
+    std::sort(product.begin(), product.end());
 
     //the first position always starts an atom
     begin = 0;
@@ -282,10 +275,10 @@ void distance::dist(const general_partition &p1, const general_partition &p2) {
 
 }
 
-int WRITE(const char *where, double *what) {
+int WRITE(const char *where, const std::vector<double> & what) {
     FILE *out = fopen(where, "wb");
     int expected = opts.n_seq * opts.n_seq;
-    int bytes_written = fwrite(what, sizeof (double), expected, out);
+    int bytes_written = fwrite(&what[0], sizeof (double), expected, out);
     fclose(out);
     if (bytes_written == expected)
         return (1);
@@ -295,29 +288,24 @@ int WRITE(const char *where, double *what) {
     }
 }
 
-void init_zero(double * &vec) {
-    vec = new double[opts.n_seq * opts.n_seq];
-    for (int i = 0; i < opts.n_seq * opts.n_seq; i++)
-        vec[i] = 0;
-}
-
 template <typename partition_t>
 void calcola_matrice_distanze(const partition_t* X) {
 
-    double *dist_shan = 0;
-    double *dist_shan_r = 0;
-    double *dist_top = 0;
-    double *dist_top_r = 0;
-    double *dist_ham = 0;
-
     int &da_calcolare = opts.da_calcolare;
+    const int dim=opts.n_seq * opts.n_seq;
 
+    std::vector<double> dist_shan;
+    std::vector<double> dist_shan_r;
+    std::vector<double> dist_top;
+    std::vector<double> dist_top_r;
+    std::vector<double> dist_ham;
+    
     //distance matrix allocation and zeroing,if needed
-    if (da_calcolare & SHAN) init_zero(dist_shan);
-    if (da_calcolare & RID) init_zero(dist_shan_r);
-    if (da_calcolare & TOP) init_zero(dist_top);
-    if (da_calcolare & RID_TOP) init_zero(dist_top_r);
-    if (da_calcolare & HAMM) init_zero(dist_ham);
+    if (da_calcolare & SHAN) dist_shan.reserve(dim);
+    if (da_calcolare & RID) dist_shan_r.reserve(dim);
+    if (da_calcolare & TOP) dist_top.reserve(dim);
+    if (da_calcolare & RID_TOP) dist_top_r.reserve(dim);
+    if (da_calcolare & HAMM) dist_ham.reserve(dim);
 
     fprintf(stderr, "Calculating distance matrix\n");
 
@@ -391,16 +379,6 @@ void calcola_matrice_distanze(const partition_t* X) {
         fprintf(stderr, "Written %dx distance matrix\n", count);
     }
 
-    if (dist_shan)
-        delete[] dist_shan;
-    if (dist_shan_r)
-        delete[] dist_shan_r;
-    if (dist_top)
-        delete[] dist_top;
-    if (dist_top_r)
-        delete[] dist_top_r;
-    if (dist_ham)
-        delete[] dist_ham;
 }
 template void calcola_matrice_distanze(const linear_partition *X);
 template void calcola_matrice_distanze(const general_partition *X);

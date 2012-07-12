@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cassert>
 #include <vector>
+#include <algorithm>
 
 #include "strutture.h"
 #include "adj_handler.h"
@@ -176,34 +177,16 @@ template void linear_partition::fill(const char *, int);
 
 void general_partition::allocate(label_t len) {
     assert(len != 0);
-    if (labels && N != len) {
+    
+    if (!labels.empty() && N != len) {
         fprintf(stderr, "Allocating again for a different length without freeing first\n");
         exit(1);
     }
     N = len;
-
+    
     try {
-        if (!labels)
-            labels = new label_t[N];
-        if (!prev_site)
-            prev_site = new label_t[N];
-        //    if (!atomi)
-        //        atomi = new atom[N];
-    } catch (std::bad_alloc &e) {
-        fprintf(stderr, "Error allocating new partition: %s\n", e.what());
-        exit(1);
-    }
-}
-
-void general_partition::allocate_atoms(label_t n1) {
-
-    try {
-        if (atomi && n1 <= allocated_n)
-            return;
-        if (atomi)
-            delete []atomi;
-        allocated_n = (12 * n1) / 10;
-        atomi = new atom[allocated_n];
+        labels.reserve(N);
+        prev_site.reserve(N);
     } catch (std::bad_alloc &e) {
         fprintf(stderr, "Error allocating new partition: %s\n", e.what());
         exit(1);
@@ -216,29 +199,9 @@ general_partition::general_partition(int len) {
     N = len;
     entropia_topologica = 0;
     entropia_shannon = 0;
-    prev_site = 0;
-    atomi = 0;
-    labels = 0;
 
     if (N)
         allocate(N);
-    else {
-        labels = 0;
-        prev_site = 0;
-        atomi = 0;
-    }
-}
-
-general_partition::~general_partition() {
-    if (N) {
-        delete []labels;
-        delete []prev_site;
-        delete []atomi;
-    }
-}
-
-inline int compare(const void * a, const void * b) {
-    return ( *(int*) a - *(int*) b);
 }
 
 void general_partition::sort_entropy() {
@@ -247,14 +210,9 @@ void general_partition::sort_entropy() {
     int mu;
     int begin;
 
-    label_t *temp = new label_t[N];
-    allocate(N);
-
-    for (label_t i = 0; i < N; i++)
-        temp[i] = labels[i];
-
-    qsort(temp, N, sizeof (temp[0]), compare);
-
+    std::vector<label_t> temp(labels);
+    std::sort(temp.begin(),temp.end());
+    
     //the first position always starts an atom
     begin = 0;
     label_count = 1;
@@ -287,8 +245,6 @@ void general_partition::sort_entropy() {
     entropia_topologica = mylog[label_count];
     n = label_count;
     entropia_shannon = H;
-
-    delete []temp;
 }
 
 bool symmetric_difference(Iter_t from1, Iter_t from2, Iter_t to, int tol = 10) {
@@ -350,6 +306,8 @@ void general_partition::reduce(const general_partition &p1, const general_partit
 
         // uguaglianza "fuzzy" tra atomi, a meno di 'tol' siti
         // similmente, se sono 'uguali', salto l'atomo nella partizione risultante
+        
+        //nel caso di epsilon > 0, scorrere tutto un atomo per controllare l'altro... peccato!
         if (symmetric_difference(ii, p2.begin(atomo2), end, 0))
             continue;
 
@@ -366,54 +324,29 @@ void general_partition::reduce(const general_partition &p1, const general_partit
     entropia_shannon += common_size * mylog[common_size];
     entropia_shannon = -entropia_shannon / N + mylog[N];
     entropia_topologica = mylog[fattori_indipendenti + 1];
-    //this->sort_entropy();
     //printf("Stima: %g, sicura: %g\n",entropia,entropia_shannon);
 }
 
-void general_partition::linear_intersection(const general_partition &p1, const general_partition &p2) {
-    label_t * vicinato[2];
-    allocate(p1.N);
-
-    vicinato[0] = p1.prev_site;
-    vicinato[1] = p2.prev_site;
-    // Calcolo a partire dall'insieme dei vicini    
-    from_nnb(vicinato);
-
-    // Grafico il reticolo risultante, se richiesto
-    if (opts.graphics && (opts.topologia == RETICOLO_2D)) {
-        static int imagecount = 0;
-        char filename[255];
-        imagecount++;
-        sprintf(filename, "comune%03d.ppm", imagecount);
-        ppmout2(p1.labels, p2.labels, opts.lato, filename);
-        imagecount++;
-        sprintf(filename, "comune%03d.ppm", imagecount);
-        ppmout(labels, opts.lato, filename);
-    }
-}
-
-template <typename pointer_t> int findroot(int i, pointer_t *ptr) {
+template <typename data_t> int findroot(int i, data_t *ptr) {
     if (ptr[i] < 0) return i;
     return ptr[i] = findroot(ptr[i], ptr);
 }
 
 template <typename data_t>
-void general_partition::from_configuration(const data_t *configuration, adj_struct adj, int N1) {
+void general_partition::from_configuration(const data_t *configuration, const adj_struct & adj, int N1) {
     label_t s1, s2;
     label_t r1, r2;
     int z;
 
     if(N1==0) N1=adj.N;
     allocate(N1);
-    N = N1;
 
-    for (label_t i = 0; i < N; i++) {
-        labels[i] = -1;
-    }
+    //set all labels to -1
+    labels.assign(N, -1);
 
     // percolazione e primi labels
     for (s1 = 0; s1 < N; s1++) {
-        r1 = findroot(s1, labels);
+        r1 = findroot(s1, &labels[0]);
 
         z = adj.fetch(s1);
         for (int j = 0; j < z; j++) {
@@ -424,7 +357,7 @@ void general_partition::from_configuration(const data_t *configuration, adj_stru
             if (s2 >= s1 || s2 < 0 || configuration[s1] != configuration[s2])
                 continue;
 
-            r2 = findroot(s2, labels);
+            r2 = findroot(s2, &labels[0]);
             // attribution to proper tree root
             if (r1 != r2) {
                 if (labels[r1] >= labels[r2]) {
@@ -448,21 +381,22 @@ void general_partition::from_configuration(const data_t *configuration, adj_stru
         char filename[255];
         imagecount++;
         sprintf(filename, "reticolo%03d.ppm", imagecount);
-        ppmout2(configuration, labels, opts.lato, filename);
+        ppmout2(configuration, &labels[0], opts.lato, filename);
     }
 }
-template void general_partition::from_configuration(const int *configuration, adj_struct adj, int N1);
-template void general_partition::from_configuration(const char *configuration, adj_struct adj, int N1);
+template void general_partition::from_configuration(const int *configuration, const adj_struct & adj, int N1);
+template void general_partition::from_configuration(const char *configuration, const adj_struct & adj, int N1);
 
 void general_partition::relabel() {
-    label_t *new_label = new label_t[N];
+    static std::vector<label_t> new_label;
+    new_label.reserve(N);
     entropia_shannon = 0;
     n = 0;
 
     // 0-conto nr. atomi diversi per il solo scopo di allocare ottimalmente
-    for (label_t i = 0; i < N; i++)
+    for(label_t i = 0; i < N; i++)
         n += labels[i] < 0;
-    allocate_atoms(n);
+    atomi.reserve(n);
     n = 0;
     // 1-creazione array atomi
     // 2-inizializzazione ogni elemento
@@ -479,7 +413,7 @@ void general_partition::relabel() {
             prev_site[i] = i;
             n++;
         } else {
-            prev_site[i] = findroot(i, labels);
+            prev_site[i] = findroot(i, &labels[0]);
             new_label[i] = prev_site[i];
         }
     }
@@ -495,42 +429,64 @@ void general_partition::relabel() {
         prev_site[i] = std::min(atomi[atom_pos].end, i);
         atomi[atom_pos].end = i;
     }
-
-    delete []new_label;
 }
 
-void general_partition::from_nnb(label_t **neighbors) {
+void general_partition::linear_intersection(const general_partition &p1, const general_partition &p2) {
     label_t s1, s2;
-    const int dim = 2;
+    allocate(p1.N);
 
-    for (label_t i = 0; i < N; i++) {
-        labels[i] = -1;
-    }
+    //set all labels to -1
+    labels.assign(N, -1);
 
     // percolazione e primi labels
     for (s1 = 0; s1 < N; s1++) {
         int r2;
-        int r1 = findroot(s1, labels);
+        int r1 = findroot(s1, &labels[0]);
 
-        for (int j = 0; j < dim; j++) {
-            s2 = neighbors[j][s1];
-            if (s1 == s2 || s2 < 0)
-                continue;
-            r2 = findroot(s2, labels);
-            if (r1 != r2) {
-                if (labels[r1] >= labels[r2]) {
-                    labels[r2] += labels[r1];
-                    labels[r1] = r2;
-                    r1 = r2;
-                } else {
-                    labels[r1] += labels[r2];
-                    labels[r2] = r1;
-                }
+        s2 = p1.prev_site[s1];
+        if (s1 == s2 || s2 < 0)
+            continue;
+        r2 = findroot(s2, &labels[0]);
+        if (r1 != r2) {
+            if (labels[r1] >= labels[r2]) {
+                labels[r2] += labels[r1];
+                labels[r1] = r2;
+                r1 = r2;
+            } else {
+                labels[r1] += labels[r2];
+                labels[r2] = r1;
+            }
+        }
+
+        s2 = p2.prev_site[s1];
+        if (s1 == s2 || s2 < 0)
+            continue;
+        r2 = findroot(s2, &labels[0]);
+        if (r1 != r2) {
+            if (labels[r1] >= labels[r2]) {
+                labels[r2] += labels[r1];
+                labels[r1] = r2;
+                r1 = r2;
+            } else {
+                labels[r1] += labels[r2];
+                labels[r2] = r1;
             }
         }
     }
 
     this->relabel();
+
+    // Grafico il reticolo risultante, se richiesto
+    if (opts.graphics && (opts.topologia == RETICOLO_2D)) {
+        static int imagecount = 0;
+        char filename[255];
+        imagecount++;
+        sprintf(filename, "comune%03d.ppm", imagecount);
+        ppmout2(&p1.labels[0], &p2.labels[0], opts.lato, filename);
+        imagecount++;
+        sprintf(filename, "comune%03d.ppm", imagecount);
+        ppmout(&labels[0], opts.lato, filename);
+    }
 }
 
 void general_partition::print_cluster_adjacency() {

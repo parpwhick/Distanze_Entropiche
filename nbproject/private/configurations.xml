@@ -24,7 +24,6 @@
       </nativedebugger>
       <runprofile version="9">
         <runcommandpicklist>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"/distanze_generiche.exe -random -adiacenza vector1.bin vector2.bin -seqnum 3</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -random -adiacenza vector1.bin vector2.bin -seqnum 3</runcommandpicklistitem>
           <runcommandpicklistitem>time "${OUTPUT_PATH}" >/dev/null</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
@@ -34,8 +33,9 @@
           <runcommandpicklistitem>"${OUTPUT_PATH}"  -microcanonical -square 100 -num 1000 -link_energy 0</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"  -microcanonical -sierpinski 6 -num 5 -link_energy 5</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"  -microcanonical -sierpinski 3 -num 5 -link_energy 5</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"  -microcanonical -sierpinski 3 -num 10</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}"  -microcanonical -sierpinski 3 -num 5 -link_energy 5</runcommand>
+        <runcommand>"${OUTPUT_PATH}"  -microcanonical -sierpinski 3 -num 10</runcommand>
         <rundir>.</rundir>
         <buildfirst>true</buildfirst>
         <console-type>1</console-type>

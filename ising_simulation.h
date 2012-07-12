@@ -15,7 +15,7 @@ class ising_simulation {
     
     simulation_t update_rule;
 
-    adj_struct NN;
+    const adj_struct & NN;
     int N;
     config_t *config;
     config_t *link_energies;
@@ -31,7 +31,7 @@ class ising_simulation {
 public:
     void metropolis_step();
     void microcanonical_step();
-    ising_simulation(adj_struct NN1, simulation_t TT, int time_length=1,int initial_time_skip=0);
+    ising_simulation(const adj_struct & NN1, simulation_t TT, int time_length=1,int initial_time_skip=0);
     ~ising_simulation(){
         if(config) delete config;
         if(link_energies) delete link_energies;        
@@ -46,6 +46,7 @@ public:
     
     int *border1;
     int *border2;
+    int *border3;
     int border_size;
     const config_t *config_reference() { return config;}
     int energia_cinetica();
@@ -53,7 +54,7 @@ public:
     double magnetizzazione();
 };
 
-void time_series(adj_struct adj);
+void time_series(const adj_struct & adj);
 
 #endif	/* ISING_SIMULATION_H */
 

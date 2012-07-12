@@ -29,6 +29,7 @@ void print_help() {
             "  -simulation       Configurations from temporal evolution\n"
             "  -num N            Limits the number of configurations to N [2550]\n"
             "  -length N         Limits configuration length to N [600]\n"
+            "  -epsilon N        Use epsilon-reduction with unnormalized size N [0]"
             "  -nodistance       Doesn't calculate any distance matrix\n"
             "  -symbols N        Generate random strings with N symbols [2]\n"
             "  -nowrite          Don't write the distance matrices [off]\n"
@@ -64,6 +65,7 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.seq_len = 625;
     opts.lato = 25;
     opts.n_seq = 2550;
+    opts.epsilon = 0;
     opts.n_symbols = 2;
     opts.topologia = RETICOLO_2D;
     opts.letto_da = RANDOM;
@@ -124,6 +126,14 @@ void set_program_options(options &opts, int argc, char**argv) {
 
                 opts.seq_len = atoi(argv[read_argvs++]);
                 fprintf(stderr, "Sequence length limited to %d\n", opts.seq_len);
+            }  else if (input == "-epsilon") {
+                if (argc - read_argvs < 1)
+                    error("Need to specify epsilon\n");
+                if (argv[read_argvs][0] == '-')
+                    error("Expecting argument, not another option\n");
+
+                opts.epsilon = atoi(argv[read_argvs++]);
+                fprintf(stderr, "Reduction uses epsilon algorithm, with size %d\n", opts.epsilon);
             } else if (input == "-square") {
                 if (argc - read_argvs < 1)
                     error("Need to specify lattice side length\n");

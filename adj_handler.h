@@ -13,34 +13,33 @@
 
 #define LEAST -1
 
-/*
- * La matrice di adiacenza e' in realta' un vettore:
- * supponiamo che i primi due siti abbiano vicini 
- * v=[v1,v2,v3]
- * w=[w1,w2,w3,w4]
- * il tutto e' organizzato cosi:
- * adj=[-v1,v2,v3,-w1,w2,w3,w4,-1]
- * gli elementi negativi marcano l'inizio di un altro sito
+/* Dato il link k-esimo, che collega i <--k--> j, 
+ * gli array adi[k] e adj[k] restituiscono i e j.
+ * 
+ * index[i] restituisce il primo link che coinvolge i, fino a index[i+1] sono
+ * tutti i link del sito i-esimo, ordinati.
+ * 
+ * z=fetch(i) restituisce il nr. di coordinazione di 'i' e carica i link opportuni
+ * nell'array vicini[0 .. z-1]
  */
 
 class adj_struct {
 public:
+    int *adi;
     int *adj;
     int *index;
-    int *adi;
     int N;
     int n_link;
-    int n;
-    int *vicini;
     int zmax;
+    mutable int *vicini;
     
-    int fetch(int site){
+    int fetch(int site) const {
         if(site>=N)
             return 0;
-        n=index[site+1]-index[site];
+        int z=index[site+1]-index[site];
         vicini=adj+index[site];
         __builtin_prefetch(vicini,0,0);
-        return(n);
+        return(z);
     }
 };
 
