@@ -134,7 +134,7 @@ private:
     label_t allocated_n;
 
     void allocate(label_t len);
-    void sort_entropy();
+    void entropy_calculation();
     void relabel();
     //nearest neighbors
     std::vector<label_t> prev_site;
@@ -143,7 +143,6 @@ public:
     //labels identify generic atoms across the partition
     std::vector<label_t> labels;
 
-    void from_nnb(const label_t **NNB);
     template <typename data_t> void from_configuration(const data_t *configuration, const adj_struct & adj, int N1=0);
 
     general_partition(int len = 0);

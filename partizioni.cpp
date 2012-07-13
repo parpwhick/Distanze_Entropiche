@@ -174,16 +174,21 @@ template void linear_partition::fill(const char *, int);
  ************************************************
  */
 
-
-void general_partition::allocate(label_t len) {
-    assert(len != 0);
-    
-    if (!labels.empty() && N != len) {
-        fprintf(stderr, "Allocating again for a different length without freeing first\n");
+/* allocate: funzione helper, assicura di avere memoria allocata per tutto quello 
+ *  che serve. Da chiamare sempre prima di usare la memoria. Se e' gia allocata, non fa 
+ *  nulla a parte un controllo di sicurezza!
+ */
+void general_partition::allocate(label_t len) {    
+    //errore se:
+    //len == 0 : cerco di allocare una partizione lunga 0
+    //labels e' pieno, ma N != len -> probabilmente si sta usando partizioni di lunghezze diverse
+    if (len==0 || (!labels.empty() && N != len)) {
+        fprintf(stderr, "Allocating for a different length, or length 0\n");
         exit(1);
     }
     N = len;
     
+    //preallocazione dei vettori, se ci si riesce
     try {
         labels.reserve(N);
         prev_site.reserve(N);
@@ -204,12 +209,18 @@ general_partition::general_partition(int len) {
         allocate(N);
 }
 
-void general_partition::sort_entropy() {
+/* A partire da una partizione con label assegnati, calcola l'entropia
+ *  con il metodo del sort. Calcola entrambi i tipi di entropia.
+ * Funzione al momento non utilizzata (rimane per completezza)
+ */
+void general_partition::entropy_calculation() {
     int label_count = 0;
     double H = 0;
     int mu;
     int begin;
 
+    //create a temp vector, a copy of "labels"
+    //during the sort, temp is destructively changed, can't use the labels!
     std::vector<label_t> temp(labels);
     std::sort(temp.begin(),temp.end());
     
@@ -290,7 +301,7 @@ void general_partition::reduce(const general_partition &p1, const general_partit
     int common_size = N;
     //per ogni atomo
     for (label_t which = 0; which < p1.n; which++) {
-        // Considero l'atomo n-esimo del primo
+        // Considero l'atomo n-esimo della prima partizione
         // Trovo l'atomo che corrisponde nella seconda partizione
         //  attraverso il primo sito in comune
         const atom &atomo1 = p1.atomi[which];
@@ -324,10 +335,16 @@ void general_partition::reduce(const general_partition &p1, const general_partit
     entropia_shannon += common_size * mylog[common_size];
     entropia_shannon = -entropia_shannon / N + mylog[N];
     entropia_topologica = mylog[fattori_indipendenti + 1];
-    //printf("Stima: %g, sicura: %g\n",entropia,entropia_shannon);
 }
 
-template <typename data_t> int findroot(int i, data_t *ptr) {
+
+/* findroot ricorsivamente trova il primo sito del cluster, la radice appunto.
+ * La formulazione ricorsiva implica path-compression.  Non e' possibile fare
+ *  una versione iterativa mantenendo la compression: il compilatore non puo' 
+ *  fare tail optimization in questo caso, findroot e' responsabile per il 30%
+ *  del tempo speso dall'applicazione :(
+ */
+template <typename data_t> inline int findroot(int i, data_t *ptr) {
     if (ptr[i] < 0) return i;
     return ptr[i] = findroot(ptr[i], ptr);
 }
@@ -387,21 +404,28 @@ void general_partition::from_configuration(const data_t *configuration, const ad
 template void general_partition::from_configuration(const int *configuration, const adj_struct & adj, int N1);
 template void general_partition::from_configuration(const char *configuration, const adj_struct & adj, int N1);
 
+/* relabel: funzione essenziale per il corretto partizionamento
+ * Costruisce l'elenco degli atomi, il vettore prev_site;
+ * A partire dai labels, che indicano le posizioni, i siti sono rinumerati,
+ *  usando come etichette l'indice dall'atomo, contando dal basso.
+ */
 void general_partition::relabel() {
-    static std::vector<label_t> new_label;
-    new_label.reserve(N);
     entropia_shannon = 0;
     n = 0;
 
     // 0-conto nr. atomi diversi per il solo scopo di allocare ottimalmente
-    for(label_t i = 0; i < N; i++)
+    for(label_t i = 0; i < N; i++){
         n += labels[i] < 0;
+        //a questo punto prev_site contiene il primo sito appartenente al cluster
+        prev_site[i] = findroot(i, &labels[0]);
+    }
     atomi.reserve(n);
     n = 0;
+    
     // 1-creazione array atomi
     // 2-inizializzazione ogni elemento
     // 3-creazione indice (label atomo) <--> root
-    // 4-calcolo entropia a partire dai size nei root
+    // 4-calcolo entropia a partire dai size nei root    
 #define ATOMO atomi[n]
     for (label_t i = 0; i < N; i++) {
         if (labels[i] < 0) {
@@ -409,28 +433,28 @@ void general_partition::relabel() {
             ATOMO.size = -labels[i];
             ATOMO.end = i;
             ATOMO.start = i;
-            new_label[i] = n;
-            prev_site[i] = i;
+            labels[i] = n;
             n++;
-        } else {
-            prev_site[i] = findroot(i, &labels[0]);
-            new_label[i] = prev_site[i];
         }
     }
-
     entropia_topologica = mylog[n];
     entropia_shannon = -entropia_shannon / N + mylog[N];
+    
     // 1-relabeling secondo l'indice dell'atomo, non del sito di appartenenza
-    // 2-hashing
-    // 3-creazione del collegamento prev_site e atom.end
+    // 2-creazione del collegamento prev_site(che usa il precedente, non il primo com'era prima)
+    //   e aggiornamento atom.end, che indica l'ultimo sito trovato apparentenente all'atomo
     for (label_t i = 0; i < N; i++) {
-        int atom_pos = new_label[prev_site[i]];
-        labels[i] = atom_pos;
-        prev_site[i] = std::min(atomi[atom_pos].end, i);
-        atomi[atom_pos].end = i;
+        int atom_label = labels[prev_site[i]];
+        labels[i] = atom_label;
+        prev_site[i] = std::min(atomi[atom_label].end, i);
+        atomi[atom_label].end = i;
     }
 }
 
+/* linear_intersection: funzione come from_configuration (percolazione) specializzata
+ *  per il caso di una struttura 2dimensionale, con argomenti due partizioni (invece di 
+ *  una configurazione e una struttura adiacenza!).
+ */
 void general_partition::linear_intersection(const general_partition &p1, const general_partition &p2) {
     label_t s1, s2;
     allocate(p1.N);
@@ -443,6 +467,7 @@ void general_partition::linear_intersection(const general_partition &p1, const g
         int r2;
         int r1 = findroot(s1, &labels[0]);
 
+        //usa come primo vicino il sito dalla partizione 1
         s2 = p1.prev_site[s1];
         if (s1 == s2 || s2 < 0)
             continue;
@@ -458,6 +483,7 @@ void general_partition::linear_intersection(const general_partition &p1, const g
             }
         }
 
+        //usa come secondo vicino il sito dalla partizione 2
         s2 = p2.prev_site[s1];
         if (s1 == s2 || s2 < 0)
             continue;
@@ -489,6 +515,11 @@ void general_partition::linear_intersection(const general_partition &p1, const g
     }
 }
 
+/* Funzione utile per costruire il laplaciano dei clusters.
+ * La matrice di adiacenza e' cosi costruita:
+ * A(i,j) = { 1 se i e' nello stesso cluster di j, 0 altrimenti}
+ * Il risultato e' una matrice poco sparsa, ma puo' dare info spettrali sui clusters.
+ */
 void general_partition::print_cluster_adjacency() {
     //label_t e' definito in strutture.h come int32
     std::vector<label_t> riga;

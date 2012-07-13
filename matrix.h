@@ -21,7 +21,7 @@ public:
         nrows = rows;
         ncols = cols;
         if (nrows) {
-            fprintf(stderr, "Requested allocation space of %d kbytes\n", (((int)sizeof (data_t)) * total) >> 10);
+            //fprintf(stderr, "Requested allocation space of %d kbytes\n", (((int)sizeof (data_t)) * total) >> 10);
             buffer = new data_t[total];
             if(fill) 
                 for (int i=0; i<total ;i++)
@@ -31,7 +31,7 @@ public:
 
     data_t & operator()(int row, int col) {
         if(row>=nrows || col>=ncols){
-            fprintf(stderr,"Requesting element out of bounds at (%d, %d)!\n",row,col);
+            //fprintf(stderr,"Requesting element out of bounds at (%d, %d)!\n",row,col);
         }
         return buffer[ncols * row + col];
     }
@@ -53,7 +53,7 @@ public:
         total = rows*cols;
         nrows = rows;
         if (nrows) {
-            fprintf(stderr, "Requested allocation space of %d kbytes\n", (((int)sizeof (int)) * total) >> 10);
+            //fprintf(stderr, "Requested allocation space of %d kbytes\n", (((int)sizeof (int)) * total) >> 10);
             buffer = new int[total];
             if(fill) 
                 for (int i=0; i<total ;i++)

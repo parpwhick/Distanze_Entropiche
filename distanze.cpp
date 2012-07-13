@@ -43,13 +43,13 @@ void distance::fill(const linear_partition& e1, const linear_partition& e2) {
 }
 
 void distance::fill(const general_partition& e1, const general_partition& e2) {
-    static int imagecount = 0;
+    
 
     if (opts.da_calcolare & RID) {
-        partizione_comune.linear_intersection(e1, e2);
+        //partizione_comune.linear_intersection(e1, e2);
         //partizione_comune.trivial(e1.N);
-        ridotto1.reduce(e1, partizione_comune);
-        ridotto2.reduce(e2, partizione_comune);
+        //ridotto1.reduce(e1, partizione_comune);
+        //ridotto2.reduce(e2, partizione_comune);
 
 
         if (opts.verbose > 2) {
@@ -61,14 +61,15 @@ void distance::fill(const general_partition& e1, const general_partition& e2) {
             print_array(&ridotto2.labels[0], quanto, "lbls ridot2");
 
         }
-        //        ridotto1.reduce(e1, e2);
-        //        ridotto2.reduce(e2, e1);
+                ridotto1.reduce(e1, e2);
+                ridotto2.reduce(e2, e1);
 
         dist(ridotto1, ridotto2);
         dist_shan_r = dist_shan;
         dist_top_r = dist_top;
         //printf("comune generale: %d, r1: %d/%d, r2: %d/%d, prod: %d\n",partizione_comune.n, ridotto1.n, e1.n, ridotto2.n,e2.n,(int)dist_fuzzy_t);
         if (opts.graphics && (opts.topologia == RETICOLO_2D)) {
+            static int imagecount = 0;
             char filename[255];
             imagecount++;
             sprintf(filename, "ridotto%03d.ppm", imagecount);
