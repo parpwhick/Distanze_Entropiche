@@ -17,7 +17,95 @@ void print_array(int *array, int len, const char *nome);
 void DJBHASH_STEP(u_int32_t &hash, u_int32_t value) ;
 
 
+template <class T> class my_allocator;
 
+// specialize for void:
+template <> class my_allocator<void> {
+public:
+    typedef void*       pointer;
+    typedef const void* const_pointer;
+    // reference to void members are impossible.
+    typedef void value_type;
+    template <class U> struct rebind { typedef my_allocator<U>    other; };
+};
+
+template <typename T> class my_allocator : public std::allocator<T> {
+public:
+    typedef std::size_t    size_type;
+    typedef std::ptrdiff_t difference_type;
+    typedef T*        pointer;
+    typedef const T*  const_pointer;
+    typedef T&        reference;
+    typedef const T&  const_reference;
+    typedef T         value_type;
+    static size_type total_memory;
+
+    template <class U> 
+    struct rebind { 
+        typedef my_allocator<U> other; 
+    };
+
+    my_allocator() throw() 
+    {
+        
+    }
+
+    my_allocator(const my_allocator& to_copy) throw() 
+    { 
+    }
+
+    template <class U> 
+    my_allocator(const my_allocator<U>& to_copy) throw()
+    {
+    }
+
+    ~my_allocator() throw()
+    {
+    }
+
+    pointer address(reference x) const
+    {
+        return std::allocator<T>::address(x);
+    }
+
+    const_pointer address(const_reference x) const
+    {
+        return std::allocator<T>::address(x);
+    }
+
+    pointer allocate(size_type s1, typename std::allocator<void>::const_pointer hint = 0)
+    {
+        size_t block_size = s1 * sizeof (T);
+        total_memory += block_size;
+        std::cout << typeid(T).name() << " allocated, MiB: " <<  (block_size / (1024.0 * 1024.0)) << ", total: " << (total_memory>>20) << "\n";
+        
+        return std::allocator<T>::allocate(s1, hint);
+    }
+
+    void deallocate(pointer p, size_type n)
+    {
+        size_t block_size = n * sizeof (T);
+        total_memory -= block_size;
+        std::cout << typeid(T).name() << " deallocated, MiB: " <<   (block_size/ (1024.0 * 1024.0)) << ", total: " << (total_memory>>20) << "\n";
+        std::allocator<T>::deallocate(p, n);
+    }
+
+    size_type max_size() const throw()
+    {
+        return std::allocator<T>::max_size();
+    }
+
+    void construct(pointer p, const T& val)
+    {
+        std::allocator<T>::construct(p, val);
+    }
+
+    void destroy(pointer p)
+    {
+        std::allocator<T>::destroy (p);
+    }
+};
+template<typename T> std::size_t my_allocator<T>::total_memory = 0;
 
 
 #define HASHVAR (atomi[label_count-1].hash)
@@ -110,80 +198,6 @@ template void linear_partition::fill(const char *, int, int);
 int compare_labelled_array (const void * a, const void * b) {
   return ( ((labelled_array*)a)->value - ((labelled_array*)b)->value );
 }
-
-
-#undef HASHVAR
-#define HASHVAR (p.atomi[label_count-1].hash)
-#define LASTATOM p.atomi[label_count-1]
-#define LAST_POS product[i-1].pos
-#define THIS_POS product[i].pos
-void sort_labelling(linear_partition &p, labelled_array *product) {
-    int i;
-    int label_count = 0;
-    double H = 0;
-    int mu;
-    int begin;
-    
-    qsort(product,p.N,sizeof(labelled_array),compare_labelled_array);
-    
-    //the first position always starts an atom
-    begin = 0;
-    label_count=1;
-    int old_val=product[0].value;
-    
-    //we skip over the first value, so initialize here
-    p.labels[product[0].pos]=label_count;
-    p.nnL[product[0].pos]=product[0].pos;
-    
-    DJBHASH_STEP(HASHVAR,product[0].pos);
-    
-    for (i = 1; i < p.N; i++) {
-               
-        //whenever we find a new atom
-        if (product[i].value!=old_val) {
-            //a new atom starts
-            
-            //the closed (old)atom's length is calculated
-            mu = i - begin;
-            LASTATOM.start=product[begin].pos;
-            LASTATOM.size=mu;
-            LASTATOM.end=LAST_POS;
-            p.next_site[LAST_POS]=LAST_POS;
-            p.nnL[THIS_POS]=THIS_POS;
-            //the new one is ready to go
-            label_count++;
-            begin = i;
-            //cache the new label to check
-            old_val=product[i].value;
-
-            //we add the entropy, with the trick mu>0 and when mu=1 the log is 0
-            if (mu > 1)
-                H += (double) mu * mylog[mu];   
-        }else{
-            p.next_site[LAST_POS]=THIS_POS;
-            p.nnL[THIS_POS]=LAST_POS;
-        }
-        
-        p.labels[THIS_POS]=label_count;
-        DJBHASH_STEP(HASHVAR,THIS_POS);
-    }
-    //the last one, so it's not left hanging
-    mu = p.N - begin;
-    LASTATOM.start=product[begin].pos;
-    LASTATOM.size=mu;
-    LASTATOM.end=LAST_POS;
-    p.next_site[LAST_POS]=LAST_POS;
-    H += mu * mylog[mu];
-    
-    //normalize the result
-    H = -H / p.N + mylog[p.N];
-    
-    p.entropia_topologica=mylog[label_count];
-    p.n=label_count;
-    p.entropia_shannon=H;
-}
-
-
 
 void sort_entropy(linear_partition &p, labelled_array *product) {
     int i;

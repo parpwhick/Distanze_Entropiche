@@ -3,6 +3,12 @@
  *
  * Started on January 11, 2012, 2:30 PM
  * 
+ * Version: 6.2, 2012/07/13
+ * -Improved simulation, with time series output
+ * -23x speed improvement over version 6.0!
+ * -Using STL classes and methods
+ * -Using a more optimized reduction (without common part)
+ * 
  * Version: 6.1, 2012/06/21
  * -Added simulation class
  * -Improved entropy calculation, 2x speedup
@@ -109,14 +115,24 @@ int main(int argc, char** argv) {
             topologia = adiacenza_from_file(opts.adj_vec_1, opts.adj_vec_2, opts.seq_len);
             break;
     }
-
+    
+    int memory_estimate =
+            +topologia.n_link * 2 * sizeof (int) +topologia.N * sizeof (int) //struct adiacenza
+            +opts.seq_len * sizeof (int) //caricamento sequenza
+            +opts.seq_len * sizeof (double) //logaritmo
+            +opts.seq_len * sizeof (uint64_t) //temp product
+            +opts.seq_len * opts.n_seq * sizeof (label_t) * ( 2 +1) //partizioni: fisso + max_variabile
+            +opts.n_seq * opts.n_seq * __builtin_popcount(opts.da_calcolare) * sizeof(double); //per l'output
+    memory_estimate >>= 20;
+    fprintf(stderr,"Estimated memory usage: %d MB\n",memory_estimate+1);
+            
     //logarithm lookup table, 6x program speedup
     int lunghezza = std::max(opts.seq_len, opts.n_seq) + 10;
     mylog = new double[ lunghezza ];
     for (int i = 1; i < lunghezza; i++)
         mylog[i] = log(i);
     mylog[0] = 0;
-
+    
     //
     // SIMULATION case
     //
@@ -147,13 +163,13 @@ int main(int argc, char** argv) {
     printf("Loaded %d sequences long %d\n", opts.n_seq, opts.seq_len);
     print_partition_stats(Z);
     printf("\n");
-
+    
     //
     //  DISTANCE MEASUREMENTS
     //
     if (opts.distance == false)
         return(0);
-
+	
     calcola_matrice_distanze(Z);
     //
     //  PROGRAM EXIT

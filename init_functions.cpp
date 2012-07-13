@@ -12,8 +12,6 @@ using namespace std;
 options opts;
 
 
-void translate(string type, char *testo, int len);
-
 void error(const char* message) {
     fputs(message, stderr);
     exit(1);
@@ -334,6 +332,7 @@ void fill_seq_from_file(options &opts, std::string *sequenze) {
         exit(2);
     }
 
+    //vector<string> V((istream_iterator<string>(cin)), istream_iterator<string>());
     int cur_entry = -1;
     while (1) {
         //get every line and check if read properly

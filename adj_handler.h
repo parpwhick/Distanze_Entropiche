@@ -25,12 +25,12 @@
 
 class adj_struct {
 public:
-    int *adi;
-    int *adj;
-    int *index;
     int N;
     int n_link;
     int zmax;
+    int *adi;
+    int *adj;
+    int *index;
     mutable int *vicini;
     
     int fetch(int site) const {

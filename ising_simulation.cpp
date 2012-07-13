@@ -90,11 +90,11 @@ void ising_simulation::step(int steps){
         }
 }
 
-int ising_simulation::energia_cinetica(){
+double ising_simulation::energia_cinetica(){
     int totale = 0;
     for (int i = 0; i < NN.n_link; i++)
         totale += link_energies[i];
-    return (totale);
+    return (totale+0.0)/NN.n_link;
 }
 
 double ising_simulation::magnetizzazione(){
@@ -107,13 +107,13 @@ double ising_simulation::magnetizzazione(){
 }
 
 
-int ising_simulation::energia_magnetica() {
+double ising_simulation::energia_magnetica() {
     int dH=0;
     // somma su i
     for (int i = 0; i < NN.n_link; i++)
         dH += - config[NN.adi[i]] * config[NN.adj[i]];
     dH /= 2;
-    return(dH);
+    return (dH+0.0)/NN.n_link;
 }
 
 void ising_simulation::metropolis_step() {
@@ -164,7 +164,7 @@ void ising_simulation::metropolis_subset(int *subset, int length) {
     
     /* Dinamica di Metropolis, 1 passo temporale */
     
-    //update red
+    //update pari
     for (int j = 0; j < length; j+=2) {        
         s = subset[j];
         z = NN.fetch(subset[j]);
@@ -179,7 +179,7 @@ void ising_simulation::metropolis_subset(int *subset, int length) {
             config[s] = -config[s];
     }
     
-    //update black
+    //update dispari
     for (int j = 1; j < length; j+=2) {        
         s = subset[j];
         z = NN.fetch(subset[j]);
@@ -204,12 +204,17 @@ void ising_simulation::microcanonical_step() {
     if (config == 0) {
         config = new config_t [NN.N];
         for (int i = 0; i < NN.N; i++)
-            config[i] = 2 * (random.get_double() < 0.5) - 1 ;
+            config[i] = 2 * (random.get_double() < 0.2) - 1 ;
     }
     if (link_energies == 0) {
         link_energies = new config_t [NN.n_link];
         for (int i = 0; i < NN.n_link; i++)
-            link_energies[i] = random.get_int() % max_link_energy;
+            //distribuizione uniforme
+            //link_energies[i] = random.get_int() % max_link_energy;
+            
+            //distribuzione esponenziale inversa
+            //N = -1/lambda * ln(1-r) -1   poi da ceil'are.
+            link_energies[i] = std::ceil(-1/opts.beta * std::log(1-random.get_double()) - 1);
     }
 
     uint32_t randnum = random.get_int();
@@ -378,44 +383,58 @@ template <typename data_t> void write_binary_array(data_t *array, int N, const c
 #ifndef STANDALONE
 void time_series(const adj_struct &adj){
     general_partition Z1, Z2;
-    distance d(adj.N);
-    int E_kin=0, E_mag=0;
-    double mag;
+    distance dist(adj.N);
+    double E_kin=0, E_mag=0;
+    double mag, beta_est;
     
-    ising_simulation sim(adj,opts.simulation_type,3,0);
+    ising_simulation sim(adj,opts.simulation_type,100,50);
     sim.set_beta(opts.beta);
     sim.set_max_energy(opts.max_link_energy);
     if(opts.topologia == SIERPINSKI){
         sim.border_size=generate_sierpinski_borders(adj.N,sim.border1,sim.border2,sim.border3);
-    }
-        
+    }        
     //sim.init_config();
     sim.step();
        
     Z1.from_configuration(sim.config_reference(),adj);
-    E_kin = sim.energia_cinetica();
-    E_mag = sim.energia_magnetica();
-    mag = sim.magnetizzazione();
+        
+    /* piccola nota sulla distribuzione delle energie:
+     * se f(En) = exp(-beta * En) a meno di costante
+     * allora <En> = 1 / (exp(beta) - 1) ====> beta = log[(1 + 1 / <En>]
+     * delta(beta) = -1/[(<En>+1)*<En>)]  * sigma(En)/sqrt(N)
+     */
+    printf("%%t, atomi, entropia, e_kin, e_mag, dist, dist_rid, M, beta_est\n");
     
-    printf("%%t\tatomi\tentropia\te kin\te mag\tdist\t\tdist_ridotta\tmagnetizz\n");
-    printf("%d\t%d\t%.6f\t%d\t%d\t%.6f\t%.6f\t%.6f\n",1,Z1.n,Z1.entropia_shannon,E_kin, E_mag, 0.0, 0.0,mag);
-    for(int i=1; i<opts.n_seq; i++){
-        sim.step();
-        if(opts.graphics)
-            write_binary_array(sim.config_reference(),adj.N, "configurazioni.bin");
-        if(i%2){
-            Z2.from_configuration(sim.config_reference(),adj);
-            if(opts.graphics)
-            write_binary_array(&Z2.labels[0],adj.N,"partizioni.bin");
-        }
-        else
-            Z1.from_configuration(sim.config_reference(),adj);
-        d.fill(Z1,Z2);
+    for (int i = 1; i < opts.n_seq + 1; i++) {
+        //calcolo quantita' da stampare
         E_kin = sim.energia_cinetica();
         E_mag = sim.energia_magnetica();
         mag = sim.magnetizzazione();
-        printf("%d\t%d\t%.6f\t%d\t%d\t%.6f\t%.6f\t%.6f\n",i+1,Z2.n,Z2.entropia_shannon,E_kin,E_mag,
-                                d.dist_shan,d.dist_shan_r,mag);
+        beta_est = std::log(1. + 1. / E_kin);
+        //stampa
+        printf("%d\t", i);
+        printf("%d\t", Z1.n);
+        printf("%.4f\t", Z1.entropia_shannon);
+        printf("%.4f\t", E_kin);
+        printf("%.4f\t", E_mag);
+        printf("%.4f\t", dist.dist_shan);
+        printf("%.4f\t", dist.dist_shan_r);
+        printf("%.4f\t", mag);
+        printf("%.4f\t", beta_est);
+        printf("\n");
+
+        //simulation step
+        sim.step();
+        if (opts.graphics)
+            write_binary_array(sim.config_reference(), adj.N, "configurazioni.bin");
+        if (i % 2) {
+            Z2.from_configuration(sim.config_reference(), adj);
+            if (opts.graphics)
+                write_binary_array(&Z2.labels[0], adj.N, "partizioni.bin");
+        } else
+            Z1.from_configuration(sim.config_reference(), adj);
+        //calcolo distanze
+        dist(Z1, Z2);
     }
 }
 #endif

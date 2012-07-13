@@ -1,14 +1,16 @@
 COPTS= -O3 -march=native
-#COPTS= -g2
+COPTS+= -g2
 #COPTS+= -pg 
-COPTS += -Wall #-fopenmp
+COPTS +=-Wall #-fopenmp
+COPTS +=-std=c++0x 
 LINK_OPTS = -lm -lgomp
 files=*.cpp *.h Makefile
 file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
 
 OBJ_LIST= init_functions.o distanze.o partizioni.o rand55.o adj_handler.o rand_mersenne.o 
 DIST_GEN_OBJ = general_distance.o ising_simulation.o
-ALL: distanze_generiche ising distanze_lineari sierpinski
+
+all: distanze_generiche ising distanze_lineari sierpinski
 
 distanze_generiche: ${DIST_GEN_OBJ} ${OBJ_LIST}
 	g++ ${COPTS} -o distanze_generiche ${DIST_GEN_OBJ} ${OBJ_LIST} ${LINK_OPTS}
@@ -55,6 +57,7 @@ rand55.o: rand55.cpp rand55.h
 
 clean:
 	rm -f *.o
+	rm -vf *.bin
 
 zip: ${files} ${file_supporto}
 	zip -9 prog_distanze.zip ${files} ${file_supporto}

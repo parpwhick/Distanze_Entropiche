@@ -49,8 +49,8 @@ public:
     int *border3;
     int border_size;
     const config_t *config_reference() { return config;}
-    int energia_cinetica();
-    int energia_magnetica();
+    double energia_cinetica();
+    double energia_magnetica();
     double magnetizzazione();
 };
 

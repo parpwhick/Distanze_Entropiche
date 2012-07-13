@@ -38,13 +38,7 @@ distance::~distance() {
     N = 0;
 }
 
-void distance::fill(const linear_partition& e1, const linear_partition& e2) {
-    this->dist(e1, e2);
-}
-
-void distance::fill(const general_partition& e1, const general_partition& e2) {
-    
-
+void distance::dist(const general_partition& e1, const general_partition& e2) {
     if (opts.da_calcolare & RID) {
         //partizione_comune.linear_intersection(e1, e2);
         //partizione_comune.trivial(e1.N);
@@ -61,10 +55,10 @@ void distance::fill(const general_partition& e1, const general_partition& e2) {
             print_array(&ridotto2.labels[0], quanto, "lbls ridot2");
 
         }
-                ridotto1.reduce(e1, e2);
-                ridotto2.reduce(e2, e1);
+        ridotto1.reduce(e1, e2);
+        ridotto2.reduce(e2, e1);
 
-        dist(ridotto1, ridotto2);
+        calc_distance(ridotto1, ridotto2);
         dist_shan_r = dist_shan;
         dist_top_r = dist_top;
         //printf("comune generale: %d, r1: %d/%d, r2: %d/%d, prod: %d\n",partizione_comune.n, ridotto1.n, e1.n, ridotto2.n,e2.n,(int)dist_fuzzy_t);
@@ -81,7 +75,7 @@ void distance::fill(const general_partition& e1, const general_partition& e2) {
     }
 
     if (opts.da_calcolare & SHAN)
-        dist(e1, e2);
+        calc_distance(e1, e2);
 }
 
 void print_binary_partition(int*p, int N) {
@@ -209,10 +203,11 @@ void distance::dist(const linear_partition &first, const linear_partition &secon
     }
     this->dist_top_r = 2 * mylog[coperture12r] - mylog[coperture1r] - mylog[coperture2r];
 
-    //printf("comune semplice: %d, r1: %d/%d, r2: %d/%d, prod: %d\n",coperture_common, coperture1r, coperture1, coperture2r, coperture2, coperture12r);
+    //printf("comune semplice: %d, r1: %d/%d, r2: %d/%d, prod: %d\n",
+    //coperture_common, coperture1r, coperture1, coperture2r, coperture2, coperture12r);
 }
 
-void distance::dist(const general_partition &p1, const general_partition &p2) {
+void distance::calc_distance(const general_partition &p1, const general_partition &p2) {
     int i;
     int label_count = 0;
     double H = 0;
@@ -322,7 +317,7 @@ void calcola_matrice_distanze(const partition_t* X) {
             int index = i * opts.n_seq + j;
 
             if (da_calcolare & (SHAN | RID)) {
-                d.fill(X[i], X[j]);
+                d.dist(X[i], X[j]);
                 if (da_calcolare & SHAN) dist_shan[index] = d.dist_shan;
                 if (da_calcolare & RID) dist_shan_r[index] = d.dist_shan_r;
                 if (da_calcolare & TOP) dist_top[index] = d.dist_top;

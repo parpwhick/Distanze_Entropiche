@@ -12,6 +12,11 @@
 #include "adj_handler.h"
 #include <vector>
 #include <string>
+#include <iostream>
+
+#include <algorithm>
+#include <stdio.h>
+
 #include <stdint.h>
 
 enum simulation_t {
@@ -75,11 +80,6 @@ typedef struct {
 
 } options;
 
-typedef struct {
-    int value;
-    int pos;
-} labelled_array;
-
 typedef int32_t label_t;
 
 class basic_partition {
@@ -120,12 +120,6 @@ public:
     label_t size;
     label_t start;
     label_t end;
-
-    atom() {
-        size = 0;
-        end = 0;
-        start = 0;
-    }
 };
 
 class general_partition : public basic_partition {
@@ -139,15 +133,18 @@ private:
     //nearest neighbors
     std::vector<label_t> prev_site;
     std::vector<atom> atomi;
+    general_partition(const general_partition &);
+    general_partition & operator=(const general_partition &);
 public:
     //labels identify generic atoms across the partition
     std::vector<label_t> labels;
 
-    template <typename data_t> void from_configuration(const data_t *configuration, const adj_struct & adj, int N1=0);
-
     general_partition(int len = 0);
+
+    template <typename data_t> void from_configuration(const data_t *configuration, const adj_struct & adj, int N1=0);
     void reduce(const general_partition &ridurre, const general_partition &common);
     void linear_intersection(const general_partition &p1, const general_partition &p2);
+    void product(const general_partition & p1, const general_partition & p2);
 
     void print();
     void print_cluster_adjacency();
@@ -224,6 +221,7 @@ private:
     general_partition partizione_comune;
 
     int N;
+    void calc_distance(const general_partition &p1, const general_partition &p2);
 
 public:
     double dist_shan;
@@ -232,10 +230,11 @@ public:
     double dist_top_r;
     double dist_ham;
 
-    void dist(const linear_partition &p1, const linear_partition &p2);
-    void dist(const general_partition &p1, const general_partition &p2);
-    void fill(const linear_partition& e1, const linear_partition& e2);
-    void fill(const general_partition& e1, const general_partition& e2);
+    void dist(const linear_partition& e1, const linear_partition& e2);
+    void dist(const general_partition& e1, const general_partition& e2);
+    void operator()(const general_partition& e1, const general_partition& e2){
+        dist(e1,e2);
+    }
     template <typename T> void hamming_distance(const T* seq1, const T* seq2);
 
     ~distance();

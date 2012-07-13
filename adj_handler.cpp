@@ -124,7 +124,7 @@ adj_struct adiacenza_sierpinski(int GEN, int &total_size){
     total_size = 6;
     for (int g = 2; g <= GEN; g++)
         total_size = 3 * total_size - 3;
-    fprintf(stderr, "Generazione %d, size %d\n", GEN, total_size);
+    fprintf(stderr, "Generazione %d, size %d, links %d\n", GEN, total_size, total_size * 4 - 6);
 
     // prima generazione, dimensione 6
     old_size = 6;
@@ -133,9 +133,9 @@ adj_struct adiacenza_sierpinski(int GEN, int &total_size){
     /*allocazione */
     
     // vettore di coordinazione
-    memory < 1 > z  = *new memory < 1 > (total_size);
+    memory < 1 > z(total_size);
     // matrice (n,4) nearest neighbour
-    memory < 4 > nn = *new memory < 4 > (total_size, -1);
+    memory < 4 > nn(total_size, -1);
     
     /*riempimento del triangolo generatore */
     z(0) = 2;
