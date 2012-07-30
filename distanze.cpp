@@ -14,12 +14,15 @@
 extern options opts;
 extern double *mylog;
 
+/* Prealloca i vettori temporanei utilizzati per il calcolo delle entropie
+ */
 void distance::allocate(int n) {
     if (opts.partition_type == LINEAR_PARTITION) {
         common_factor.reserve(n);
         reduced1.reserve(n);
         reduced2.reserve(n);
         product_reduced.reserve(n);
+        binary_product.reserve(n);
     }
     product.reserve(n);
 }
@@ -38,13 +41,20 @@ distance::~distance() {
     N = 0;
 }
 
+/* Esegue la riduzione e calcola le distanze tra due partizioni.
+ * Tutti i calcoli sono fatti con variabili interne alla classe, e il runtime
+ * in memoria e' costante - rendendo molto piu' veloci i calcoli.
+ */
 void distance::dist(const general_partition& e1, const general_partition& e2) {
     if (opts.da_calcolare & RID) {
-        //partizione_comune.linear_intersection(e1, e2);
-        //partizione_comune.trivial(e1.N);
-        //ridotto1.reduce(e1, partizione_comune);
-        //ridotto2.reduce(e2, partizione_comune);
-
+        if (opts.riduzione == COMUNE) {
+            partizione_comune.linear_intersection(e1, e2);
+            ridotto1.reduce(e1, partizione_comune);
+            ridotto2.reduce(e2, partizione_comune);
+        } else if (opts.riduzione == DIRETTA) {
+            ridotto1.reduce(e1, e2);
+            ridotto2.reduce(e2, e1);
+        }
 
         if (opts.verbose > 2) {
             label_t quanto = std::min(e1.N, (label_t) 50);
@@ -53,10 +63,7 @@ void distance::dist(const general_partition& e1, const general_partition& e2) {
             print_array(&ridotto1.labels[0], quanto, "lbls ridot1");
             print_array(&e2.labels[0], quanto, "lbls e2    ");
             print_array(&ridotto2.labels[0], quanto, "lbls ridot2");
-
         }
-        ridotto1.reduce(e1, e2);
-        ridotto2.reduce(e2, e1);
 
         calc_distance(ridotto1, ridotto2);
         dist_shan_r = dist_shan;
@@ -85,42 +92,41 @@ void print_binary_partition(int*p, int N) {
     printf("\n");
 }
 
+/* La funzione molto semplice per il calcolo dell'entropia di una partizione
+ * lineare, in cui l'inizio di un nuovo atomo e' indicato da "1"
+ */
 template <typename T>
-double entropy_binary_partition(const T *p, int N) {
-    //p: binary partition
-    //n: total length
-    int i = 0;
+inline double entropy_binary_partition(const std::vector<T> &p, int N) {
+    int label_count = 0;
+    double H = 0;
     int mu;
     int begin;
-    double H = 0;
 
     //the first position always starts an atom
     begin = 0;
-    for (i = 1; i < N; i++) {
-        //whenever we find 1 (a new atom)
+    label_count = 1;
+
+    for (label_t i = 1; i < N; i++) {
+        //whenever we find a new atom
         if (p[i]) {
             //the closed (old)atom's length is calculated
             mu = i - begin;
             //the new one is ready to go
+            label_count++;
             begin = i;
             //we add the entropy, with the trick mu>0 and when mu=1 the log is 0
             if (mu > 1)
                 H += (double) mu * mylog[mu];
         }
     }
-    //we check the last one, in case it's left hanging
+    //the last one, so it's not left hanging
     mu = N - begin;
-    if (mu > 1) H += mu * mylog[mu];
+    H += mu * mylog[mu];
 
-    //proper entropy normalization
+    //normalize the result
     H = -H / N + mylog[N];
-    return (H);
-}
-template double entropy_binary_partition(const int *, int);
 
-template <typename T>
-inline double entropy_binary_partition(const std::vector<T> &p, int N) {
-    return entropy_binary_partition(&p[0],N);    
+    return H;
 }
 
 template <typename T>
@@ -142,14 +148,14 @@ void distance::dist(const linear_partition &first, const linear_partition &secon
     bool ridotta = opts.da_calcolare & RID;
     //the partition product/intersection, OR'ing
     for (int i = 0; i < N; i++)
-        product[i] = first.binary[i] | second.binary[i];
-    product[0] = 1;
+        binary_product[i] = first.binary[i] | second.binary[i];
+    binary_product[0] = 1;
 
     //calculating ALL the entropies (3 per non-reduced Rohlin dist, 3 per reduced)
     double
     h1 = first.entropia_shannon,
             h2 = second.entropia_shannon,
-            h12 = entropy_binary_partition(product, N);
+            h12 = entropy_binary_partition(binary_product, N);
 
     this->dist_shan = 2 * h12 - h1 - h2;
 
@@ -159,7 +165,7 @@ void distance::dist(const linear_partition &first, const linear_partition &secon
     for (int i = 0; i < N; i++) {
         coperture1 += first.binary[i];
         coperture2 += second.binary[i];
-        coperture12 += product[i];
+        coperture12 += binary_product[i];
     }
     this->dist_top = 2 * mylog[coperture12] - mylog[coperture1] - mylog[coperture2];
 
@@ -208,15 +214,9 @@ void distance::dist(const linear_partition &first, const linear_partition &secon
 }
 
 void distance::calc_distance(const general_partition &p1, const general_partition &p2) {
-    int i;
-    int label_count = 0;
-    double H = 0;
-    int mu;
-    int begin;
-
-    for (i = 0; i < N; i++) {
-        uint64_t temp1 = p1.labels[i];
-        uint64_t temp2 = p2.labels[i];
+    for (auto i = 0; i < N; i++) {
+        product_t temp1 = p1.labels[i];
+        product_t temp2 = p2.labels[i];
 
         product[i] = (temp1 << 32) | temp2;
     }
@@ -233,40 +233,14 @@ void distance::calc_distance(const general_partition &p1, const general_partitio
     }
 
     std::sort(product.begin(), product.end());
-
-    //the first position always starts an atom
-    begin = 0;
-    label_count = 1;
-    uint64_t old_val = product[0];
-    for (i = 1; i < N; i++) {
-        //whenever we find a different value (a new atom)
-        if (product[i] != old_val) {
-            //a new atom starts
-            label_count++;
-            //the closed (old)atom's length is calculated
-            mu = i - begin;
-            //the new one is ready to go
-            begin = i;
-            //cache the new label to check
-            old_val = product[i];
-            //we add the entropy, with the trick mu>0 and when mu=1 the log is 0
-            if (mu > 1)
-                H += (double) mu * mylog[mu];
-        }
-    }
-    //we check the last one, in case it's left hanging
-    mu = N - begin;
-    H += mu * mylog[mu];
-
-    //normalize the result
-    H = -H / N + mylog[N];
-
+    entropy_pair entropie = ordered_vector_entropy(product.data(),N);
+    
     double h1 = p1.entropia_shannon,
             h2 = p2.entropia_shannon,
             t1 = p1.entropia_topologica,
             t2 = p2.entropia_topologica;
-    this->dist_shan = 2 * H - h1 - h2;
-    this->dist_top = 2 * mylog[label_count] - t1 - t2;
+    this->dist_shan = 2 * entropie.first - h1 - h2;
+    this->dist_top = 2 * mylog[entropie.second] - t1 - t2;
 
 
 }

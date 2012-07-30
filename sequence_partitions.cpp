@@ -59,13 +59,54 @@
 extern options opts;
 double *mylog=0;
 
+/************************************************
+ ************************************************
+ *             PARTIZIONI SEMPLICI              *
+ ************************************************
+ ************************************************
+ */
+
+void linear_partition::print() {
+    if (opts.verbose > 3) {
+        // {1,0,0,1,0,1,...}
+        print_array(binary, N, "Binary");
+    }
+    fprintf(stdout, "Partitions[n]: %d, Shannon %f, Topological %f\n", n, entropia_shannon,
+            entropia_topologica);
+}
+
+template <typename T>
+linear_partition::linear_partition(const T* seq, int len) {
+    this->fill(seq, len);
+}
+
+template <typename T>
+void linear_partition::fill(const T* seq, int len) {
+    //Total length of the partition is equal to the sequence
+    N = len;
+    binary = new int[len];
+
+    //first one always start an atom
+    binary[0] = 1;
+
+    //checking for a different symbol from the one before
+    //when that happens => new atom!
+    for (int i = 1; i < len; i++)
+        binary[i] = seq[i] != seq[i - 1];
+
+    auto entropie = ordered_vector_entropy(seq,N);
+    n=entropie.second;
+    entropia_shannon = entropie.first;
+    entropia_topologica = mylog[n];
+}
+template void linear_partition::fill(const char *, int);
 
 void print_partition_stats(linear_partition *X){
     label_t min=X[0].N*20, max=0;
     double mean=0, std=0;
     for(int i=0; i<opts.n_seq; i++){
 	if(X[i].n < 10)
-		printf("Pochi atomi in %d\n",i);
+		printf("Few atoms in partition: %d\n",i);
         min=std::min(X[i].n,min);
         max=std::max(X[i].n,max);
         mean+=X[i].n;
@@ -76,8 +117,8 @@ void print_partition_stats(linear_partition *X){
     std /= opts.n_seq;
     std = std - mean*mean;
     
-    fprintf(stderr,"Partizioni: nr. frammenti tra [%d,%d], ",min,max);
-    fprintf(stderr,"media %.2f con %.2f siti/atomo\n",mean,opts.seq_len/mean);
+    fprintf(stderr,"Partitions: n. atoms between [%d,%d], ",min,max);
+    fprintf(stderr,"avg %.2f with %.2f sites/atom\n",mean,opts.seq_len/mean);
     
 }
 

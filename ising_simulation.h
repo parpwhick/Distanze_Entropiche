@@ -9,16 +9,19 @@
 #define	ISING_SIMULATION_H
 
 #include "rand_mersenne.h"
+#include <vector>
+using std::vector;
 
 class ising_simulation {
+    
     typedef char config_t;
     
     simulation_t update_rule;
 
     const adj_struct & NN;
     int N;
-    config_t *config;
-    config_t *link_energies;
+    vector<config_t> config;
+    vector<config_t> link_energies;
     int steps_per_time;
     int skip;
     int max_link_energy;
@@ -27,28 +30,24 @@ class ising_simulation {
     double beta;
     RandMT random;
     
-    void metropolis_subset(int *subset, int length);
+    void metropolis_subset(std::vector<int> subset);
 public:
     void metropolis_step();
     void microcanonical_step();
     ising_simulation(const adj_struct & NN1, simulation_t TT, int time_length=1,int initial_time_skip=0);
-    ~ising_simulation(){
-        if(config) delete config;
-        if(link_energies) delete link_energies;        
-    }
     void set_beta(double bt) { beta = bt;}
     void set_max_energy (int m){ max_link_energy = m;}
     void measure();
     void step(int steps = 1);
     void test_run(int T);
     void init_config();
-    config_t *copy();
+    vector<config_t> copy();
     
-    int *border1;
-    int *border2;
-    int *border3;
-    int border_size;
-    const config_t *config_reference() { return config;}
+    vector<int> border1;
+    vector<int> border2;
+    vector<int> border3;
+    //int border_size;
+    const config_t *config_reference() { return config.data();}
     double energia_cinetica();
     double energia_magnetica();
     double magnetizzazione();

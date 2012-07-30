@@ -37,10 +37,7 @@ adj_struct adiacenza_square_lattice(int lato){
     adj[4*N]=LEAST;
     index[N]=4*N;
     
-    adj_struct temp;
-    temp.adj=adj;
-    temp.adi=adi;
-    temp.index=index;
+    adj_struct temp(adi,adj,index);
     temp.N=N;
     temp.n_link=4*N;
     temp.zmax=4;
@@ -60,9 +57,7 @@ adj_struct adiacenza_simple_line(int N){
     adj[N]=LEAST;
     index[N]=N;
 
-    adj_struct temp;
-    temp.adj=adj;
-    temp.index=index;
+    adj_struct temp(nullptr,adj,index);
     temp.N=N;
     temp.n_link=N;
     temp.zmax=1;
@@ -86,9 +81,7 @@ adj_struct adiacenza_fuzzy_line(int N){
     adj[adj_count]=-1;
     index[N]=adj_count;
 
-    adj_struct temp;
-    temp.adj=adj;
-    temp.index=index;
+    adj_struct temp(nullptr,adj,index);
     temp.N=N;
     temp.n_link=adj_count;
     temp.zmax=opts.fuzzy+1;
@@ -238,10 +231,7 @@ adj_struct adiacenza_sierpinski(int GEN, int &total_size){
         scritti += z(i);
     }
     index[total_size] = scritti;
-    adj_struct temp;
-    temp.adi=adi;
-    temp.adj=adj;
-    temp.index=index;
+    adj_struct temp(adi,adj,index);
     temp.N=total_size;
     temp.n_link=scritti;
     temp.zmax=4;
@@ -348,10 +338,7 @@ adj_struct adiacenza_from_file(const char *name_vec1,const char *name_vec2, int 
         tmp_index[i] -= offset;    
     
     
-    adj_struct temp;
-    temp.index=index;
-    temp.adj=adj;
-    temp.adi=tmp_index;
+    adj_struct temp(tmp_index,adj,index);
     temp.n_link=M;
     temp.N=N;
     temp.zmax=zmax;

@@ -8,15 +8,9 @@
 #ifndef STRUTTURE_H
 #define	STRUTTURE_H
 
-#include "rand55.h"
 #include "adj_handler.h"
 #include <vector>
 #include <string>
-#include <iostream>
-
-#include <algorithm>
-#include <stdio.h>
-
 #include <stdint.h>
 
 enum simulation_t {
@@ -47,6 +41,11 @@ enum source {
     SIMULATION,
 };
 
+enum red_strategy{
+    COMUNE,
+    DIRETTA
+};
+
 typedef struct {
     int seq_len;
     int n_seq;
@@ -62,6 +61,7 @@ typedef struct {
     char adj_vec_1[255];
     char adj_vec_2[255];
     int fuzzy;
+    red_strategy riduzione;
 
     int da_calcolare;
     bool write;
@@ -81,6 +81,7 @@ typedef struct {
 } options;
 
 typedef int32_t label_t;
+typedef uint64_t product_t;
 
 class basic_partition {
 public:
@@ -141,7 +142,7 @@ public:
 
     general_partition(int len = 0);
 
-    template <typename data_t> void from_configuration(const data_t *configuration, const adj_struct & adj, int N1=0);
+    template <typename data_t> void from_configuration(const data_t *configuration, const adj_struct & adj);
     void reduce(const general_partition &ridurre, const general_partition &common);
     void linear_intersection(const general_partition &p1, const general_partition &p2);
     void product(const general_partition & p1, const general_partition & p2);
@@ -156,13 +157,18 @@ public:
         return atomi[labels[inizio]];
     }
 
-    class Iterator {
+    class Iterator : public std::iterator_traits<label_t>{
+ 
     private:
         label_t _site;
         const label_t *_next;
 
     public:
-
+        typedef label_t value_type;
+        typedef label_t *pointer;
+        typedef label_t &reference;
+        typedef label_t difference_type;
+    typedef std::forward_iterator_tag iterator_category;
         Iterator(int dove, const label_t *vicini) : _site(dove), _next(vicini) {
         };
 
@@ -211,11 +217,12 @@ class distance {
 private:
     void allocate(int n);
 
-    std::vector<int> common_factor;
-    std::vector<int> reduced1;
-    std::vector<int> reduced2;
-    std::vector<int> product_reduced;
-    std::vector<uint64_t> product;
+    std::vector<char> common_factor;
+    std::vector<char> reduced1;
+    std::vector<char> reduced2;
+    std::vector<char> product_reduced;
+    std::vector<char> binary_product;
+    std::vector<product_t> product;
     general_partition ridotto1;
     general_partition ridotto2;
     general_partition partizione_comune;
@@ -251,7 +258,8 @@ void generate_next_sequence(int *num_entry);
 int load_config(options &opts, int *num_entry);
 
 //more general 
-template <typename T> double entropy_binary_partition(const T *p, int n);
+typedef std::pair<double,int> entropy_pair;
+template <typename T>  entropy_pair ordered_vector_entropy(const T *temp, int N);
 template <typename partition_t> void calcola_matrice_distanze(const partition_t *X);
 template <typename data_t> void print_array(const data_t *array, int len, const char *nome);
 template <typename T> void ppmout(const T *grid, int sz, const char *filename);

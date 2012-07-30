@@ -16,163 +16,6 @@ using std::sort;
 
 extern options opts;
 extern double *mylog;
-int *colore;
-
-static rand55 gen;
-
-template <typename data_t> void print_array(const data_t *array, int len, const char *nome) {
-    printf("%s [%3d", nome, array[0]);
-    for (int i = 1; i < len; i++)
-        printf(",%3d", array[i]);
-    printf("]\n");
-}
-template void print_array(const label_t *grid, int sz, const char *filename);
-
-template <typename T>
-void print_square_lattice(const T* valori, int lato) {
-    for (int i = 0; i < lato; i++) {
-        for (int j = 0; j < lato; j++) {
-            printf("%2d ", valori[j * lato + i]);
-        }
-        printf("\n");
-    }
-    printf("\n");
-}
-
-
-#define COL_MAX 1000
-
-template <typename T>
-void ppmout(const T *grid1, int sz, const char *filename) {
-
-    if (colore == 0) {
-        colore = new int[COL_MAX];
-        for (int i = 0; i < COL_MAX; i++) {
-            colore[i] = gen.rand_long();
-        }
-        colore[0] = 0x0F5A3A1F; // blue almost black
-    }
-
-    int MULT;
-    if (sz > 500)
-        MULT = 1;
-    else
-        MULT = 500 / sz + 1;
-
-
-    FILE *fout = fopen(filename, "w");
-    fprintf(fout, "P6\n %d %d\n 255\n", MULT*sz, MULT * sz);
-
-
-    for (int rg = 0; rg < sz; rg++) {
-        for (int i = 0; i < MULT; i++)
-            for (int cl = 0; cl < sz; cl++) {
-                int sito = grid1[rg * sz + cl] % COL_MAX;
-                int color = colore[sito];
-                for (int j = 0; j < MULT; j++)
-                    fwrite(&color, 3, 1, fout);
-            }
-    }
-}
-
-template <typename T, typename U>
-void ppmout2(const T *grid1, const U* grid2, int sz, const char *filename) {
-    //Se l'array dei colori non e' inizializzato - riempiamolo!
-    if (colore == 0) {
-        colore = new int[COL_MAX];
-        for (int i = 0; i < COL_MAX; i++) {
-            colore[i] = gen.rand_long();
-        }
-        colore[0] = 0x0F5A3A1F; // blue almost black
-    }
-
-    int MULT;
-    if (sz > 500)
-        MULT = 3;
-    else
-        MULT = 500 / sz + 1;
-
-
-    int black = 0x20202020;
-    int intermezzo = 100; //pixels tra i pannelli
-
-    FILE *fout = fopen(filename, "w");
-    fprintf(fout, "P6\n %d %d\n 255\n", 2 * MULT * sz + intermezzo, MULT * sz);
-
-    for (int rg = 0; rg < sz; rg++) {
-        for (int i = 0; i < MULT; i++) {
-            //primo reticolo
-            for (int cl = 0; cl < sz; cl++) {
-                int sito = grid1[rg * sz + cl] % COL_MAX;
-                int color = colore[sito];
-                for (int j = 0; j < MULT; j++)
-                    fwrite(&color, 3, 1, fout);
-            }
-            //10 pixels neri in mezzo
-            for (int j = 0; j < intermezzo; j++)
-                fwrite(&black, 3, 1, fout);
-
-            //secondo reticolo
-            for (int cl = 0; cl < sz; cl++) {
-                int sito = grid2[rg * sz + cl] % COL_MAX;
-                int color = colore[sito];
-                for (int j = 0; j < MULT; j++)
-                    fwrite(&color, 3, 1, fout);
-            }
-        }
-    }
-}
-
-template void ppmout(const int32_t *grid, int sz, const char *filename);
-template void ppmout(const uint64_t *grid, int sz, const char *filename);
-template void ppmout2(const int *grid1, const int* grid2, int, const char *);
-template void ppmout2(const uint64_t *grid1, const unsigned long* grid2, int, const char *);
-
-/************************************************
- ************************************************
- *             PARTIZIONI SEMPLICI              *
- ************************************************
- ************************************************
- */
-
-
-void linear_partition::print() {
-    if (opts.verbose > 3) {
-        // {1,0,0,1,0,1,...}
-        print_array(binary, N, "Binary");
-    }
-    fprintf(stdout, "Partitions[n]: %d, Shannon %f, Topological %f\n", n, entropia_shannon,
-            entropia_topologica);
-}
-
-template <typename T>
-linear_partition::linear_partition(const T* seq, int len) {
-    this->fill(seq, len);
-}
-
-template <typename T>
-void linear_partition::fill(const T* seq, int len) {
-    //Total length of the partition is equal to the sequence
-    N = len;
-    binary = new int[len];
-
-    //first one always start an atom
-    binary[0] = 1;
-
-    //checking for a different symbol from the one before
-    //when that happens => new atom!
-    for (int i = 1; i < len; i++)
-        binary[i] = seq[i] != seq[i - 1];
-
-    //number of atoms found
-    n = 0;
-    for (int i = 0; i < len; i++)
-        n += binary[i];
-
-    entropia_topologica = mylog[n];
-    entropia_shannon = entropy_binary_partition(binary, N);
-}
-template void linear_partition::fill(const char *, int);
 
 /************************************************
  ************************************************
@@ -197,8 +40,8 @@ void general_partition::allocate(label_t len) {
 
     //preallocazione dei vettori, se ci si riesce
     try {
-        labels.reserve(N);
-        prev_site.reserve(N);
+        labels.resize(N);
+        prev_site.resize(N);
     } catch (std::bad_alloc &e) {
         fprintf(stderr, "Error allocating new partition: %s\n", e.what());
         exit(1);
@@ -216,25 +59,16 @@ general_partition::general_partition(int len) {
         allocate(N);
 }
 
-/* A partire da una partizione con label assegnati, calcola l'entropia
- *  con il metodo del sort. Calcola entrambi i tipi di entropia.
- * Funzione al momento non utilizzata (rimane per completezza)
- */
-void general_partition::entropy_calculation() {
+template <typename T> entropy_pair ordered_vector_entropy(const T *temp, int N){
     int label_count = 0;
     double H = 0;
     int mu;
     int begin;
 
-    //create a temp vector, a copy of "labels"
-    //during the sort, temp is destructively changed, can't use the labels!
-    vector<label_t> temp(labels);
-    sort(temp.begin(),temp.end());
-
     //the first position always starts an atom
     begin = 0;
     label_count = 1;
-    int old_val = temp[0];
+    T old_val = temp[0];
 
     for (label_t i = 1; i < N; i++) {
         //whenever we find a new atom
@@ -260,17 +94,35 @@ void general_partition::entropy_calculation() {
     //normalize the result
     H = -H / N + mylog[N];
 
-    entropia_topologica = mylog[label_count];
-    n = label_count;
-    entropia_shannon = H;
+    return std::make_pair(H,label_count);
+}
+template entropy_pair ordered_vector_entropy(const label_t *temp, int N);
+template entropy_pair ordered_vector_entropy(const product_t *temp, int N);
+template entropy_pair ordered_vector_entropy(const char *temp, int N);
+
+/* A partire da una partizione con label assegnati, calcola l'entropia.
+ * Funzione al momento non utilizzata (rimane per completezza)
+ */
+void general_partition::entropy_calculation() {
+    //create a temp vector, a copy of "labels"
+    //during the sort, temp is destructively changed, can't use the labels!
+    vector<label_t> temp(labels);
+    sort(temp.begin(),temp.end());
+
+    entropy_pair entropie = ordered_vector_entropy(temp.data(),N);
+    
+    n = entropie.second;
+    entropia_topologica = mylog[n];
+    entropia_shannon = entropie.first;
 }
 
 /* Implementazione di similitudine a meno di 'epsilon', tramite differenza
  * simmetrica di due insiemi (ottenuti tramite iteratori) ordinati.
  * L'implementazione e' custom per ritornare un risultato non appena le differenze
- * sono sufficienti a dare una risposta immediata
+ * sono sufficienti a dare una risposta immediata.
+ * Ritorna 'false' non appena le differenze sono maggiori di epsilon, 'true' altrimenti.
  */
-bool is_atom_similar(Iter_t from1, Iter_t from2, Iter_t to, int epsilon) {
+bool is_similar(Iter_t from1, Iter_t from2, Iter_t to, int epsilon) {
     int differenze = 0;
 
     while (differenze < epsilon) {
@@ -304,25 +156,18 @@ bool is_atom_similar(Iter_t from1, Iter_t from2, Iter_t to, int epsilon) {
     return(false);
 }
 
-/* Versione di differenza simmetrica tra due insiemi per ritornare non appena
+/* Differenza simmetrica tra due insiemi modificata per ritornare non appena
  * si trova una differenza -- ottimizzazione per il caso epsilon == 0 .
+ * Ritorna 'true' quando gli elementi nei due range [from,last) sono uguali.
  */
-bool is_atom_equal(Iter_t from1, Iter_t from2, Iter_t to) {
-    while (true) {
-        if ((from1 == to) != (from2 == to)) {
-            return (false);
-        } else if ((from1 == to) && (from2 == to)) {
-            // Se ho raggiunto la fine di entrambi gli atomi senza troppe differenze
-            // allora accetto l'uguaglianza
-            return (true);
-        } else if (*from1 != *from2) {
-            return(false);
-        } else {
-            // I due atomi hanno lo stesso elemento - scorro in avanti entrambi
-            from1++;
-            from2++;
-        }
+bool is_equal(Iter_t from1, Iter_t last1, Iter_t from2, Iter_t last2) {
+    while ((from1 != last1) && (from2 != last2)) {
+        if (*from1 != *from2)
+            return false;
+        ++from1;
+        ++from2;
     }
+    return (from1 == last1) && (from2 == last2);
 }
 
 /* general_partition::reduce (part1, part2)
@@ -383,7 +228,7 @@ void general_partition::reduce(const general_partition &p1, const general_partit
                     almost_equal = false;
                     break;
                 }
-                if (is_atom_similar(ii1, p2.begin(atomo2), end, epsilon)) {
+                if (is_similar(ii1, p2.begin(atomo2), end, epsilon)) {
                     almost_equal = true;
                     break;
                 }
@@ -395,7 +240,7 @@ void general_partition::reduce(const general_partition &p1, const general_partit
                 continue;
         } else {
             label_t atomo2 = p2.labels[*ii1];
-            if (is_atom_equal(ii1, p2.begin(atomo2), end))
+            if(is_equal(ii1,end,p2.begin(atomo2),end))
                 continue;
         }
         // altrimenti interseca il fattore dicotomico con i precedenti
@@ -414,26 +259,37 @@ void general_partition::reduce(const general_partition &p1, const general_partit
 }
 
 
-/* findroot ricorsivamente trova il primo sito del cluster, la radice appunto.
- * La formulazione ricorsiva implica path-compression.  Non e' possibile fare
- *  una versione iterativa mantenendo la compression: il compilatore non puo'
- *  fare tail optimization in questo caso, findroot e' responsabile per il 30%
- *  del tempo speso dall'applicazione :(
+/* findroot ricorsivamente trova il primo sito del cluster, la radice appunto, applicando
+ * path compression (in questa versione nonricorsiva usando path-halving), per ottimizzare
+ * future chiamate alla stessa funzione.
  */
 template <typename data_t> inline int findroot(int i, data_t *ptr) {
-    if (ptr[i] < 0) return i;
-    return ptr[i] = findroot(ptr[i], ptr);
+    int r, s;
+    r = s = i;
+    while (ptr[r] >= 0) {
+        ptr[s] = ptr[r];
+        s = r;
+        r = ptr[r];
+    }
+    return r;
 }
 
+/* Calcolo della partizione a partire da un vettore di stato *configuration, usando adj come
+ *  struttura contenente le informazioni topologiche di adiacenza necessarie ad interpretare
+ *  il vettore di stato.
+ *
+ * Il calcolo e' fatto tramite percolazione sulla struttura data da adj, mettendo link
+ *  solo laddove i siti vicini hanno gli stessi valori. Il numero dei vicini non e' fissato.
+ * Alla fine si chiama 'relabel' per riempire tutte le informazioni sulla partizione oltre
+ *  al label di ciascun atomo.
+ */
 template <typename data_t>
-void general_partition::from_configuration(const data_t *configuration, const adj_struct & adj, int N1) {
+void general_partition::from_configuration(const data_t *configuration, const adj_struct & adj) {
     label_t s1, s2;
     label_t r1, r2;
     int z;
 
-    if(N1==0) N1=adj.N;
-    allocate(N1);
-
+    allocate(adj.N);
     //set all labels to -1
     labels.assign(N, -1);
 
@@ -477,8 +333,8 @@ void general_partition::from_configuration(const data_t *configuration, const ad
         ppmout2(configuration, &labels[0], opts.lato, filename);
     }
 }
-template void general_partition::from_configuration(const int *configuration, const adj_struct & adj, int N1);
-template void general_partition::from_configuration(const char *configuration, const adj_struct & adj, int N1);
+template void general_partition::from_configuration(const int *configuration, const adj_struct & adj);
+template void general_partition::from_configuration(const char *configuration, const adj_struct & adj);
 
 /* relabel: funzione essenziale per il corretto partizionamento
  * Costruisce l'elenco degli atomi, il vettore prev_site;
@@ -490,12 +346,13 @@ void general_partition::relabel() {
     n = 0;
 
     // 0-conto nr. atomi diversi per il solo scopo di allocare ottimalmente
+    // 1-assicurazione che prev_site punta al cluster di appartenenza
     for(label_t i = 0; i < N; i++){
         n += labels[i] < 0;
         //a questo punto prev_site contiene il primo sito appartenente al cluster
         prev_site[i] = findroot(i, &labels[0]);
     }
-    atomi.reserve(n);
+    atomi.resize(n);
     n = 0;
 
     // 1-creazione array atomi
@@ -611,8 +468,8 @@ void general_partition::print_cluster_adjacency() {
            cercato con efficienza massima. */
         const atom &atomo = atomi[labels[which]];
         int quanti = atomo.size;
-        riga.reserve(quanti);
-        colonna.reserve(quanti);
+        riga.resize(quanti);
+        colonna.resize(quanti);
 
         int sito = 0;
         //scorro tutti i siti appartenenti allo stesso atomo,
@@ -666,13 +523,14 @@ void general_partition::product(const general_partition & p1, const general_part
     allocate(p1.N);
 
     /* I label del prodotto sono rappresentati dalle coppie (pair<label_t, label_t>)
-     *  di label dei fattori. Il vettore product contiene la coppia <label_prodotto, indice>.
+     * di label dei fattori. Il vettore product contiene la coppia <label_prodotto, indice>.
      * Per riconoscere gli atomi, ordino il vettore product rispetto al label del prodotto:
      * -il risultato sara un vettore ordinato, per cui riconosciamo gli atomi come elementi
      *  contigui con lo stesso label. Il label e' temporaneo, gli atomi avranno indice
      *  progressivo.
-     *
-     * product[i].first - indice (temp) del prodotto.
+     */
+
+    /* product[i].first - indice (temp) del prodotto.
      * product[i].second, da' l'indice corrispondente del sito nella partizione,
      *  e' utilizzato per indicizzare i cambiamenti e gli accessi ai vettori labels[], ecc.
      */

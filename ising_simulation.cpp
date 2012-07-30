@@ -2,6 +2,7 @@
 #include "strutture.h"
 #include "rand_mersenne.h"
 #include "ising_simulation.h"
+#include <vector>
 #include <cmath>
 
 #ifndef STANDALONE
@@ -9,16 +10,17 @@ extern
 #endif
 options opts;
 
+using std::vector;
 double *myexp=0;
-
-ising_simulation::config_t* ising_simulation::copy() {
-    config_t *second = new config_t[N];
-    for (int i = 0; i < N; i++)
-        second[i] = config[i];
-    return second;
+template <typename T> inline void prefetch(T& element) {
+    __builtin_prefetch(&element,0,0);
 }
 
-int generate_sierpinski_borders(int N, int * &bordo_sinistro, int * &bordo_destro, int * &bordo_sotto){
+std::vector<ising_simulation::config_t> ising_simulation::copy() {
+    return config;
+}
+
+int generate_sierpinski_borders(int N, vector<int> &bordo_sinistro, vector<int> &bordo_destro, vector<int> &bordo_sotto){
     int gen=1;
     int size=6;
     int bordersize=2;
@@ -30,9 +32,9 @@ int generate_sierpinski_borders(int N, int * &bordo_sinistro, int * &bordo_destr
 	bordersize = 2*bordersize;
     }
     
-    bordo_sinistro = new int[bordersize];
-    bordo_destro = new int[bordersize];
-    bordo_sotto = new int[bordersize];
+    bordo_sinistro.resize(bordersize);
+    bordo_destro.resize(bordersize);
+    bordo_sotto.resize(bordersize);
     bordo_sinistro[0]=2;
     bordo_sinistro[1]=4;
     bordo_destro[0]=3;
@@ -58,8 +60,8 @@ int generate_sierpinski_borders(int N, int * &bordo_sinistro, int * &bordo_destr
     return bordersize;
 }
 
-int generate_square_border(int lato, int * &bsx){
-    bsx = new int[lato];    
+int generate_square_border(int lato, vector<int> &bsx){
+    bsx.reserve(lato);
     
     for(int i=0; i < lato; i++)
         bsx[i]=i;
@@ -81,12 +83,12 @@ void ising_simulation::step(int steps){
     else if(update_rule==MICROCANONICAL)
         for(int i=0; i<steps; i++){
             microcanonical_step();
-            if(border1)
-                metropolis_subset(border1,border_size);
-            if(border2)
-                metropolis_subset(border2,border_size);
-            if(border3)
-                metropolis_subset(border2,border_size);
+            if(!border1.empty())
+                metropolis_subset(border1);
+            if(!border2.empty())
+                metropolis_subset(border2);
+            if(!border3.empty())
+                metropolis_subset(border3);
         }
 }
 
@@ -119,10 +121,10 @@ double ising_simulation::energia_magnetica() {
 void ising_simulation::metropolis_step() {
     int s, z, somma_vicini, dH;
 
-    if (config == 0) {
-        config = new config_t [NN.N];
-        for (int i = 0; i < NN.N; i++)
-            config[i] = 2 * (random.get_double() < 0.5) -1 ;
+    if (config.empty()) {
+        config.resize(NN.N);
+        for(auto &x : config)
+            x = 2 * (random.get_double() < 0.2) - 1 ;
     }
 
     if (myexp == 0) {
@@ -139,8 +141,8 @@ void ising_simulation::metropolis_step() {
         // uccide in confronto con s=j!
         s=s1;
         s1 = random.get_int() % NN.N;
-        __builtin_prefetch(config+s1,0,0);
-        __builtin_prefetch(NN.index+s1,0,0);        
+        prefetch(config[s1]);
+        prefetch(NN.index[s1]);
         
         z = NN.fetch(s);
         somma_vicini = 0;
@@ -153,7 +155,7 @@ void ising_simulation::metropolis_step() {
     }
 }
 
-void ising_simulation::metropolis_subset(int *subset, int length) {
+void ising_simulation::metropolis_subset(vector<int> subset) {
     int s, z, somma_vicini, dH;
       
     if (myexp == 0) {
@@ -165,11 +167,11 @@ void ising_simulation::metropolis_subset(int *subset, int length) {
     /* Dinamica di Metropolis, 1 passo temporale */
     
     //update pari
-    for (int j = 0; j < length; j+=2) {        
+    for (size_t j = 0; j < subset.size(); j+=2) {
         s = subset[j];
         z = NN.fetch(subset[j]);
-        __builtin_prefetch(config+subset[j+2],0,0);
-        __builtin_prefetch(NN.index+subset[j+2],0,0);
+        prefetch(config[subset[j+2]]);
+        prefetch(NN.index[subset[j+2]]);
         somma_vicini = 0;
         for (int m = 0; m < z; m++)
             somma_vicini += config[NN.vicini[m]];
@@ -180,11 +182,11 @@ void ising_simulation::metropolis_subset(int *subset, int length) {
     }
     
     //update dispari
-    for (int j = 1; j < length; j+=2) {        
+    for (size_t j = 1; j < subset.size(); j+=2) {
         s = subset[j];
         z = NN.fetch(subset[j]);
-        __builtin_prefetch(config+subset[j+2],0,0);
-        __builtin_prefetch(NN.index+subset[j+2],0,0);
+        prefetch(config[subset[j+2]]);
+        prefetch(NN.index[subset[j+2]]);
         somma_vicini = 0;
         for (int m = 0; m < z; m++)
             somma_vicini += config[NN.vicini[m]];
@@ -201,13 +203,13 @@ void ising_simulation::microcanonical_step() {
     int z;
 
     //generazione dei buffer necessari, se vuoti
-    if (config == 0) {
-        config = new config_t [NN.N];
+    if (config.empty()) {
+        config.resize(NN.N);
         for (int i = 0; i < NN.N; i++)
             config[i] = 2 * (random.get_double() < 0.2) - 1 ;
     }
-    if (link_energies == 0) {
-        link_energies = new config_t [NN.n_link];
+    if (link_energies.empty()) {
+        link_energies.resize(NN.n_link);
         for (int i = 0; i < NN.n_link; i++)
             //distribuizione uniforme
             //link_energies[i] = random.get_int() % max_link_energy;
@@ -241,17 +243,17 @@ void ising_simulation::microcanonical_step() {
          
          La differenza e' un 50% di tempo in piu' se si rimuovono i prefetch!
          */
-        __builtin_prefetch(NN.index+s1,0,0);
-        __builtin_prefetch(NN.index+s2,0,0);
-        __builtin_prefetch(config+s1,0,0);
-        __builtin_prefetch(config+s2,0,0);
+        prefetch(NN.index[s1]);
+        prefetch(NN.index[s2]);
+        prefetch(config[s1]);
+        prefetch(config[s2]);
         config_t &linkenergy = link_energies[link];        
         
         randnum = random.get_int();
         link = randnum % NN.n_link;
-        __builtin_prefetch(link_energies+link,1,0);
-        __builtin_prefetch(NN.adi+link,0,0);
-        __builtin_prefetch(NN.adj+link,0,0);
+        __builtin_prefetch(&link_energies[link],1,0);
+        prefetch(NN.adi[link]);
+        prefetch(NN.adj[link]);
         
         if (!(accept1 || accept2))
             continue;
@@ -321,7 +323,7 @@ void ising_simulation::measure() {
 }
 
 void ising_simulation::init_config() {
-    config = new config_t[N];
+    config.reserve(N);
     int size = N / 3 + 1;    
     for (int i = 0; i < size; i++)
         config[i] = +1;
@@ -333,19 +335,12 @@ void ising_simulation::init_config() {
 
 ising_simulation::ising_simulation(const adj_struct & NN1, simulation_t TT,
         int time_length,int initial_time_skip) : NN(NN1) {
-    config = 0;
-    link_energies = 0;
     max_link_energy = 8;
     beta = 0.45;
     running = false;
     steps_per_time=time_length;
     skip=initial_time_skip;
-    border_size=0;
-    border1=0;
-    border2=0;
-    border3=0;
-
-    //NN = NN1;
+    
     N = NN.N;
 
     update_rule = TT;
@@ -387,11 +382,11 @@ void time_series(const adj_struct &adj){
     double E_kin=0, E_mag=0;
     double mag, beta_est;
     
-    ising_simulation sim(adj,opts.simulation_type,100,50);
+    ising_simulation sim(adj,opts.simulation_type,100,0);
     sim.set_beta(opts.beta);
     sim.set_max_energy(opts.max_link_energy);
     if(opts.topologia == SIERPINSKI){
-        sim.border_size=generate_sierpinski_borders(adj.N,sim.border1,sim.border2,sim.border3);
+        generate_sierpinski_borders(adj.N,sim.border1,sim.border2,sim.border3);
     }        
     //sim.init_config();
     sim.step();

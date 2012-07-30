@@ -107,6 +107,23 @@ public:
 };
 template<typename T> std::size_t my_allocator<T>::total_memory = 0;
 
+template <typename data_t> inline int findroot_recursive(int i, data_t *ptr) { //143 secondi
+    if (ptr[i] < 0) return i;
+    return ptr[i] = findroot_recursive(ptr[i], ptr);
+}
+
+template <typename data_t> inline int findroot_stack(int i, data_t *ptr) { // 142 secondi
+    int n = 0;
+    data_t stack[50];
+    while (ptr[i] >= 0) {
+        stack[n++] = i;
+        i = ptr[i];
+    }
+    for (int k = 0; k < n; k++)
+        ptr[stack[k]] = i;
+    return i;
+}
+
 
 #define HASHVAR (atomi[label_count-1].hash)
 template <typename T>

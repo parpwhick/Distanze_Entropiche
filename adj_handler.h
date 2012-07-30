@@ -10,6 +10,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <memory>
 
 #define LEAST -1
 
@@ -28,19 +29,22 @@ public:
     int N;
     int n_link;
     int zmax;
-    int *adi;
-    int *adj;
-    int *index;
+    std::unique_ptr<int[]> adi;
+    std::unique_ptr<int[]> adj;
+    std::unique_ptr<int[]> index;
     mutable int *vicini;
     
     int fetch(int site) const {
         if(site>=N)
             return 0;
         int z=index[site+1]-index[site];
-        vicini=adj+index[site];
+        vicini=&adj[index[site]];
         __builtin_prefetch(vicini,0,0);
         return(z);
     }
+
+    adj_struct(int* _adi = nullptr, int* _adj = nullptr, int* _index = nullptr)
+            : adi(_adi), adj(_adj), index(_index) {}
 };
 
 adj_struct adiacenza_fuzzy_line(int N);

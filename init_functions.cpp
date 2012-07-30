@@ -27,7 +27,6 @@ void print_help() {
             "  -simulation       Configurations from temporal evolution\n"
             "  -num N            Limits the number of configurations to N [2550]\n"
             "  -length N         Limits configuration length to N [600]\n"
-            "  -epsilon N        Use epsilon-reduction with unnormalized size N [0]"
             "  -nodistance       Doesn't calculate any distance matrix\n"
             "  -symbols N        Generate random strings with N symbols [2]\n"
             "  -nowrite          Don't write the distance matrices [off]\n"
@@ -39,6 +38,11 @@ void print_help() {
     const char *message2 =
             "  -graphics         Make .ppm graphics when using square lattice topology\n"
             "  \n"
+            "Reduction options:\n"
+            "  -epsilon N        Use epsilon-reduction with unnormalized size N [0]\n"
+            "  -common           Reduce using common partition\n"
+            "  -direct           Reduce two partitions against each other [default]\n"
+            "\n"
             "Options the choice of a topology:\n"
             "  -sequence         Linear open sequence topology with 2 nearest neighbours\n"
             "  -fuzzy N          Linear open sequence with N nearest neighbours\n"
@@ -67,7 +71,7 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.n_symbols = 2;
     opts.topologia = RETICOLO_2D;
     opts.letto_da = RANDOM;
-    opts.simulation_type=MICROCANONICAL;
+    opts.simulation_type = MICROCANONICAL;
     opts.beta = 0.45;
     opts.max_link_energy = 10;
     opts.graphics = false;
@@ -75,6 +79,7 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.write = true;
     opts.distance = true;
     opts.fuzzy = 0;
+    opts.riduzione = DIRETTA;
     opts.threads = 2;
     opts.da_calcolare = 0
             | SHAN | TOP
@@ -132,6 +137,12 @@ void set_program_options(options &opts, int argc, char**argv) {
 
                 opts.epsilon = atoi(argv[read_argvs++]);
                 fprintf(stderr, "Reduction uses epsilon algorithm, with size %d\n", opts.epsilon);
+            } else if (input == "-direct") {
+                fprintf(stderr, "Using reduction against each other\n");
+                opts.riduzione = DIRETTA;
+            } else if (input == "-common") {
+                fprintf(stderr, "Using common-factor reduction\n");
+                opts.riduzione = COMUNE;
             } else if (input == "-square") {
                 if (argc - read_argvs < 1)
                     error("Need to specify lattice side length\n");
@@ -165,12 +176,12 @@ void set_program_options(options &opts, int argc, char**argv) {
                 if (argv[read_argvs][0] == '-')
                     error("Expecting argument, not another option\n");
 
-                opts.fuzzy = atoi(argv[read_argvs++]);
-                if (opts.fuzzy > 0)
+                opts.epsilon = atoi(argv[read_argvs++]);
+                if (opts.epsilon > 0)
                     opts.topologia = FUZZY;
                 else
                     opts.topologia = LINEARE;
-                fprintf(stderr, "Fuzziness degree set to: %d\n", opts.fuzzy);
+                fprintf(stderr, "Fuzziness degree set to: %d\n", opts.epsilon);
             }else if (input == "-beta") {
                 if (argc - read_argvs < 1)
                     error("Missing beta parameter\n");
@@ -376,3 +387,111 @@ void fill_seq_from_file(options &opts, std::string *sequenze) {
     opts.seq_len = max_length;
 
 }
+
+int *colore;
+template <typename data_t> void print_array(const data_t *array, int len, const char *nome) {
+    printf("%s [%3d", nome, array[0]);
+    for (int i = 1; i < len; i++)
+        printf(",%3d", array[i]);
+    printf("]\n");
+}
+template void print_array(const label_t *grid, int sz, const char *filename);
+
+template <typename T>
+void print_square_lattice(const T* valori, int lato) {
+    for (int i = 0; i < lato; i++) {
+        for (int j = 0; j < lato; j++) {
+            printf("%2d ", valori[j * lato + i]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+
+#define COL_MAX 1000
+
+template <typename T>
+void ppmout(const T *grid1, int sz, const char *filename) {
+
+    if (colore == 0) {
+        colore = new int[COL_MAX];
+        for (int i = 0; i < COL_MAX; i++) {
+            colore[i] = gen.get_int();
+        }
+        colore[0] = 0x0F5A3A1F; // blue almost black
+    }
+
+    int MULT;
+    if (sz > 500)
+        MULT = 1;
+    else
+        MULT = 500 / sz + 1;
+
+    FILE *fout = fopen(filename, "w");
+    fprintf(fout, "P6\n %d %d\n 255\n", MULT*sz, MULT * sz);
+
+    for (int rg = 0; rg < sz; rg++) {
+        for (int i = 0; i < MULT; i++)
+            for (int cl = 0; cl < sz; cl++) {
+                int sito = grid1[rg * sz + cl] % COL_MAX;
+                int color = colore[sito];
+                for (int j = 0; j < MULT; j++)
+                    fwrite(&color, 3, 1, fout);
+            }
+    }
+}
+
+template <typename T, typename U>
+void ppmout2(const T *grid1, const U* grid2, int sz, const char *filename) {
+    //Se l'array dei colori non e' inizializzato - riempiamolo!
+    if (colore == 0) {
+        colore = new int[COL_MAX];
+        for (int i = 0; i < COL_MAX; i++) {
+            colore[i] = gen.get_int();
+        }
+        colore[0] = 0x0F5A3A1F; // blue almost black
+    }
+
+    int MULT;
+    if (sz > 500)
+        MULT = 3;
+    else
+        MULT = 500 / sz + 1;
+
+
+    int black = 0x20202020;
+    int intermezzo = 100; //pixels tra i pannelli
+
+    FILE *fout = fopen(filename, "w");
+    fprintf(fout, "P6\n %d %d\n 255\n", 2 * MULT * sz + intermezzo, MULT * sz);
+
+    for (int rg = 0; rg < sz; rg++) {
+        for (int i = 0; i < MULT; i++) {
+            //primo reticolo
+            for (int cl = 0; cl < sz; cl++) {
+                int sito = grid1[rg * sz + cl] % COL_MAX;
+                int color = colore[sito];
+                for (int j = 0; j < MULT; j++)
+                    fwrite(&color, 3, 1, fout);
+            }
+            //10 pixels neri in mezzo
+            for (int j = 0; j < intermezzo; j++)
+                fwrite(&black, 3, 1, fout);
+
+            //secondo reticolo
+            for (int cl = 0; cl < sz; cl++) {
+                int sito = grid2[rg * sz + cl] % COL_MAX;
+                int color = colore[sito];
+                for (int j = 0; j < MULT; j++)
+                    fwrite(&color, 3, 1, fout);
+            }
+        }
+    }
+}
+
+template void ppmout(const label_t *grid, int sz, const char *filename);
+template void ppmout(const product_t *grid, int sz, const char *filename);
+template void ppmout2(const label_t *grid1, const label_t* grid2, int, const char *);
+template void ppmout2(const product_t *grid1, const product_t* grid2, int, const char *);
+template void ppmout2(const char *grid1, const label_t* grid2, int, const char *);

@@ -1,13 +1,13 @@
 COPTS= -O3 -march=native
-COPTS+= -g2
-#COPTS+= -pg 
-COPTS +=-Wall #-fopenmp
-COPTS +=-std=c++0x 
+#COPTS+= -g2
+#COPTS+= -pg
+COPTS +=-Wall -fopenmp
+COPTS +=-std=c++0x
 LINK_OPTS = -lm -lgomp
 files=*.cpp *.h Makefile
 file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
 
-OBJ_LIST= init_functions.o distanze.o partizioni.o rand55.o adj_handler.o rand_mersenne.o 
+OBJ_LIST= init_functions.o distanze.o partizioni.o adj_handler.o rand_mersenne.o 
 DIST_GEN_OBJ = general_distance.o ising_simulation.o
 
 all: distanze_generiche ising distanze_lineari sierpinski

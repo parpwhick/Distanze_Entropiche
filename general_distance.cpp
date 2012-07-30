@@ -2,6 +2,13 @@
  * Author: Dawid Crivelli
  *
  * Started on January 11, 2012, 2:30 PM
+ *
+ * Version: 6.3, 2012/07/29
+ * -Memory efficience guaranteed
+ * -Improvements in findroot and is_equal
+ * -Unified entropy calculation
+ * -Product of partitions
+ * -Cleanup and comments in the code
  * 
  * Version: 6.2, 2012/07/13
  * -Improved simulation, with time series output
@@ -157,7 +164,7 @@ int main(int argc, char** argv) {
             
         if (opts.verbose)
             fprintf(stderr, "Loaded sequence %d, analysing\n", i + 1);
-        Z[i].from_configuration(num_buffer, topologia, opts.seq_len);
+        Z[i].from_configuration(num_buffer, topologia);
     }
 
     printf("Loaded %d sequences long %d\n", opts.n_seq, opts.seq_len);
