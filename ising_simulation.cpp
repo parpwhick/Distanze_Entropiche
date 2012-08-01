@@ -12,9 +12,13 @@ options opts;
 
 using std::vector;
 double *myexp=0;
+#ifndef _GLIBCXX_DEBUG
 template <typename T> inline void prefetch(T& element) {
     __builtin_prefetch(&element,0,0);
 }
+#else
+#define prefetch(something); ;
+#endif
 
 std::vector<ising_simulation::config_t> ising_simulation::copy() {
     return config;
@@ -35,10 +39,10 @@ int generate_sierpinski_borders(int N, vector<int> &bordo_sinistro, vector<int> 
     bordo_sinistro.resize(bordersize);
     bordo_destro.resize(bordersize);
     bordo_sotto.resize(bordersize);
-    bordo_sinistro[0]=2;
-    bordo_sinistro[1]=4;
-    bordo_destro[0]=3;
-    bordo_destro[1]=6;
+    bordo_sinistro[0]=1;
+    bordo_sinistro[1]=3;
+    bordo_destro[0]=2;
+    bordo_destro[1]=5;
     
     // we start over and populate
     size=6;
@@ -61,7 +65,7 @@ int generate_sierpinski_borders(int N, vector<int> &bordo_sinistro, vector<int> 
 }
 
 int generate_square_border(int lato, vector<int> &bsx){
-    bsx.reserve(lato);
+    bsx.resize(lato);
     
     for(int i=0; i < lato; i++)
         bsx[i]=i;
@@ -323,7 +327,7 @@ void ising_simulation::measure() {
 }
 
 void ising_simulation::init_config() {
-    config.reserve(N);
+    config.resize(N);
     int size = N / 3 + 1;    
     for (int i = 0; i < size; i++)
         config[i] = +1;

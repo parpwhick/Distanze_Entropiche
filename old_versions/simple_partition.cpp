@@ -107,6 +107,20 @@ public:
 };
 template<typename T> std::size_t my_allocator<T>::total_memory = 0;
 
+class comparatore_coppie{
+public:
+    comparatore_coppie(const general_partition &p1,const general_partition &p2) :
+    l1(p1.labels.data()), l2(p2.labels.data()) {}
+
+    bool inline operator<(const label_t &a, const label_t &b) const  {
+           return (l1[a] < l1[b]) ||
+                  (!(l1[a] < l1[b]) && l2[a] < l2[b]);
+       }
+private:
+    label_t *l1;
+    label_t *l2;
+};
+
 template <typename data_t> inline int findroot_recursive(int i, data_t *ptr) { //143 secondi
     if (ptr[i] < 0) return i;
     return ptr[i] = findroot_recursive(ptr[i], ptr);

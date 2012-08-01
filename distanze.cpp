@@ -18,13 +18,13 @@ extern double *mylog;
  */
 void distance::allocate(int n) {
     if (opts.partition_type == LINEAR_PARTITION) {
-        common_factor.reserve(n);
-        reduced1.reserve(n);
-        reduced2.reserve(n);
-        product_reduced.reserve(n);
-        binary_product.reserve(n);
-    }
-    product.reserve(n);
+        common_factor.resize(n);
+        reduced1.resize(n);
+        reduced2.resize(n);
+        product_reduced.resize(n);
+        binary_product.resize(n);
+    } else
+        product.resize(n);
 }
 
 distance::distance(int n) {
@@ -271,11 +271,11 @@ void calcola_matrice_distanze(const partition_t* X) {
     std::vector<double> dist_ham;
     
     //distance matrix allocation and zeroing,if needed
-    if (da_calcolare & SHAN) dist_shan.reserve(dim);
-    if (da_calcolare & RID) dist_shan_r.reserve(dim);
-    if (da_calcolare & TOP) dist_top.reserve(dim);
-    if (da_calcolare & RID_TOP) dist_top_r.reserve(dim);
-    if (da_calcolare & HAMM) dist_ham.reserve(dim);
+    if (da_calcolare & SHAN) dist_shan.resize(dim);
+    if (da_calcolare & RID) dist_shan_r.resize(dim);
+    if (da_calcolare & TOP) dist_top.resize(dim);
+    if (da_calcolare & RID_TOP) dist_top_r.resize(dim);
+    if (da_calcolare & HAMM) dist_ham.resize(dim);
 
     fprintf(stderr, "Calculating distance matrix\n");
 

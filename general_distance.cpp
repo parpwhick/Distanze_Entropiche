@@ -127,8 +127,8 @@ int main(int argc, char** argv) {
             +topologia.n_link * 2 * sizeof (int) +topologia.N * sizeof (int) //struct adiacenza
             +opts.seq_len * sizeof (int) //caricamento sequenza
             +opts.seq_len * sizeof (double) //logaritmo
-            +opts.seq_len * sizeof (uint64_t) //temp product
-            +opts.seq_len * opts.n_seq * sizeof (label_t) * ( 2 +1) //partizioni: fisso + max_variabile
+            +opts.seq_len * sizeof (product_t) * opts.threads //temp product
+            +opts.seq_len * opts.n_seq * sizeof (label_t) * ( 2 +1) //partizioni: fisso + max_variabile/3
             +opts.n_seq * opts.n_seq * __builtin_popcount(opts.da_calcolare) * sizeof(double); //per l'output
     memory_estimate >>= 20;
     fprintf(stderr,"Estimated memory usage: %d MB\n",memory_estimate+1);
