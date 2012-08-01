@@ -1,13 +1,19 @@
 COPTS= -O3 -march=native
-#COPTS+= -g2
+# debugging symbols
+#COPTS+=-g2
+# debugging the STL library
+#COPTS+=-D_GLIBCXX_DEBUG
+# profiling
 #COPTS+= -pg
+# STL profiling
+#COPTS+= -D_GLIBCXX_PROFILE
 COPTS +=-Wall -fopenmp
 COPTS +=-std=c++0x
 LINK_OPTS = -lm -lgomp
 files=*.cpp *.h Makefile
 file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
 
-OBJ_LIST= init_functions.o distanze.o partizioni.o adj_handler.o rand_mersenne.o 
+OBJ_LIST= init_functions.o distance.o partizioni.o adj_handler.o rand_mersenne.o 
 DIST_GEN_OBJ = general_distance.o ising_simulation.o
 
 all: distanze_generiche ising distanze_lineari sierpinski
@@ -24,26 +30,26 @@ ising: ising_simulation.cpp adj_handler.o adj_handler.h rand_mersenne.o
 sierpinski: sierpinski.cpp
 	g++ -o sierpinski -O3 -Wall sierpinski.cpp
 
-general_distance.o: general_distance.cpp strutture.h 
+general_distance.o: general_distance.cpp strutture.h partizioni.h distance.h adj_handler.h
 	g++ ${COPTS} -c general_distance.cpp
 
-sequence_partitions.o: sequence_partitions.cpp strutture.h 
+sequence_partitions.o: sequence_partitions.cpp strutture.h partizioni.h
 	g++ ${COPTS} -c sequence_partitions.cpp
 
 translation.o: strutture.h translation.cpp
 	g++ ${COPTS} -c translation.cpp
 
-ising_simulation.o: ising_simulation.cpp ising_simulation.h adj_handler.h
+ising_simulation.o: ising_simulation.cpp ising_simulation.h adj_handler.h distance.h partizioni.h
 	g++ ${COPTS} -c ising_simulation.cpp
 
 
 init_functions.o: strutture.h init_functions.cpp
 	g++ ${COPTS} -c init_functions.cpp
 
-distanze.o: strutture.h distanze.cpp
-	g++ ${COPTS} -c distanze.cpp
+distance.o: strutture.h distance.cpp distance.h
+	g++ ${COPTS} -c distance.cpp
 
-partizioni.o: strutture.h partizioni.cpp adj_handler.h
+partizioni.o: strutture.h partizioni.cpp adj_handler.h partizioni.h
 	g++ ${COPTS} -c partizioni.cpp
 
 adj_handler.o: adj_handler.cpp adj_handler.h

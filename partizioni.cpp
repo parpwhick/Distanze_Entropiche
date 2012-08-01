@@ -1,6 +1,5 @@
 #include <cstdlib>
 #include <cstdio>
-#include <cassert>
 
 #include <cmath>
 #include <vector>
@@ -8,6 +7,7 @@
 
 #include "strutture.h"
 #include "adj_handler.h"
+#include "partizioni.h"
 
 using std::vector;
 using std::pair;
@@ -179,14 +179,15 @@ bool is_equal(Iter_t from1, Iter_t last1, Iter_t from2, Iter_t last2) {
 void general_partition::reduce(const general_partition &p1, const general_partition &p2) {
     //inizializzazioni
     const int & epsilon = opts.epsilon;
-    int fattori_indipendenti = 0;
     if (p1.n == 0 || p2.n == 0) {
         fprintf(stderr, "REDUCE: Trying to use empty partition\n");
         exit(1);
     }
     allocate(p1.N);
+    atomi.resize(N);
 
-    labels.assign(N, 1);
+    labels.assign(N, -1);
+    n=0;
 
     int common_size = N;
     //per ogni atomo
@@ -244,18 +245,48 @@ void general_partition::reduce(const general_partition &p1, const general_partit
                 continue;
         }
         // altrimenti interseca il fattore dicotomico con i precedenti
-        fattori_indipendenti++;
         common_size -= size;
         entropia_shannon += size * mylog[size];
 
         // faccio il prodotto rapido - moltiplico le etichette di atomo1 per il numero
-        for (; ii1 != end; ii1++)
-            labels[*ii1] *= fattori_indipendenti + 1;
+        for (; ii1 != end; ii1++){
+            labels[*ii1] = n;
+            prev_site[*ii1] = p1.prev_site[*ii1];
+        }
+        atomi[n]=p1.atomi[which];
+        n++;
+    }
+    //la parte "comune" sara l'atomo 'n' se c'e',
+    //con etichetta -1
+    //creiamo prev_site per tutti i siti con etichetta -1...
+    if (false && common_size) {
+        atomi[n].size = common_size;
+        label_t dove;
+        for(dove=0; dove<N; dove++)
+            if(labels[dove] == -1)
+                break;
+
+        //mettere a posto il primo
+        labels[dove] = n;
+        atomi[n].start = dove;
+        label_t prev = dove;
+
+        //cercare il resto
+        for(dove++; dove < N; dove++){
+            if(labels[dove] == -1){
+                labels[dove] = n;
+                prev_site[dove] = prev;
+                prev = dove;
+            }
+        }
+        //chiudiamo
+        atomi[n].end = prev;
+        n++;
     }
     // si tiene conto dell'atomo sconnesso di background, formato dai pezzi comuni
     entropia_shannon += common_size * mylog[common_size];
     entropia_shannon = -entropia_shannon / N + mylog[N];
-    entropia_topologica = mylog[fattori_indipendenti + 1];
+    entropia_topologica = mylog[n];
 }
 
 

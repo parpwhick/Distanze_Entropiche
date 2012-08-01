@@ -1,9 +1,10 @@
+#include <vector>
+#include <cmath>
 #include "adj_handler.h"
 #include "strutture.h"
 #include "rand_mersenne.h"
 #include "ising_simulation.h"
-#include <vector>
-#include <cmath>
+#include "distance.h"
 
 #ifndef STANDALONE
 extern

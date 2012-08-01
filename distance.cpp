@@ -4,12 +4,15 @@
 #include <ctime>
 #include <vector>
 #include <algorithm>
+#include <iostream>
 
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
 #include "strutture.h"
+#include "partizioni.h"
+#include "distance.h"
 
 extern options opts;
 extern double *mylog;
@@ -24,7 +27,11 @@ void distance::allocate(int n) {
         product_reduced.resize(n);
         binary_product.resize(n);
     } else
-        product.resize(n);
+        /*BUG FIXME !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         * product.resize funziona completamente diverso da product.reserve,
+         * perche??????????????????????
+         */
+        product.reserve(n);
 }
 
 distance::distance(int n) {
@@ -220,29 +227,29 @@ void distance::calc_distance(const general_partition &p1, const general_partitio
 
         product[i] = (temp1 << 32) | temp2;
     }
+    
+    std::sort(product.begin(), product.end());
+    std::pair<double,int> entropie = ordered_vector_entropy(product.data(),N);
+    int n = entropie.second;
+    double H = entropie.first;
 
-    static int imagecount = 0;
-    char filename[255];
-    if (opts.graphics && (opts.topologia == RETICOLO_2D)) {
+    double h1 = p1.entropia_shannon,
+            h2 = p2.entropia_shannon,
+            t1 = p1.entropia_topologica,
+            t2 = p2.entropia_topologica;
+    this->dist_shan = 2 * H - h1 - h2;
+    this->dist_top = 2 * mylog[n] - t1 - t2;
+
+    /*if (opts.graphics && (opts.topologia == RETICOLO_2D)) {
+        static int imagecount = 0;
+        char filename[255];
         imagecount++;
         sprintf(filename, "prodotto%03d.ppm", imagecount);
         ppmout2(&p1.labels[0], &p2.labels[0], opts.lato, filename);
         imagecount++;
         sprintf(filename, "prodotto%03d.ppm", imagecount);
         ppmout(&product[0], opts.lato, filename);
-    }
-
-    std::sort(product.begin(), product.end());
-    entropy_pair entropie = ordered_vector_entropy(product.data(),N);
-    
-    double h1 = p1.entropia_shannon,
-            h2 = p2.entropia_shannon,
-            t1 = p1.entropia_topologica,
-            t2 = p2.entropia_topologica;
-    this->dist_shan = 2 * entropie.first - h1 - h2;
-    this->dist_top = 2 * mylog[entropie.second] - t1 - t2;
-
-
+    }*/
 }
 
 int WRITE(const char *where, const std::vector<double> & what) {

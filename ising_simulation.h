@@ -9,6 +9,7 @@
 #define	ISING_SIMULATION_H
 
 #include "rand_mersenne.h"
+#include "adj_handler.h"
 #include <vector>
 using std::vector;
 

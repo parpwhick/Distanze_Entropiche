@@ -55,6 +55,8 @@
 #include <cmath>
 #include <map>
 #include "strutture.h"
+#include "partizioni.h"
+#include "distance.h"
 
 extern options opts;
 double *mylog=0;

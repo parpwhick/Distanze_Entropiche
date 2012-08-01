@@ -68,6 +68,9 @@
 #include <cmath>
 #include "strutture.h"
 #include "ising_simulation.h"
+#include "partizioni.h"
+#include "adj_handler.h"
+#include "distance.h"
 
 extern options opts;
 double *mylog = 0;
