@@ -48,35 +48,62 @@ enum red_strategy{
     DIRETTA
 };
 
-typedef struct {
+///Struttura globale di tutte le opzioni del programma
+typedef class {
+public:
+    ///Lunghezza delle partizioni
     int seq_len;
+    ///Numero di configurazioni/partizioni richieste
     int n_seq;
+    ///Lunghezza del lato, nel caso di un reticolo quadrato bidimensionale
     int lato;
+    ///Generazione del triangono di Sierpinski richiesta per l'adiacenza
     int sierpinski_gen;
+    ///Cardinalita' dell'alfabeto utilizzato per la generazione di configurazioni random [default: 2]
     int n_symbols;
+    ///Tipo di partizione: lineare o generale
     part_type partition_type;
+    ///Parametro epsilon per la riduzione [default: 0]
     int epsilon;
 
+    ///Informazioni sulla generazione delle configurazioni
     source letto_da;
+    ///Topologia delle configurazioni richieste
     source topologia;
+    ///Nome del file da cui leggere le configurazioni
     char state_filename[255];
+    ///Nome del file con le righe della matrice di adiacenza
     char adj_vec_1[255];
+    ///Nome del file con le colonne della matrice di adiacenza
     char adj_vec_2[255];
+    ///Per la topologia della retta con salto, indica il salto massimo
     int fuzzy;
+    ///Tipo di riduzione da usare: partizione comune o diretta [default]
     red_strategy riduzione;
 
+    ///Bitmap delle distanze da calcolare [default: tutte]
     int da_calcolare;
+    ///Scrivere i risultati in file? [default: true]
     bool write;
+    ///Calcolare le distanze? [default: true]
     bool distance;
+    ///Numero dei threads richiesti [default: numero di processori]
     int threads;
+    ///Stampare disegni in .pbm per tutte le operazioni svolte
     bool graphics;
 
+    ///Seed del generatore di numeri casuali [default: casuale]
     int seed;
+    ///Dinamica Metropolis o microcanonica [default: microcanonica]
     simulation_t simulation_type;
-    int steps;
+    ///Numero di sweeps in un intervallo temporale [default: 1]
+    int sweeps;
+    ///Temperatura inversa per metropolis [default: 0.45]
     double beta;
+    ///Massima energia per link nel caso di distribuzione random uniforme
     int max_link_energy;
-    
+
+    ///Grado di verbosita', da 0 [default: 0]
     int verbose;
     //bool translate;
 

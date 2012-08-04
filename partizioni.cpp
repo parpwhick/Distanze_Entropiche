@@ -24,14 +24,14 @@ extern double *mylog;
  ************************************************
  */
 
-/* allocate: funzione helper, assicura di avere memoria allocata per tutto quello
- *  che serve. Da chiamare sempre prima di usare la memoria. Se e' gia allocata, non fa
+/** allocate: funzione helper, assicura di avere memoria allocata per tutto quello
+ *  che serve. Da chiamare sempre prima di usare la memoria. Se è gia allocata, non fa
  *  nulla a parte un controllo di sicurezza!
  */
 void general_partition::allocate(label_t len) {
     //errore se:
     //len == 0 : cerco di allocare una partizione lunga 0
-    //labels e' pieno, ma N != len -> probabilmente si sta usando partizioni di lunghezze diverse
+    //labels è pieno, ma N != len -> probabilmente si sta usando partizioni di lunghezze diverse
     if (len==0 || (!labels.empty() && N != len)) {
         fprintf(stderr, "Allocating for a different length, or length 0\n");
         exit(1);
@@ -50,7 +50,6 @@ void general_partition::allocate(label_t len) {
 
 general_partition::general_partition(int len) {
     n = 0;
-    allocated_n = 0;
     N = len;
     entropia_topologica = 0;
     entropia_shannon = 0;
@@ -59,6 +58,13 @@ general_partition::general_partition(int len) {
         allocate(N);
 }
 
+/**\brief Calcola l'entropia di un range ordinato di dimensione N
+ * Gli atomi sono individuati da un'etichetta diversa della precedente, il metodo e' lo stesso usato in
+ * \ref product e \ref entropy_binary_partition.
+ *
+ * @param temp[] Vettore ordinato con le etichette di cui si vuole conoscere l'entropia
+ * @param N lunghezza del vettore
+ * @return La coppia |<H(double), n_atomi(int)>| di entropia e n */
 template <typename T> entropy_pair ordered_vector_entropy(const T *temp, int N){
     int label_count = 0;
     double H = 0;
@@ -100,8 +106,8 @@ template entropy_pair ordered_vector_entropy(const label_t *temp, int N);
 template entropy_pair ordered_vector_entropy(const product_t *temp, int N);
 template entropy_pair ordered_vector_entropy(const char *temp, int N);
 
-/* A partire da una partizione con label assegnati, calcola l'entropia.
- * Funzione al momento non utilizzata (rimane per completezza)
+/**
+ * Crea un array temporaneo in cui copia i labels per usare il sort, che distruggerebbe l'ordine iniziale, modificando la partizione.
  */
 void general_partition::entropy_calculation() {
     //create a temp vector, a copy of "labels"
@@ -116,18 +122,18 @@ void general_partition::entropy_calculation() {
     entropia_shannon = entropie.first;
 }
 
-/* Implementazione di similitudine a meno di 'epsilon', tramite differenza
+/** Implementazione di similitudine a meno di 'epsilon', tramite differenza
  * simmetrica di due insiemi (ottenuti tramite iteratori) ordinati.
- * L'implementazione e' custom per ritornare un risultato non appena le differenze
- * sono sufficienti a dare una risposta immediata.
- * Ritorna 'false' non appena le differenze sono maggiori di epsilon, 'true' altrimenti.
+ * Ritorna un risultato non appena le differenze sono sufficienti.
+ *
+ * @return 'false' non appena le differenze sono maggiori di epsilon, 'true' altrimenti.
  */
 bool is_similar(Iter_t from1, Iter_t from2, Iter_t to, int epsilon) {
     int differenze = 0;
 
     while (differenze < epsilon) {
         /*if (differenze > tol) {
-            // Se il numero delle differenze e' elevato, escludo l'uguaglianza
+            // Se il numero delle differenze è elevato, escludo l'uguaglianza
             return (false);
         } else */
         if ((from1 == to) && (from2 == to)) {
@@ -156,9 +162,14 @@ bool is_similar(Iter_t from1, Iter_t from2, Iter_t to, int epsilon) {
     return(false);
 }
 
-/* Differenza simmetrica tra due insiemi modificata per ritornare non appena
+/** Differenza simmetrica tra due insiemi modificata per ritornare non appena
  * si trova una differenza -- ottimizzazione per il caso epsilon == 0 .
- * Ritorna 'true' quando gli elementi nei due range [from,last) sono uguali.
+ *
+ * @return 'true' quando gli elementi nei due range [from,last) sono uguali.
+ * @param from1 Iteratore del primo insieme
+ * @param from2 Iteratore del secondo insieme
+ * @param last1 Iteratore 'end' del primo insieme
+ * @param last2 Iteratore 'end' del secondo insieme
  */
 bool is_equal(Iter_t from1, Iter_t last1, Iter_t from2, Iter_t last2) {
     while ((from1 != last1) && (from2 != last2)) {
@@ -170,11 +181,16 @@ bool is_equal(Iter_t from1, Iter_t last1, Iter_t from2, Iter_t last2) {
     return (from1 == last1) && (from2 == last2);
 }
 
-/* general_partition::reduce (part1, part2)
- * Genera una partizione ridotta incompleta, generata da part1, scartando gli elementi
- *  uguali (a meno di epsilon) nella partizione 2.
- * La partizione non ha l'elenco degli atomi, ne' il vettore prev_site, ma basta per
- *  calcolare il prodotto (una funzione solo dei labels e dell'entropia).
+/**
+ * Genera una partizione ridotta incompleta, generata da p1, scartando gli elementi
+ * uguali (a meno di epsilon) ad atomi in p2.\n
+ * La partizione cosi generata è completa, contiene tutte le informazioni necessarie, sovrabbondante
+ * rispetto a quanto richiesto dal solo calcolo delle distanze.
+ *
+ * @param epsilon Variabile globale opts.epsilon
+ * @param p1 Partizione da ridurre
+ * @param p2 Partizione con cui confrontare
+ * @return Partizione ridotta nell'oggetto chiamante
  */
 void general_partition::reduce(const general_partition &p1, const general_partition &p2) {
     //inizializzazioni
@@ -195,24 +211,18 @@ void general_partition::reduce(const general_partition &p1, const general_partit
         // Considero l'atomo n-esimo della prima partizione
         label_t size = p1.atomi[which].size;
 
-        // Se gli atomi sono uguali, l'intersezione delle partizioni dicotomiche
-        // non e' banale => salto
-
         // Creazione degli iteratori, per ottenere tutti i siti in atomo1
         Iter_t ii1 = p1.begin(which);
         Iter_t end = p1.end();
 
-        // uguaglianza "fuzzy" tra atomi, a meno di 'epsilon' siti
-        // similmente, se sono 'uguali', salto l'atomo nella partizione risultante
-
-        //nel caso di epsilon > 0, scorrere tutto un atomo per controllare l'altro.
+        /** Nel caso epsilon > 0, scorro ogni atomo della partizione 2 che ha qualche sito coincidente
+         *  con l'atomo della partizione 1. Infatti atomo1 puo' essere eliminato da un qualunque
+         *  atomo della partizione2, bisogna controllare in maniera esaustiva.*/
         if (epsilon) {
-            //salto se l'atomo e' sufficientemente piccolo
+            //salto se l'atomo è sufficientemente piccolo
             bool almost_equal = 2 * size < epsilon;
             Iter_t ii = ii1;
-            /* Scorro ogni atomo della partizione 2 che ha qualche sito coincidente
-             *  con l'atomo della partizione 1.
-             * Ottimizzazione: controlliamo la epsilon-uguaglianza solo una volta
+            /* Ottimizzazione: controlliamo la epsilon-uguaglianza solo una volta
              *  per ogni atomo della partizione 2, quindi teniamo un indice degli
              *  atomi incontrati, e facciamo un controllo solo si trova un atomo nuovo.
              */
@@ -224,54 +234,72 @@ void general_partition::reduce(const general_partition &p1, const general_partit
                     //controlliamo sito successivo
                     continue;
                 if (std::abs(p2.atomi[atomo2].size - size) > epsilon) {
-                    //se la differenza delle dimensioni e' maggiore di epsilon,
+                    //se la differenza delle dimensioni è maggiore di epsilon,
                     //sicuramente non possono essere uguali!
                     almost_equal = false;
                     break;
                 }
                 if (is_similar(ii1, p2.begin(atomo2), end, epsilon)) {
+                    //test vero e proprio di similarita' a meno di epsilon, i precedenti
+                    //test erano ottimizzazioni
                     almost_equal = true;
                     break;
                 }
                 atomo2_old = atomo2;
             }
             if (almost_equal)
-                //atomo1 e' saltato, perche e' stato trovato un corrispondente
+                //atomo1 è saltato, perche è stato trovato un corrispondente
                 //nella partizione 2
                 continue;
         } else {
             label_t atomo2 = p2.labels[*ii1];
+            /// Nel caso epsilon==0, l'uguaglianza secca è piu' veloce da implementare.
             if(is_equal(ii1,end,p2.begin(atomo2),end))
                 continue;
         }
-        // altrimenti interseca il fattore dicotomico con i precedenti
+        // common_size rappresenta la dimensione degli atomi scartati, diminuisce ogni volta che teniamo un atomo.
         common_size -= size;
+        // Per ogni atomo tenuto si tiene conto del suo contributo entropico.
         entropia_shannon += size * mylog[size];
 
-        // faccio il prodotto rapido - moltiplico le etichette di atomo1 per il numero
+        /** Se l'intersezione è banale, intersechiamo il corrispondente del fattore dicotomico con i precedenti.
+         *  Questa intersezione in realta' non è necessaria - si scrive direttamente il risultato.
+         *  L'assegnazione di \ref labels della partizione ridotta è rapida: corrispondono
+         *  all'indice delle partizioni dicotomiche tenute, \ref n. Il caso dell'atomo di fondo è trattato a parte.\n
+         *  Similmente \ref prev_site all'interno degli atomi è uguale, ricopiamo quindi sito per sito.
+         */
         for (; ii1 != end; ii1++){
             labels[*ii1] = n;
             prev_site[*ii1] = p1.prev_site[*ii1];
         }
+        ///Gli atomi sono "copiati" dalla partizione1 alla partizione ridotta, per questo hanno gli stessi parametri.
         atomi[n]=p1.atomi[which];
         n++;
     }
-    //la parte "comune" sara l'atomo 'n' se c'e',
-    //con etichetta -1
-    //creiamo prev_site per tutti i siti con etichetta -1...
-    if (false && common_size) {
+
+    /** In fine si tiene conto dell'atomo sconnesso di background, formato dai pezzi comuni (o simili)
+     * delle partizioni.
+     * La dimensione è semplice da calcolare e nel caso di molti scarti da' un contributo entropico
+     * significativo.
+     * 
+     * L'atomo rappresentante la parte scartata non è copiata dalla partizione1, ma va calcolato appositamente.
+     * Si cerca sito per sito gli appartenenti all'atomo di fondo e si assegna opportunamente \ref prev_site di volta in volta.
+     */
+
+    //se la parte comune ha dim > 0...
+    if (common_size) {
         atomi[n].size = common_size;
         label_t dove;
         for(dove=0; dove<N; dove++)
             if(labels[dove] == -1)
                 break;
 
-        //mettere a posto il primo
+        //mettere a posto il primo sito
         labels[dove] = n;
         atomi[n].start = dove;
         label_t prev = dove;
 
-        //cercare il resto
+        //cercare il resto dei siti, e collegarli ai precenti
         for(dove++; dove < N; dove++){
             if(labels[dove] == -1){
                 labels[dove] = n;
@@ -279,18 +307,18 @@ void general_partition::reduce(const general_partition &p1, const general_partit
                 prev = dove;
             }
         }
-        //chiudiamo
+        //chiudiamo con l'ultimo trovato e segnamo di aver trovato un atomo in piu'.
         atomi[n].end = prev;
         n++;
     }
-    // si tiene conto dell'atomo sconnesso di background, formato dai pezzi comuni
+    // entropia della parte comune e normalizzazione
     entropia_shannon += common_size * mylog[common_size];
     entropia_shannon = -entropia_shannon / N + mylog[N];
     entropia_topologica = mylog[n];
 }
 
 
-/* findroot ricorsivamente trova il primo sito del cluster, la radice appunto, applicando
+/** findroot ricorsivamente trova il primo sito del cluster, detto 'radice' o 'root', applicando
  * path compression (in questa versione nonricorsiva usando path-halving), per ottimizzare
  * future chiamate alla stessa funzione.
  */
@@ -305,14 +333,17 @@ template <typename data_t> inline int findroot(int i, data_t *ptr) {
     return r;
 }
 
-/* Calcolo della partizione a partire da un vettore di stato *configuration, usando adj come
- *  struttura contenente le informazioni topologiche di adiacenza necessarie ad interpretare
- *  il vettore di stato.
+/** Calcolo della partizione a partire da un vettore di stato configuration[], di adiacenza adj --
+ *  necessaria per interpretare il vettore di stato.
  *
- * Il calcolo e' fatto tramite percolazione sulla struttura data da adj, mettendo link
- *  solo laddove i siti vicini hanno gli stessi valori. Il numero dei vicini non e' fissato.
+ * Il calcolo è fatto tramite percolazione sulla struttura data da adj, mettendo link
+ *  solo laddove i siti vicini hanno gli stessi valori. Il numero dei vicini non è fissato.
  * Alla fine si chiama 'relabel' per riempire tutte le informazioni sulla partizione oltre
  *  al label di ciascun atomo.
+ *
+ * @param configuration Vettore di configurazione/stato
+ * @param adj Struttura di adiacenza, contenente le informazioni sulla topologia
+ * @return Partizione completa ottenuta dalla configurazione fornita
  */
 template <typename data_t>
 void general_partition::from_configuration(const data_t *configuration, const adj_struct & adj) {
@@ -321,24 +352,25 @@ void general_partition::from_configuration(const data_t *configuration, const ad
     int z;
 
     allocate(adj.N);
-    //set all labels to -1
+    /// Ogni sito in partenza è un atomo a sè stante, da unire poi agli altri, con label -1.
     labels.assign(N, -1);
 
     // percolazione e primi labels
     for (s1 = 0; s1 < N; s1++) {
+        ///Per ogni sito si trova il cluster di appartenenza
         r1 = findroot(s1, &labels[0]);
 
         z = adj.fetch(s1);
         for (int j = 0; j < z; j++) {
-            //select next neighbor
+            ///Si guarda ogni vicino
             s2 = adj.vicini[j];
 
-            //check them for being in the same cluster, skip when they're not
+            ///e se fanno parte dello stesso cluster
             if (s2 >= s1 || s2 < 0 || configuration[s1] != configuration[s2])
                 continue;
 
             r2 = findroot(s2, &labels[0]);
-            // attribution to proper tree root
+            ///si unisce l'atomo del vicino al proprio, aggiungendo il "ramo" alla propria radice.
             if (r1 != r2) {
                 if (labels[r1] >= labels[r2]) {
                     labels[r2] += labels[r1];
@@ -367,10 +399,9 @@ void general_partition::from_configuration(const data_t *configuration, const ad
 template void general_partition::from_configuration(const int *configuration, const adj_struct & adj);
 template void general_partition::from_configuration(const char *configuration, const adj_struct & adj);
 
-/* relabel: funzione essenziale per il corretto partizionamento
- * Costruisce l'elenco degli atomi, il vettore prev_site;
- * A partire dai labels, che indicano le posizioni, i siti sono rinumerati,
- *  usando come etichette l'indice dall'atomo, contando dal basso.
+/** A partire dai label della percolazione, costruisce l'elenco degli atomi, il vettore prev_site;
+ *  La partizione finale non usa labels che indicano il cluster con il primo sito di appartenza, ma sono rinumerati,
+ *  usando come etichette l'indice progressivo dall'atomo.
  */
 void general_partition::relabel() {
     entropia_shannon = 0;
@@ -386,10 +417,12 @@ void general_partition::relabel() {
     atomi.resize(n);
     n = 0;
 
-    // 1-creazione array atomi
-    // 2-inizializzazione ogni elemento
-    // 3-creazione indice (label atomo) <--> root
-    // 4-calcolo entropia a partire dai size nei root
+    /**
+      - creazione array atomi
+      - inizializzazione ogni elemento
+      - creazione indice (label atomo) <--> root
+      - calcolo entropia a partire dai size nei root
+     */
 #define ATOMO atomi[n]
     for (label_t i = 0; i < N; i++) {
         if (labels[i] < 0) {
@@ -404,9 +437,11 @@ void general_partition::relabel() {
     entropia_topologica = mylog[n];
     entropia_shannon = -entropia_shannon / N + mylog[N];
 
-    // 1-relabeling secondo l'indice dell'atomo, non del sito di appartenenza
-    // 2-creazione del collegamento prev_site(che usa il precedente, non il primo com'era prima)
-    //   e aggiornamento atom.end, che indica l'ultimo sito trovato apparentenente all'atomo
+    /**
+      - relabeling secondo l'indice dell'atomo, non del sito di appartenenza
+      - creazione del collegamento prev_site(che usa il precedente, non il primo com'era prima)
+         e aggiornamento atom.end, che indica l'ultimo sito trovato apparentenente all'atomo
+     */
     for (label_t i = 0; i < N; i++) {
         int atom_label = labels[prev_site[i]];
         labels[i] = atom_label;
@@ -415,9 +450,13 @@ void general_partition::relabel() {
     }
 }
 
-/* linear_intersection: funzione come from_configuration (percolazione) specializzata
- *  per il caso di una struttura 2dimensionale, con argomenti due partizioni (invece di
- *  una configurazione e una struttura adiacenza!).
+/** Funzione come from_configuration (percolazione) specializzata per il caso di una struttura 2-dimensionale.
+ * La partizione intersezione è definita come la partizione piu' fine, minore sia di p1 che di p2.
+ * Queste caratteristiche si ottengono creando una partizione che ha come vicini l'unione dei vicini
+ * di p1 e di p2. \n
+ * Il caso ottimizzato è bidimensionale: basta prendere l'unione di p1.prev_site[] e p2.prev_site[].
+ *  
+ * @return La partizione risultante è l'intersezione (op. simmetrica) di p1 con p2.
  */
 void general_partition::linear_intersection(const general_partition &p1, const general_partition &p2) {
     label_t s1, s2;
@@ -479,13 +518,19 @@ void general_partition::linear_intersection(const general_partition &p1, const g
     }
 }
 
-/* Funzione utile per costruire il laplaciano dei clusters.
- * La matrice di adiacenza e' cosi costruita:
- * A(i,j) = { 1 se i e' nello stesso cluster di j, 0 altrimenti}
- * Il risultato e' una matrice poco sparsa, ma puo' dare info spettrali sui clusters.
+/** Costruisce la matrice di adiacenza sparsa intra-cluster (utile per il laplaciano della partizione).
+ * La matrice di adiacenza è cosi costruita:\n
+ * \verbatim
+  A(i,j) =  / 1 se i è nello stesso cluster di j
+            \ 0 altrimenti
+   \endverbatim
+ * Il risultato è una matrice poco sparsa, ma puo' dare info spettrali sui clusters.
+ * 
+ * @param () Nessun parametro di input
+ * @return Stampa la matrice corrispondente alla partizione.
  */
 void general_partition::print_cluster_adjacency() {
-    //label_t e' definito in strutture.h come int32
+    //label_t è definito in strutture.h come int32
     std::vector<label_t> riga;
     std::vector<label_t> colonna;
     int totale = 0;
@@ -493,9 +538,9 @@ void general_partition::print_cluster_adjacency() {
     FILE *vec2 = fopen("vector2.bin", "wb");
     //per ogni sito
     for (label_t which = 0; which < N; which++) {
-        /* Per ogni sito appartenente al reticolo, recupero le informazioni
+        /** Per ogni sito appartenente al reticolo, recupero le informazioni
            sul cluster di appartenenza (atomo in questa nomenclatura).
-           Cio' e' necessario per ottenere tutti i siti (ordinati) del cluster
+           Cio' è necessario per ottenere tutti i siti (ordinati) del cluster
            cercato con efficienza massima. */
         const atom &atomo = atomi[labels[which]];
         int quanti = atomo.size;
@@ -504,7 +549,7 @@ void general_partition::print_cluster_adjacency() {
 
         int sito = 0;
         //scorro tutti i siti appartenenti allo stesso atomo,
-        //con l'iteratore ii. Il sito corrispondente e'  *ii
+        //con l'iteratore ii. Il sito corrispondente è  *ii
         for (Iter_t ii = this->begin(atomo); ii != this->end(); ii++) {
             /* gli elementi nonnulli della matrice di adiacenza A(i,j)
                sono in (which, *ii), salvo i valori delle righe e delle colonne
@@ -522,16 +567,17 @@ void general_partition::print_cluster_adjacency() {
         fwrite(&colonna[0], sizeof (label_t), sito, vec2);
         totale += sito;
 
-        /* Creazione vettori di adiacenza per matrice sparse in stile Matlab */
-        /* La funzione per caricare i dati cosi creati e':
-        -------------------------------
+        /** Creazione vettori di adiacenza per matrice sparse in stile Matlab
+         La funzione per caricare i dati cosi creati è:
+        \code
         function adiacenza=load_sierpinski()
             indici_riga=fread(fopen('vector1.bin','r'),inf,'int32');
             indici_colonna=fread(fopen('vector2.bin','r'),inf,'int32');
             N=max(max(indici_riga),max(indici_colonna));
             adiacenza=sparse(indici_riga,indici_colonna,1,N,N);
         end
-         ******************************/
+        \endcode
+         */
     }
     fclose(vec1);
     fclose(vec2);
@@ -541,10 +587,14 @@ void general_partition::print_cluster_adjacency() {
 #define ATOM atomi[label_count-1]
 #define LAST_POS product[i-1].second
 #define THIS_POS product[i].second
-/* Calcolo della partizione prodotto a partire da due altre.
- * Il risultato e' un oggetto partizione completo, con tutte le proprieta' definite.
- * Per il calcolo di una distanza e' eccessivo - meglio usare la classe distance,
+/** Calcolo della partizione prodotto (simmetrico).
+ * Il risultato è un oggetto partizione completo, con tutte le proprieta' definite.
+ * Per il calcolo di una distanza è eccessivo - meglio usare la classe distance,
  *  che implementa lo stesso codice troncato e senza temporanei inutili.
+ *
+ * @param p1 Primo fattore
+ * @param p2 Secondo fattore
+ * @return L'oggetto partizione prodotto
  */
 void general_partition::product(const general_partition & p1, const general_partition & p2) {
     label_t label_count = 0;
@@ -553,17 +603,18 @@ void general_partition::product(const general_partition & p1, const general_part
     label_t begin;
     allocate(p1.N);
 
-    /* I label del prodotto sono rappresentati dalle coppie (pair<label_t, label_t>)
-     * di label dei fattori. Il vettore product contiene la coppia <label_prodotto, indice>.
+    /** I label del prodotto sono rappresentati dalle coppie (pair<label_t, label_t>)
+     * di label dei fattori. Il vettore product contiene la coppia <label_prodotto, indice>.\n
      * Per riconoscere gli atomi, ordino il vettore product rispetto al label del prodotto:
-     * -il risultato sara un vettore ordinato, per cui riconosciamo gli atomi come elementi
-     *  contigui con lo stesso label. Il label e' temporaneo, gli atomi avranno indice
+     *  il risultato sara' un vettore ordinato, per cui riconosciamo gli atomi come elementi
+     *  contigui con lo stesso label. Il label è temporaneo, gli atomi avranno indice
      *  progressivo.
      */
 
-    /* product[i].first - indice (temp) del prodotto.
-     * product[i].second, da' l'indice corrispondente del sito nella partizione,
-     *  e' utilizzato per indicizzare i cambiamenti e gli accessi ai vettori labels[], ecc.
+    /** Il vettore \i product contiene i seguenti membri:
+     *  - product[i].first - indice (temp) del prodotto.
+     *  - product[i].second - indica la posizione del sito nella partizione,
+     *     è utilizzato per indicizzare i cambiamenti e gli accessi ai vettori labels[], ecc.
      */
     vector<pair<pair<label_t, label_t>, label_t> > product(N);
 
@@ -572,7 +623,9 @@ void general_partition::product(const general_partition & p1, const general_part
 
     sort(product.begin(), product.end());
 
-    //the first position always starts an atom
+    /* Dopo il sort, riconosciamo gli atomi. Il primo sito sicuramente inizia un nuovo
+     * atomo, per i successivi riconosciamo un atomo non appena il label cambia
+     */
     begin = 0;
     label_count = 1;
     pair<label_t, label_t> old_val = product[0].first;
@@ -592,6 +645,7 @@ void general_partition::product(const general_partition & p1, const general_part
             ATOM.size = mu;
             ATOM.end = LAST_POS;
             //the new one is ready to go
+            //prev_site del sito corrente è il sito stesso
             prev_site[THIS_POS] = THIS_POS;
             label_count++;
             begin = i;
@@ -602,7 +656,7 @@ void general_partition::product(const general_partition & p1, const general_part
             if (mu > 1)
                 H += (double) mu * mylog[mu];
         } else
-            //prev site del sito corrente e' il precedente trovato nello stesso atomo
+            //prev site del sito corrente è il precedente trovato nello stesso atomo
             prev_site[THIS_POS] = LAST_POS;
 
         labels[THIS_POS] = label_count;
@@ -614,9 +668,22 @@ void general_partition::product(const general_partition & p1, const general_part
     ATOM.end = product[N - 1].second;
     H += mu * mylog[mu];
 
-    //normalize the result
+    //normalize the entropy
     H = -H / N + mylog[N];
 
     entropia_topologica = mylog[label_count];
     n = label_count;
+}
+
+vector<label_t> get_forward_list(const vector<label_t> & prev_site){
+    vector<label_t> next_site(prev_site.size());
+
+    for(std::size_t i=0; i < prev_site.size(); i++)
+        next_site[i]=i;
+
+    for(label_t i=0; i < (label_t)prev_site.size(); i++){
+        if(prev_site[i] != i)
+            next_site[prev_site[i]]=i;
+    }
+    return std::move(next_site);
 }

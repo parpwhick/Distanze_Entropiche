@@ -44,10 +44,6 @@ distance::distance(const distance &d1) {
     allocate(N);
 }
 
-distance::~distance() {
-    N = 0;
-}
-
 /* Esegue la riduzione e calcola le distanze tra due partizioni.
  * Tutti i calcoli sono fatti con variabili interne alla classe, e il runtime
  * in memoria e' costante - rendendo molto piu' veloci i calcoli.

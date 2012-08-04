@@ -126,15 +126,21 @@ int main(int argc, char** argv) {
             break;
     }
     
-    int memory_estimate =
+    unsigned long memory_estimate =
             +topologia.n_link * 2 * sizeof (int) +topologia.N * sizeof (int) //struct adiacenza
             +opts.seq_len * sizeof (int) //caricamento sequenza
             +opts.seq_len * sizeof (double) //logaritmo
-            +opts.seq_len * sizeof (product_t) * opts.threads //temp product
-            +opts.seq_len * opts.n_seq * sizeof (label_t) * ( 2 +1) //partizioni: fisso + max_variabile/3
+            +opts.seq_len * sizeof (product_t) * opts.threads; //temp product
+    if(opts.letto_da != SIMULATION)
+        memory_estimate+=
+             opts.seq_len * opts.n_seq * sizeof (label_t) * ( 2 +1) //partizioni: fisso + max_variabile/3
             +opts.n_seq * opts.n_seq * __builtin_popcount(opts.da_calcolare) * sizeof(double); //per l'output
+    else
+        memory_estimate+=
+             opts.seq_len * 2 * sizeof (label_t) * ( 2 +1) //partizioni: fisso + max_variabile/3
+            + sizeof(ising_simulation::config_t) * (topologia.N + topologia.n_link) ;
     memory_estimate >>= 20;
-    fprintf(stderr,"Estimated memory usage: %d MB\n",memory_estimate+1);
+    fprintf(stderr,"Estimated memory usage: %lu MB\n",memory_estimate+1);
             
     //logarithm lookup table, 6x program speedup
     int lunghezza = std::max(opts.seq_len, opts.n_seq) + 10;

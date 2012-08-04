@@ -25,9 +25,9 @@ distanze_lineari: sequence_partitions.o ${OBJ_LIST}
 	g++ -o distanze_lineari sequence_partitions.o ${OBJ_LIST} ${LINK_OPTS}
 
 ising: ising_simulation.cpp adj_handler.o adj_handler.h rand_mersenne.o 
-	g++ ${COPTS} -o ising -DSTANDALONE ising_simulation.cpp adj_handler.o rand_mersenne.o 
+	g++ ${COPTS} -o ising -DSOLO_SIMULAZIONE ising_simulation.cpp adj_handler.o rand_mersenne.o 
 
-sierpinski: sierpinski.cpp
+sierpinski: sierpinski.cpp smart_data_types.h
 	g++ -o sierpinski -O3 -Wall sierpinski.cpp
 
 general_distance.o: general_distance.cpp strutture.h partizioni.h distance.h adj_handler.h
@@ -39,7 +39,7 @@ sequence_partitions.o: sequence_partitions.cpp strutture.h partizioni.h
 translation.o: strutture.h translation.cpp
 	g++ ${COPTS} -c translation.cpp
 
-ising_simulation.o: ising_simulation.cpp ising_simulation.h adj_handler.h distance.h partizioni.h
+ising_simulation.o: ising_simulation.cpp ising_simulation.h adj_handler.h distance.h partizioni.h smart_data_types.h
 	g++ ${COPTS} -c ising_simulation.cpp
 
 

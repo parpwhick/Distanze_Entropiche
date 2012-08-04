@@ -5,8 +5,9 @@
 #include "rand_mersenne.h"
 #include "ising_simulation.h"
 #include "distance.h"
+#include "smart_data_types.h"
 
-#ifndef STANDALONE
+#ifndef SOLO_SIMULAZIONE
 extern
 #endif
 options opts;
@@ -110,7 +111,7 @@ double ising_simulation::magnetizzazione(){
         totale += config[i];
     double media = totale;
     media /= N;
-    return (media);
+    return (std::abs(media));
 }
 
 
@@ -365,7 +366,7 @@ void ising_simulation::test_run(int T){
     measure();
 }
 
-template <typename data_t> void write_binary_array(data_t *array, int N, const char *filename){
+template <typename data_t> void write_binary_array(const data_t *array, int N, const char *filename){
     FILE *out;
 
     if(filename==0)
@@ -380,14 +381,15 @@ template <typename data_t> void write_binary_array(data_t *array, int N, const c
     fwrite(array,sizeof(data_t),N,out);
 }
 
-#ifndef STANDALONE
+#ifndef SOLO_SIMULAZIONE
 void time_series(const adj_struct &adj){
     general_partition Z1, Z2;
     distance dist(adj.N);
-    double E_kin=0, E_mag=0;
-    double mag, beta_est;
-    
-    ising_simulation sim(adj,opts.simulation_type,100,0);
+    auto_stats<double> d_shan("Distanza_Rohlin"),d_shan_r("Distanza_ridotta");
+    auto_stats<double> mag("Magnetizzazione"), beta_est("Beta_stimato");
+    auto_stats<double> E_kin("Energia_cinetica"), E_mag("Energia_magnetica");
+
+    ising_simulation sim(adj,opts.simulation_type,1,30000);
     sim.set_beta(opts.beta);
     sim.set_max_energy(opts.max_link_energy);
     if(opts.topologia == SIERPINSKI){
@@ -398,7 +400,7 @@ void time_series(const adj_struct &adj){
        
     Z1.from_configuration(sim.config_reference(),adj);
         
-    /* piccola nota sulla distribuzione delle energie:
+    /** Piccola nota sulla distribuzione delle energie:
      * se f(En) = exp(-beta * En) a meno di costante
      * allora <En> = 1 / (exp(beta) - 1) ====> beta = log[(1 + 1 / <En>]
      * delta(beta) = -1/[(<En>+1)*<En>)]  * sigma(En)/sqrt(N)
@@ -411,17 +413,19 @@ void time_series(const adj_struct &adj){
         E_mag = sim.energia_magnetica();
         mag = sim.magnetizzazione();
         beta_est = std::log(1. + 1. / E_kin);
+        d_shan = dist.dist_shan;
+        d_shan_r = dist.dist_shan_r;
         //stampa
-        printf("%d\t", i);
+        /*printf("%d\t", i);
         printf("%d\t", Z1.n);
-        printf("%.4f\t", Z1.entropia_shannon);
-        printf("%.4f\t", E_kin);
-        printf("%.4f\t", E_mag);
-        printf("%.4f\t", dist.dist_shan);
-        printf("%.4f\t", dist.dist_shan_r);
-        printf("%.4f\t", mag);
-        printf("%.4f\t", beta_est);
-        printf("\n");
+        printf("%.4f\t",(double) Z1.entropia_shannon);
+        printf("%.4f\t",(double) E_kin);
+        printf("%.4f\t",(double) E_mag);
+        printf("%.4f\t",(double) d_shan);
+        printf("%.4f\t",(double) d_shan_r);
+        printf("%.4f\t",(double) mag);
+        printf("%.4f\t",(double) beta_est);
+        printf("\n");*/
 
         //simulation step
         sim.step();
@@ -430,17 +434,18 @@ void time_series(const adj_struct &adj){
         if (i % 2) {
             Z2.from_configuration(sim.config_reference(), adj);
             if (opts.graphics)
-                write_binary_array(&Z2.labels[0], adj.N, "partizioni.bin");
+                write_binary_array(Z2.show_labels(), adj.N, "partizioni.bin");
         } else
             Z1.from_configuration(sim.config_reference(), adj);
         //calcolo distanze
         dist(Z1, Z2);
     }
+    printf("\n");
 }
 #endif
 
 
-#ifdef STANDALONE
+#ifdef SOLO_SIMULAZIONE
 int main(int argc, char** argv) {
 //    int N = 0;
     int T = 1000;

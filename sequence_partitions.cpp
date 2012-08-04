@@ -69,10 +69,8 @@ double *mylog=0;
  */
 
 void linear_partition::print() {
-    if (opts.verbose > 3) {
-        // {1,0,0,1,0,1,...}
-        print_array(binary, N, "Binary");
-    }
+    // {1,0,0,1,0,1,...}
+    print_array(binary, N, "Binary");
     fprintf(stdout, "Partitions[n]: %d, Shannon %f, Topological %f\n", n, entropia_shannon,
             entropia_topologica);
 }

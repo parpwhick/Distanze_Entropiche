@@ -7,6 +7,7 @@
 
 #include "adj_handler.h"
 #include "strutture.h"
+#include "smart_data_types.h"
 
 extern options opts;
 
@@ -109,7 +110,6 @@ char *colori=new char[total_size];
         printf("Popolazione di %d: %.2f%%\n",i+1,(popcol[i]*100.0)/total_size);
 */  
 
-#include "matrix.h"
 adj_struct adiacenza_sierpinski(int GEN, int &total_size){
     int a0, a1, a2;
     int size, old_size;

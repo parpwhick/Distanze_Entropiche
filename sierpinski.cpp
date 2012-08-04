@@ -12,43 +12,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-
-template <int cols>
-class memory {
-    int *buffer;
-    int nrows;
-    int total;
-public:
-
-    memory(int rows = 0, int fill=0) {
-        total = rows*cols;
-        nrows = rows;
-        if (nrows) {
-            fprintf(stderr, "Requested allocation space of %d kbytes\n", (((int)sizeof (int)) * total) >> 10);
-            buffer = new int[total];
-            if(fill) 
-                for (int i=0; i<total ;i++)
-                        buffer[i]=fill;
-        }
-    }
-
-    int & operator()(int row, int col) {
-        return buffer[cols * row + col];
-    }
-
-    int & operator[](int row) {
-        return buffer[row];
-    }
-
-    int & operator()(int row) {
-        return buffer[cols * row];
-    }
-
-    ~memory() {
-        if(nrows)
-                delete buffer;
-    }
-};
+#define DEBUG
+#include "smart_data_types.h"
 
 int GEN = 2;
 
