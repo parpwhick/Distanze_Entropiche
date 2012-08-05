@@ -10,13 +10,13 @@ COPTS= -O3 -march=native
 COPTS +=-Wall -fopenmp
 COPTS +=-std=c++0x
 LINK_OPTS = -lm -lgomp
-files=*.cpp *.h Makefile
+files=*.cpp *.h Makefile Doxyfile
 file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
 
 OBJ_LIST= init_functions.o distance.o partizioni.o adj_handler.o rand_mersenne.o 
 DIST_GEN_OBJ = general_distance.o ising_simulation.o
 
-all: distanze_generiche ising distanze_lineari sierpinski
+all: distanze_generiche distanze_lineari #sierpinski ising
 
 distanze_generiche: ${DIST_GEN_OBJ} ${OBJ_LIST}
 	g++ ${COPTS} -o distanze_generiche ${DIST_GEN_OBJ} ${OBJ_LIST} ${LINK_OPTS}

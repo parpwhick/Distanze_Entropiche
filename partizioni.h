@@ -100,10 +100,10 @@ private:
     ///Vettore di atomi, numerati in [0,n). Contiene le informazioni essenziali per manipolare tutti gli atomi della partizione. L'allocazione è ottimizzata, il vettore è lungo \e n.
     vector<atom> atomi;
 
-    ///L'utilizzo del copy operator è vietato.
-    general_partition(const general_partition &);
-    ///L'operatore di assegnazione è vietato.
-    general_partition & operator=(const general_partition &);
+    //L'utilizzo del copy operator è vietato.
+    //general_partition(const general_partition &);
+    //L'operatore di assegnazione è vietato.
+    //general_partition & operator=(const general_partition &);
 public:
 
     ///Costruttore della classe. Imposta il numero di atomi a 0, alloca la dimensione \e len se necessario.

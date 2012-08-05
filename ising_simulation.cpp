@@ -6,6 +6,12 @@
 #include "ising_simulation.h"
 #include "distance.h"
 #include "smart_data_types.h"
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <iomanip>
+using std::cout;
+using std::endl;
 
 #ifndef SOLO_SIMULAZIONE
 extern
@@ -385,11 +391,14 @@ template <typename data_t> void write_binary_array(const data_t *array, int N, c
 void time_series(const adj_struct &adj){
     general_partition Z1, Z2;
     distance dist(adj.N);
-    auto_stats<double> d_shan("Distanza_Rohlin"),d_shan_r("Distanza_ridotta");
+    auto_stats<double> d_top("Distanza_Topol"),d_top_r("Distanza_Top_r");
+    auto_stats<double> d_shan("Distanza_Rohlin"),d_shan_r("Distanza_Rid");
+    auto_stats<int> n_atomi("Numero_atomi");
+    auto_stats<double> H("Entropia");
     auto_stats<double> mag("Magnetizzazione"), beta_est("Beta_stimato");
-    auto_stats<double> E_kin("Energia_cinetica"), E_mag("Energia_magnetica");
+    auto_stats<double> E_kin("Energia_kin"), E_mag("Energia_mag");
 
-    ising_simulation sim(adj,opts.simulation_type,1,30000);
+    ising_simulation sim(adj,opts.simulation_type,opts.sweeps,opts.skip);
     sim.set_beta(opts.beta);
     sim.set_max_energy(opts.max_link_energy);
     if(opts.topologia == SIERPINSKI){
@@ -405,7 +414,7 @@ void time_series(const adj_struct &adj){
      * allora <En> = 1 / (exp(beta) - 1) ====> beta = log[(1 + 1 / <En>]
      * delta(beta) = -1/[(<En>+1)*<En>)]  * sigma(En)/sqrt(N)
      */
-    printf("%%t, atomi, entropia, e_kin, e_mag, dist, dist_rid, M, beta_est\n");
+    printf("%%t,\tatomi,\tH,\te_kin,\te_mag,\tdist,\tdist_r,\tM,\tbeta_est\n");
     
     for (int i = 1; i < opts.n_seq + 1; i++) {
         //calcolo quantita' da stampare
@@ -415,31 +424,67 @@ void time_series(const adj_struct &adj){
         beta_est = std::log(1. + 1. / E_kin);
         d_shan = dist.dist_shan;
         d_shan_r = dist.dist_shan_r;
+        d_top = dist.dist_top;
+        d_top_r = dist.dist_top_r;
+        n_atomi = Z1.n;
+        H = Z1.entropia_shannon;
         //stampa
-        /*printf("%d\t", i);
-        printf("%d\t", Z1.n);
-        printf("%.4f\t",(double) Z1.entropia_shannon);
+        printf("%d\t", i);
+        printf("%d\t", (int) n_atomi);
+        printf("%.4f\t",(double) H);
         printf("%.4f\t",(double) E_kin);
         printf("%.4f\t",(double) E_mag);
         printf("%.4f\t",(double) d_shan);
         printf("%.4f\t",(double) d_shan_r);
         printf("%.4f\t",(double) mag);
         printf("%.4f\t",(double) beta_est);
-        printf("\n");*/
+        printf("\n");
 
         //simulation step
         sim.step();
-        if (opts.graphics)
+        //aggiornamento partizione
+        Z2.from_configuration(sim.config_reference(), adj);
+        if (opts.graphics){
             write_binary_array(sim.config_reference(), adj.N, "configurazioni.bin");
-        if (i % 2) {
-            Z2.from_configuration(sim.config_reference(), adj);
-            if (opts.graphics)
-                write_binary_array(Z2.show_labels(), adj.N, "partizioni.bin");
-        } else
-            Z1.from_configuration(sim.config_reference(), adj);
+            write_binary_array(Z2.show_labels(), adj.N, "partizioni.bin");
+        }
+
         //calcolo distanze
         dist(Z1, Z2);
+        //adesso Z1 conterra' la vecchia partizione, Z2 la prossima
+        std::swap(Z1, Z2);
     }
+    //stampa medie
+    std::ofstream out1("medie.txt", std::ios::app);
+    out1 << std::fixed << std::setprecision(4)
+            << "%options: " << opts.command_line << endl
+            << "%beta,\tatomi,\tH,\te_kin,\te_mag,\tdist,\tdist_r,\tdist_t,\tdist_tr\tM" << endl;
+    out1 << beta_est.mean() << " \t"
+            << n_atomi.mean() << "\t"
+            << H.mean() << " \t"
+            << E_kin.mean() << " \t"
+            << E_mag.mean() << " \t"
+            << d_shan.mean() << " \t"
+            << d_shan_r.mean() << " \t"
+            << d_top.mean() << " \t"
+            << d_top_r.mean() << " \t"
+            << mag.mean() << endl;
+    //stampa varianze
+    std::ofstream out2("varianze.txt", std::ios::app);
+    out2 << std::fixed << std::setprecision(4)
+            << "%options: " << opts.command_line << endl
+            << "%beta,\tatomi,\tH,\te_kin,\te_mag,\tdist,\tdist_r,\tdist_t,\tdist_tr\tM" << endl;
+    out2 << beta_est.var() << " \t"
+            << n_atomi.var() << "\t"
+            << H.var() << " \t"
+            << E_kin.var() << " \t"
+            << E_mag.var() << " \t"
+            << d_shan.var() << " \t"
+            << d_shan_r.var() << " \t"
+            << d_top.var() << " \t"
+            << d_top_r.var() << " \t"
+            << mag.var() << endl;
+    //le variabili auto_stat qui stampano le loro medie, lasciamo una riga di spazio
     printf("\n");
 }
 #endif

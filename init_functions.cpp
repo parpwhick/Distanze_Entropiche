@@ -57,6 +57,8 @@ void print_help() {
             "  -link_energy N    Max of the microcanonical kinetic energy [10]\n"
             "  -metropolis       Evolution according to Metropolis rule\n"
             "  -beta B           Floating point beta parameter [0.45]\n"
+            "  -sweeps N         Number of full sweeps in a time unit [1]\n"
+            "  -skip N           Skip N time units to thermalize the system [50000]\n"
             ;
     fprintf(stderr, "%s", message);
     if (opts.partition_type == GENERAL_PARTITION)
@@ -74,6 +76,8 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.simulation_type = MICROCANONICAL;
     opts.beta = 0.45;
     opts.max_link_energy = 10;
+    opts.skip = 50000;
+    opts.sweeps = 1;
     opts.graphics = false;
     opts.verbose = 0;
     opts.write = true;
@@ -88,7 +92,12 @@ void set_program_options(options &opts, int argc, char**argv) {
             ;
 
     int killswitch = 0;
-
+    string command_line;
+    for(int i=0; i<argc; i++){
+        command_line += argv[i];
+        command_line +=" ";
+    }
+    opts.command_line=command_line;
     string input;
     if (argc > 1) {
         int read_argvs = 1;
@@ -160,16 +169,16 @@ void set_program_options(options &opts, int argc, char**argv) {
 
                 opts.topologia = SIERPINSKI;
                 opts.sierpinski_gen = atoi(argv[read_argvs++]);
-                fprintf(stderr, "Using Sierpinski gasket\n");
+                fprintf(stderr, "Using Sierpinski generation %d\n",opts.sierpinski_gen);
             }
             else if (input == "-num") {
                 if (argc - read_argvs < 1)
-                    error("Missing max number of sequences to read\n");
+                    error("Missing max number of configurations\n");
                 if (argv[read_argvs][0] == '-')
                     error("Expecting argument, not another option\n");
 
                 opts.n_seq = atoi(argv[read_argvs++]);
-                fprintf(stderr, "Number of sequences limited to: %d\n", opts.n_seq);
+                fprintf(stderr, "Number of configurations limited to: %d\n", opts.n_seq);
             } else if (input == "-fuzzy") {
                 if (argc - read_argvs < 1)
                     error("Missing number of partitioning fuzziness\n");
@@ -198,12 +207,28 @@ void set_program_options(options &opts, int argc, char**argv) {
 
                 opts.max_link_energy = atoi(argv[read_argvs++]);
                 fprintf(stderr, "Max link energy set to: %d\n", opts.max_link_energy);
+            } else if (input == "-sweeps") {
+                if (argc - read_argvs < 1)
+                    error("Missing number of sweeps\n");
+                if (argv[read_argvs][0] == '-')
+                    error("Expecting argument, not another option\n");
+
+                opts.sweeps = atoi(argv[read_argvs++]);
+                fprintf(stderr, "New configuration every %d sweeps\n", opts.sweeps);
+            } else if (input == "-skip") {
+                if (argc - read_argvs < 1)
+                    error("Missing number of skipped configurations\n");
+                if (argv[read_argvs][0] == '-')
+                    error("Expecting argument, not another option\n");
+
+                opts.skip = atoi(argv[read_argvs++]);
+                fprintf(stderr, "Skipping %d configurations at beginning\n", opts.skip);
             } else if (input == "-microcanonical") {
-                fprintf(stderr, "Using microcanonical rule\n");
+                fprintf(stderr, "Temporal series with microcanonical rule\n");
                 opts.simulation_type = MICROCANONICAL;
                 opts.letto_da = SIMULATION;
             } else if (input == "-metropolis") {
-                fprintf(stderr, "Using Metropolis rule\n");
+                fprintf(stderr, "Temporal with Metropolis rule\n");
                 opts.simulation_type = METROPOLIS;
                 opts.letto_da = SIMULATION;
             } else if (input == "-v") {

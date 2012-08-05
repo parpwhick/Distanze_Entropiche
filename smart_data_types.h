@@ -70,7 +70,7 @@ class auto_stats{
         }
         ///Stampa delle statistiche
         void print(){
-            printf("%s: %.3g +- %.3g\n",name.c_str(),mean(),std());
+            printf("%s\t %.3g \t %.3g\n",name.c_str(),mean(),std());
         }
         ///Quanti valori contiene
         int size(){
@@ -137,7 +137,7 @@ class memory {
     int total;
 public:
 
-    ///Crea una struttura con \ref rows righe, riempita con valore \e fill
+    ///Crea una struttura con \e rows righe, riempita con valore \e fill
     memory(int rows = 0, int fill = 0) {
         total = rows*cols;
         nrows = rows;

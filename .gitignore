@@ -1,5 +1,6 @@
 nbproject/
 h3n2_gisaid/
+Docs/
 
 distanze_*
 ising
@@ -12,3 +13,5 @@ sierpinski
 
 .fuse*
 octave-core
+.cproject
+.project

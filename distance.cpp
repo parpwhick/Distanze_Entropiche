@@ -35,6 +35,11 @@ void distance::allocate(int n) {
 }
 
 distance::distance(int n) {
+    dist_ham=0;
+    dist_shan=0;
+    dist_shan_r=0;
+    dist_top=0;
+    dist_top_r=0;
     N = n;
     allocate(N);
 }

@@ -98,6 +98,8 @@ public:
     simulation_t simulation_type;
     ///Numero di sweeps in un intervallo temporale [default: 1]
     int sweeps;
+    ///Numero di istanti temporali da saltare inizialmente
+    int skip;
     ///Temperatura inversa per metropolis [default: 0.45]
     double beta;
     ///Massima energia per link nel caso di distribuzione random uniforme
@@ -105,6 +107,8 @@ public:
 
     ///Grado di verbosita', da 0 [default: 0]
     int verbose;
+    ///Copia della riga di comando
+    std::string command_line;
     //bool translate;
 
 } options;

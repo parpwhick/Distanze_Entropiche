@@ -187,7 +187,7 @@ bool is_equal(Iter_t from1, Iter_t last1, Iter_t from2, Iter_t last2) {
  * La partizione cosi generata è completa, contiene tutte le informazioni necessarie, sovrabbondante
  * rispetto a quanto richiesto dal solo calcolo delle distanze.
  *
- * @param epsilon Variabile globale opts.epsilon
+ * Epsilon è preso dalla variabile globale opts.epsilon
  * @param p1 Partizione da ridurre
  * @param p2 Partizione con cui confrontare
  * @return Partizione ridotta nell'oggetto chiamante
@@ -611,7 +611,7 @@ void general_partition::product(const general_partition & p1, const general_part
      *  progressivo.
      */
 
-    /** Il vettore \i product contiene i seguenti membri:
+    /** Il vettore \e product contiene i seguenti membri:
      *  - product[i].first - indice (temp) del prodotto.
      *  - product[i].second - indica la posizione del sito nella partizione,
      *     è utilizzato per indicizzare i cambiamenti e gli accessi ai vettori labels[], ecc.
