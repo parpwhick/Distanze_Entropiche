@@ -8,7 +8,7 @@ COPTS= -O3 -march=native
 # STL profiling
 #COPTS+= -D_GLIBCXX_PROFILE
 COPTS +=-Wall -fopenmp
-COPTS +=-std=c++0x
+#COPTS +=-std=c++0x
 LINK_OPTS = -lm -lgomp
 files=*.cpp *.h Makefile Doxyfile
 file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*

@@ -94,7 +94,7 @@ void linear_partition::fill(const T* seq, int len) {
     for (int i = 1; i < len; i++)
         binary[i] = seq[i] != seq[i - 1];
 
-    auto entropie = ordered_vector_entropy(seq,N);
+    entropy_pair entropie = ordered_vector_entropy(seq,N);
     n=entropie.second;
     entropia_shannon = entropie.first;
     entropia_topologica = mylog[n];

@@ -222,7 +222,7 @@ void distance::dist(const linear_partition &first, const linear_partition &secon
 }
 
 void distance::calc_distance(const general_partition &p1, const general_partition &p2) {
-    for (auto i = 0; i < N; i++) {
+    for (int i = 0; i < N; i++) {
         product_t temp1 = p1.labels[i];
         product_t temp2 = p2.labels[i];
 

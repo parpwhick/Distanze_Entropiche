@@ -135,8 +135,8 @@ void ising_simulation::metropolis_step() {
 
     if (config.empty()) {
         config.resize(NN.N);
-        for(auto &x : config)
-            x = 2 * (random.get_double() < 0.2) - 1 ;
+        for (int i = 0; i < NN.N; i++)
+            config[i] = 2 * (random.get_double() < 0.2) - 1 ;
     }
 
     if (myexp == 0) {

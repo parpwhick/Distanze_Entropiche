@@ -60,7 +60,7 @@ public:
     }
 };
 
-/** \brief Informazioni minime per individuare un atomo in maniera efficiente.
+/** @brief Informazioni minime per individuare un atomo in maniera efficiente.
  *
  * Tramite queste informazioni e il vettore prev_site[] di ogni partizione, è possibile
  * percorrere in modo ottimale ogni atomo (in una direzione sola).
@@ -71,11 +71,11 @@ public:
     label_t size;
     ///Primo sito di appartenenza
     label_t start;
-    ///Ultimo sito. Il vettore \c prev_site collega \e end a \e start attraverso tutto l'atomo.
+    ///Ultimo sito. Il vettore @c prev_site collega @e end a @e start attraverso tutto l'atomo.
     label_t end;
 };
 
-/**\brief Partizione di tipo completamente generale.
+/**@brief Partizione di tipo completamente generale.
  *
  * La classe contiene i metodi necessari partizionare un qualunque vettore (fornita l'adiacenza),
  * ottenere le informazioni sulla partizione,
@@ -87,9 +87,9 @@ class general_partition : public basic_partition {
 private:
     ///Alloca i vettori prima di poter procedere a qualunque calcolo (chiamato automaticamente).
     void allocate(label_t len);
-    ///Calcola l'entropia nel caso di una partizione nota solo tramite i suoi \ref labels. Non usata attualemente.
+    ///Calcola l'entropia nel caso di una partizione nota solo tramite i suoi @ref labels. Non usata attualemente.
     void entropy_calculation();
-    ///Dopo la percolazione, corregge i \ref labels e riempie le strutture necessarie.
+    ///Dopo la percolazione, corregge i @ref labels e riempie le strutture necessarie.
     void relabel();
 
 
@@ -97,7 +97,7 @@ private:
     vector<label_t> labels;
     ///Sito precedente (o uguale) facente parte dello stesso atomo del sito i-esimo: prev_site[i]
     vector<label_t> prev_site;
-    ///Vettore di atomi, numerati in [0,n). Contiene le informazioni essenziali per manipolare tutti gli atomi della partizione. L'allocazione è ottimizzata, il vettore è lungo \e n.
+    ///Vettore di atomi, numerati in [0,n). Contiene le informazioni essenziali per manipolare tutti gli atomi della partizione. L'allocazione è ottimizzata, il vettore è lungo @e n.
     vector<atom> atomi;
 
     //L'utilizzo del copy operator è vietato.
@@ -106,7 +106,7 @@ private:
     //general_partition & operator=(const general_partition &);
 public:
 
-    ///Costruttore della classe. Imposta il numero di atomi a 0, alloca la dimensione \e len se necessario.
+    ///Costruttore della classe. Imposta il numero di atomi a 0, alloca la dimensione @e len se necessario.
     general_partition(int len = 0);
 
     ///Genera la partizione a partire una configurazione e una struttura di adiacenza
@@ -134,7 +134,8 @@ public:
     }
 
     ///L'iteratore serve per scorrere rapidamente e senza errori tutti i siti di un atomo
-    class Iterator : public std::iterator_traits<label_t>{
+    ///Eredita della classe std::iterator per avere tutti i typedef necessari automaticamente
+    class Iterator : public std::iterator<std::forward_iterator_tag, label_t>{
 
     private:
         ///Sito restituito dall'iteratore
@@ -143,13 +144,6 @@ public:
         const label_t *_next;
 
     public:
-        //definizioni necessarie per usare gli iteratori con gli algoritmi della STL
-        typedef label_t value_type;
-        typedef label_t *pointer;
-        typedef label_t &reference;
-        typedef label_t difference_type;
-        typedef std::forward_iterator_tag iterator_category;
-
         //costruttore, chiamabile solo dalla classe partizione
         Iterator(int dove, const label_t *vicini) : _site(dove), _next(vicini) {
         };
@@ -169,7 +163,7 @@ public:
             return (_site != due._site);
         }
 
-        ///Incremento intelligente: se esiste un altro sito appartenente all'atomo, allora viene caricato. Altrimenti l'iteratore restituisce \ref end.
+        ///Incremento intelligente: se esiste un altro sito appartenente all'atomo, allora viene caricato. Altrimenti l'iteratore restituisce @ref end.
         int operator++() {
             if (_site == _next[_site])
                 _site = -1;
@@ -196,7 +190,7 @@ public:
     }
     ///Iteratore banale per riconoscere la fine di un atomo
     reverse_iterator end() const {
-        return reverse_iterator(-1, nullptr);
+        return reverse_iterator(-1, 0);
     }
 };
 

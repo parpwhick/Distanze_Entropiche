@@ -71,7 +71,7 @@ public:
 
     ///Costruttore per partizioni lunghe N
     distance(int N);
-    ///Operatore di copia - crea un oggetto \ref distance delle dimensioni giuste, non copia niente.
+    ///Operatore di copia - crea un oggetto @c distance delle dimensioni giuste, non copia niente.
     distance(const distance &d1);
 
 };

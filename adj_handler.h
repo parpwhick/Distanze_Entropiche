@@ -10,7 +10,7 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <memory>
+#include <vector>
 
 #define LEAST -1
 
@@ -34,13 +34,13 @@ public:
     ///Massimo numero di coordinazione
     int zmax;
     ///Indici delle righe degli elementi non-nulli di adiacenza
-    std::unique_ptr<int[]> adi;
+    std::vector<int> adi;
     ///Indici delle colonne degli elementi non-nulli di adiacenza
-    std::unique_ptr<int[]> adj;
+    std::vector<int> adj;
     ///Indica dove iniziano i link per il sito richiesto
-    std::unique_ptr<int[]> index;
+    std::vector<int> index;
     ///Array per il veloce accesso ai vicini, tramite l'indice
-    mutable int *vicini;
+    mutable const int *vicini;
 
     /**\brief Trova e carica i vicini per il sito richiesto
      * Restituisce il nr. di coordinazione di 'i' e carica i link opportuni
@@ -52,7 +52,7 @@ public:
     int fetch(int site) const {
         //per evitare di sforare gli array, controlliamo
         if(site>=N){
-            vicini = nullptr;
+            vicini = 0;
             return 0;
         }
         //il numero di coordinazione e' dato dalla differenza tra indici successivi dell'indice
@@ -64,9 +64,10 @@ public:
         return(z);
     }
 
-    ///Costruttore per la corretta inizializzazione dei std::unique_ptr, per evitare memory leaks
-    adj_struct(int* _adi = nullptr, int* _adj = nullptr, int* _index = nullptr)
+    ///Costruttore per allocare direttamente i vettori
+    adj_struct(std::vector<int> _adi, std::vector<int> _adj , std::vector<int> _index)
             : adi(_adi), adj(_adj), index(_index) {}
+    adj_struct() {}
 };
 
 adj_struct adiacenza_fuzzy_line(int N);

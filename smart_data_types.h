@@ -17,13 +17,13 @@
 ///Funziona come una normale variabile, ma con nome, statistiche interne e storia completa
 /**
  * Per utilizzarla, basta creare una variabile con nome. Ogni volta che viene assegnata, aggiunge alle statistiche il proprio valore:
- * \code
+ * @code
  * auto_stats<double> E("Energia cinetica");
  * E=1;
  * E=3;
  * E=0.5;
  * E.print();  //Energia cinetica: 1.5 +- 1.08
- * \endcode
+ * @endcode
  */
 template <typename T>
 class auto_stats{
@@ -101,7 +101,7 @@ class matrix {
     int total;
 public:
 
-    ///Costruisce una matrice con numero di righe e colonne fornite a runtime, riempita con \e fill
+    ///Costruisce una matrice con numero di righe e colonne fornite a runtime, riempita con @e fill
     matrix(int rows, int cols, data_t fill = 0) {
         total = rows*cols;
         nrows = rows;
@@ -137,7 +137,7 @@ class memory {
     int total;
 public:
 
-    ///Crea una struttura con \e rows righe, riempita con valore \e fill
+    ///Crea una struttura con @e rows righe, riempita con valore @e fill
     memory(int rows = 0, int fill = 0) {
         total = rows*cols;
         nrows = rows;

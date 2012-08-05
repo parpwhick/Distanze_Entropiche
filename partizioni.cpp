@@ -58,9 +58,9 @@ general_partition::general_partition(int len) {
         allocate(N);
 }
 
-/**\brief Calcola l'entropia di un range ordinato di dimensione N
+/**@brief Calcola l'entropia di un range ordinato di dimensione N
  * Gli atomi sono individuati da un'etichetta diversa della precedente, il metodo e' lo stesso usato in
- * \ref product e \ref entropy_binary_partition.
+ * @ref product e @ref entropy_binary_partition.
  *
  * @param temp[] Vettore ordinato con le etichette di cui si vuole conoscere l'entropia
  * @param N lunghezza del vettore
@@ -264,9 +264,9 @@ void general_partition::reduce(const general_partition &p1, const general_partit
 
         /** Se l'intersezione è banale, intersechiamo il corrispondente del fattore dicotomico con i precedenti.
          *  Questa intersezione in realta' non è necessaria - si scrive direttamente il risultato.
-         *  L'assegnazione di \ref labels della partizione ridotta è rapida: corrispondono
-         *  all'indice delle partizioni dicotomiche tenute, \ref n. Il caso dell'atomo di fondo è trattato a parte.\n
-         *  Similmente \ref prev_site all'interno degli atomi è uguale, ricopiamo quindi sito per sito.
+         *  L'assegnazione di @ref labels della partizione ridotta è rapida: corrispondono
+         *  all'indice delle partizioni dicotomiche tenute, @ref n. Il caso dell'atomo di fondo è trattato a parte.\n
+         *  Similmente @ref prev_site all'interno degli atomi è uguale, ricopiamo quindi sito per sito.
          */
         for (; ii1 != end; ii1++){
             labels[*ii1] = n;
@@ -283,7 +283,7 @@ void general_partition::reduce(const general_partition &p1, const general_partit
      * significativo.
      * 
      * L'atomo rappresentante la parte scartata non è copiata dalla partizione1, ma va calcolato appositamente.
-     * Si cerca sito per sito gli appartenenti all'atomo di fondo e si assegna opportunamente \ref prev_site di volta in volta.
+     * Si cerca sito per sito gli appartenenti all'atomo di fondo e si assegna opportunamente @ref prev_site di volta in volta.
      */
 
     //se la parte comune ha dim > 0...
@@ -520,10 +520,10 @@ void general_partition::linear_intersection(const general_partition &p1, const g
 
 /** Costruisce la matrice di adiacenza sparsa intra-cluster (utile per il laplaciano della partizione).
  * La matrice di adiacenza è cosi costruita:\n
- * \verbatim
+ * @verbatim
   A(i,j) =  / 1 se i è nello stesso cluster di j
             \ 0 altrimenti
-   \endverbatim
+   @endverbatim
  * Il risultato è una matrice poco sparsa, ma puo' dare info spettrali sui clusters.
  * 
  * @param () Nessun parametro di input
@@ -569,14 +569,14 @@ void general_partition::print_cluster_adjacency() {
 
         /** Creazione vettori di adiacenza per matrice sparse in stile Matlab
          La funzione per caricare i dati cosi creati è:
-        \code
+        @code
         function adiacenza=load_sierpinski()
             indici_riga=fread(fopen('vector1.bin','r'),inf,'int32');
             indici_colonna=fread(fopen('vector2.bin','r'),inf,'int32');
             N=max(max(indici_riga),max(indici_colonna));
             adiacenza=sparse(indici_riga,indici_colonna,1,N,N);
         end
-        \endcode
+        @endcode
          */
     }
     fclose(vec1);
@@ -611,7 +611,7 @@ void general_partition::product(const general_partition & p1, const general_part
      *  progressivo.
      */
 
-    /** Il vettore \e product contiene i seguenti membri:
+    /** Il vettore @e product contiene i seguenti membri:
      *  - product[i].first - indice (temp) del prodotto.
      *  - product[i].second - indica la posizione del sito nella partizione,
      *     è utilizzato per indicizzare i cambiamenti e gli accessi ai vettori labels[], ecc.
@@ -685,5 +685,5 @@ vector<label_t> get_forward_list(const vector<label_t> & prev_site){
         if(prev_site[i] != i)
             next_site[prev_site[i]]=i;
     }
-    return std::move(next_site);
+    return next_site;
 }

@@ -8,7 +8,7 @@
 #include "adj_handler.h"
 #include "strutture.h"
 #include "smart_data_types.h"
-
+using std::vector;
 extern options opts;
 
 #define nnu(i) (i - (i % lato)+ ((i+lato-1)%lato))
@@ -19,9 +19,10 @@ extern options opts;
 adj_struct adiacenza_square_lattice(int lato){    
     int N=lato*lato;
 
-    int *adj=new int[4*N+1];
-    int *adi=new int[4*N+1];
-    int *index=new int[N+1];
+    vector<int> adi(4*N+1);
+    vector<int> adj(4*N+1);
+    vector<int> index(N+1);
+
     for (int i=0; i<N; i++){
         adj[4*i]   =  nnu(i);
         adj[4*i+1] =  nnl(i);
@@ -46,8 +47,9 @@ adj_struct adiacenza_square_lattice(int lato){
 }
 
 adj_struct adiacenza_simple_line(int N){ 
-    int *adj=new int[N+1];
-    int *index=new int[N+1];
+    vector<int> adi;
+    vector<int> adj(N+1);
+    vector<int> index(N+1);
     
     adj[0]=LEAST;
     index[0]=0;
@@ -58,7 +60,7 @@ adj_struct adiacenza_simple_line(int N){
     adj[N]=LEAST;
     index[N]=N;
 
-    adj_struct temp(nullptr,adj,index);
+    adj_struct temp(adi,adj,index);
     temp.N=N;
     temp.n_link=N;
     temp.zmax=1;
@@ -66,8 +68,9 @@ adj_struct adiacenza_simple_line(int N){
 }
 
 adj_struct adiacenza_fuzzy_line(int N){
-    int *adj=new int[(opts.fuzzy+1)*N];
-    int *index=new int[N+1];
+    vector<int> adi;
+    vector<int> adj((opts.fuzzy+1)*N);
+    vector<int> index(N+1);
     int adj_count=0;
     
     adj[0]=LEAST;
@@ -82,7 +85,7 @@ adj_struct adiacenza_fuzzy_line(int N){
     adj[adj_count]=-1;
     index[N]=adj_count;
 
-    adj_struct temp(nullptr,adj,index);
+    adj_struct temp(adi,adj,index);
     temp.N=N;
     temp.n_link=adj_count;
     temp.zmax=opts.fuzzy+1;
@@ -218,9 +221,9 @@ adj_struct adiacenza_sierpinski(int GEN, int &total_size){
 
 
     }
-    int *adi = new int[4 * total_size];
-    int *adj = new int[4 * total_size];
-    int *index = new int[total_size+1];
+    vector<int> adi(4 * total_size);
+    vector<int> adj(4 * total_size);
+    vector<int> index(total_size+1);
     int scritti = 0;
     for (int i = 0; i < total_size; i++) {
         index[i]=scritti;
@@ -272,15 +275,15 @@ adj_struct adiacenza_from_file(const char *name_vec1,const char *name_vec2, int 
     // voglio il numero di interi da leggere, non di byte
     M /= sizeof(int32_t);
     
-    int *adj=new int[M+1];
-    int *tmp_index = new int [M+1];
+    vector<int> adj(M+1);
+    vector<int> tmp_index(M+1);
     int zmax=0;
     
     
     //i valori sono in vec2
-    int T1= fread(adj,sizeof(int32_t),(int)M,vec2);
+    int T1= fread(&adj[0],sizeof(int32_t),(int)M,vec2);
     //gli indici sono in vec1
-    int T2= fread(tmp_index,sizeof(int32_t),(int)M,vec1);
+    int T2= fread(&tmp_index[0],sizeof(int32_t),(int)M,vec1);
     if(T1<M || T2<M){
             fprintf(stderr,"ADJ READ: Error: read %d links, %d indexes, wanted %d\n",T1,T2, (int)M);
             exit(1);
@@ -295,7 +298,7 @@ adj_struct adiacenza_from_file(const char *name_vec1,const char *name_vec2, int 
     //try detecting number of sites
     N=tmp_index[M-1]-offset+1;
     fprintf(stderr,"ADJ READ Info: Reading vectors for %d elements, %ld nonempty links\n",N,M);
-    int *index=new int[N+1];    
+    vector<int> index(N+1);
        
     if(opts.verbose)
         fprintf(stderr,"ADJ READ Info: Finished allocating\n");
@@ -347,28 +350,3 @@ adj_struct adiacenza_from_file(const char *name_vec1,const char *name_vec2, int 
     fclose(vec2);
     return(temp);
 }
-
-/* Pseudo iterator
-void neigh_factory::f3() {
-    n = 0;
-    int s1;
-    int quanti = 1;
-    if (adj[adj_counter] == LEAST)
-        quanti = 0;
-
-    while (adj[adj_counter + quanti + 1] > 0)
-        quanti++;
-    for (int i = 0; i < quanti; i++) {
-        s1 = adj[adj_counter++];
-        if (i == 0)
-            s1 = -s1;
-        //if(s1 < 0 || s1==site || 
-        if (configuration[_site] != configuration[s1])
-            continue;
-        buffer[n++] = s1;
-    }
-    _site++;
-    if (_site >= N)
-        _site = -1;
-}
- */
