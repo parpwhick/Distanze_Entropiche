@@ -1,8 +1,6 @@
-/* 
- * File:   distance.h
- * Author: fake
- *
- * Created on August 3, 2012, 2:46 PM
+/**
+ * @file   distance.h
+ * @brief Header per la classe @ref distance
  */
 
 #ifndef DISTANCE_H

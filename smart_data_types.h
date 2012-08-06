@@ -1,8 +1,8 @@
-/* 
- * File:   matrix.h
- * Author: fake
+/**
+ * @file smart_data_types.h
+ * @author Dawid Crivelli
  *
- * Created on June 27, 2012, 3:55 PM
+ * @brief Implementa classi per la manipolazione intelligente di dati, come @ref auto_stats, @ref matrix, @ref memory
  */
 
 #ifndef MATRIX_H
@@ -88,7 +88,17 @@ class auto_stats{
         }
 };
 
-///Matrice con dimensioni definite a runtime e protezione accessi oltre i limiti
+/**
+ * @brief Matrice con dimensioni definite a runtime e protezione accessi oltre i limiti
+ *
+ * @code
+ matrix<int> mat(3,3); //inizializza a zero una matrice 3x3
+ mat(27,3) = 2;         //prova ad accedere all'elemento (27,1) -> errore!
+
+ //terminate called after throwing an instance of 'std::out_of_range'
+ //what():  Requesting matrix element out of bounds at (27,3)!
+   @endcode
+ */
 template <typename data_t>
 class matrix {
     ///Buffer per i dati, acceduti poi tramite righe e colonne
@@ -126,11 +136,19 @@ public:
     }
 };
 
-///Matrice con numero di colonne definito a run-time, permette grandi ottimizzazioni
-template <int cols>
+/** @brief Matrice (o n-vettore) con numero di colonne definito a compilation, permette grandi ottimizzazioni
+ * Per avere un 3-vettore di interi lungo 500, usare:
+ * @code
+ * memory<3> vec(500); //creazione, inizializzato a 0
+ * vec(491,2); //accesso alla terza colonna, riga 491
+ * @endcode
+ *
+ * Se il simbolo @c DEBUG è definito, stampa la quantità di memoria allocata.
+*/
+template <int cols, typename T=int>
 class memory {
     ///Buffer per i dati, acceduti poi tramite righe e colonne
-    std::vector<int> buffer;
+    std::vector<T> buffer;
     ///Numero di righe
     int nrows;
     ///Dimensione totale
@@ -150,17 +168,17 @@ public:
         }
     }
     ///Operatore per leggere e scrivere tramite righe e colonne, es: nn(1,4)=5
-    inline int & operator()(int row, int col) {
+    inline T & operator()(int row, int col) {
         return buffer[cols * row + col];
     }
 
     ///Operatore per accedere al contenitore in modo sequenziale
-    inline int & operator[](int row) {
+    inline T & operator[](int row) {
         return buffer[row];
     }
 
     ///Sinonimo di []
-    inline int & operator()(int row) {
+    inline T & operator()(int row) {
         return buffer[row];
     }
 };

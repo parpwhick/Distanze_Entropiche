@@ -1,8 +1,6 @@
-/* 
- * File:   partizioni.h
- * Author: fake
- *
- * Created on August 3, 2012, 2:39 PM
+/**
+ * @file partizioni.h
+ * @brief Header che definisce le partizioni generali (@ref general_partition) e il loro iteratore (general_partition::Iterator)
  */
 
 #ifndef PARTIZIONI_H
@@ -133,8 +131,19 @@ public:
         return atomi[labels[posizione]];
     }
 
-    ///L'iteratore serve per scorrere rapidamente e senza errori tutti i siti di un atomo
-    ///Eredita della classe std::iterator per avere tutti i typedef necessari automaticamente
+    /**@brief L'iteratore serve per scorrere rapidamente e senza errori tutti i siti di un atomo
+     *
+     * L'iteratore scorre tutti i siti di un atomo nella direzione indicata dal vettore che gli viene passato
+     * durante la costruzione. Nel caso di default, e' usato @a prev_site per cui l'iteratore scorre all'indietro.
+     * E' possibile usare l'iteratore per scorrere in avanti, usando un @a next_site.
+     *
+     * Per avere un ciclo for su tutto l'atomo a cui @c sito appartiene, si puo' usare:
+     * @code
+     * for(Iter_t ii = partizione.begin(partizione.labels[sito]); ii != partizione.end(); ii++)
+     *          dosomething(*ii);
+     * @endcode
+     */
+    /// Eredita della classe std::iterator per avere tutti i typedef necessari automaticamente
     class Iterator : public std::iterator<std::forward_iterator_tag, label_t>{
 
     private:

@@ -1,8 +1,6 @@
-/* 
- * File:   ising_simulation.h
- * Author: fake
- *
- * Created on June 27, 2012, 12:45 PM
+/**
+ * @file  ising_simulation.h
+ * @brief Header per la classe @ref ising_simulation
  */
 
 #ifndef ISING_SIMULATION_H
@@ -10,6 +8,7 @@
 
 #include <vector>
 #include <string>
+#include <stdexcept>
 #include "adj_handler.h"
 #include "rand_mersenne.h"
 using std::vector;
@@ -36,8 +35,6 @@ private:
     int skip;
     ///Nel caso di una distribuzione random uniforme di energie, l'energia massima
     int max_link_energy;
-
-    bool running;
     ///temperatura inversa per il sistema (o i suoi bordi)
     double beta;
     ///Generatore di numeri casuali, uno per simulazione, per poter procedere parallelamente
@@ -67,7 +64,12 @@ public:
     ///Restituisce una copia della configurazione
     vector<config_t> copy();
     ///Restituisce un puntatore read-only alla configurazione (che puo' cambiare nel frattempo!)
-    const config_t *config_reference() { return config.data();}
+    const config_t *config_reference() {
+        if(!config.empty())
+            return config.data();
+        else
+            throw(std::runtime_error(std::string("Usata configurazione non inizializzata")));
+    }
     
     vector<int> border1;
     vector<int> border2;

@@ -1,3 +1,7 @@
+/** \file distance.cpp
+ * @brief Definizione dei metodi per la classe @ref distance e l'essenziale @ref calcola_matrice_distanze().
+ * Definisce anche @ref entropy_binary_partition()
+ */
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
@@ -49,9 +53,9 @@ distance::distance(const distance &d1) {
     allocate(N);
 }
 
-/* Esegue la riduzione e calcola le distanze tra due partizioni.
- * Tutti i calcoli sono fatti con variabili interne alla classe, e il runtime
- * in memoria e' costante - rendendo molto piu' veloci i calcoli.
+/** Calcola tutte le distanze tra le due partizioni. Per fare questo prima calcola
+ *  le partizioni ridotte, successivamente ne esegue la distanza. Infine calcola
+ *  la distanza tra le partizioni non ridotte.
  */
 void distance::dist(const general_partition& e1, const general_partition& e2) {
     if (opts.da_calcolare & RID) {
@@ -63,7 +67,7 @@ void distance::dist(const general_partition& e1, const general_partition& e2) {
             ridotto1.reduce(e1, e2);
             ridotto2.reduce(e2, e1);
         }
-
+        //stampa delle etichette in modo testuale, eventualmente da rimuovere
         if (opts.verbose > 2) {
             label_t quanto = std::min(e1.N, (label_t) 50);
             print_array(&partizione_comune.labels[0], quanto, "lbls comune");
@@ -76,7 +80,7 @@ void distance::dist(const general_partition& e1, const general_partition& e2) {
         calc_distance(ridotto1, ridotto2);
         dist_shan_r = dist_shan;
         dist_top_r = dist_top;
-        //printf("comune generale: %d, r1: %d/%d, r2: %d/%d, prod: %d\n",partizione_comune.n, ridotto1.n, e1.n, ridotto2.n,e2.n,(int)dist_fuzzy_t);
+        //stampa grafici delle partizioni ridotte e nonridotte, forse da rimuovere
         if (opts.graphics && (opts.topologia == RETICOLO_2D)) {
             static int imagecount = 0;
             char filename[255];
@@ -93,15 +97,25 @@ void distance::dist(const general_partition& e1, const general_partition& e2) {
         calc_distance(e1, e2);
 }
 
+/**@brief Stampa rappresentazione di una partizione binaria: |...|...||...|...
+ *
+ * @param p Array con la partizione
+ * @param N Lunghezza dell'array
+ */
 void print_binary_partition(int*p, int N) {
-    // |...|...||...|...
     for (int i = 0; i < N; i++)
         printf("%c", (p[i]) ? '|' : '.');
     printf("\n");
 }
 
-/* La funzione molto semplice per il calcolo dell'entropia di una partizione
- * lineare, in cui l'inizio di un nuovo atomo e' indicato da "1"
+/** @brief Calcolo dell'entropia di un vettore di 1 e 0, in cui 1 indica un nuovo atomo
+ *
+ * La funzione molto semplice per il calcolo dell'entropia di una partizione
+ * lineare rappresentata in modo binario, in cui l'inizio di un nuovo atomo e' indicato da "1", a differenza
+ * delle simili funzioni utilizzate altrove
+ * @param p Vettore con la partizione binaria
+ * @param N Lunghezza del vettore
+ * @return H Entropia di Shannon
  */
 template <typename T>
 inline double entropy_binary_partition(const std::vector<T> &p, int N) {
@@ -145,11 +159,17 @@ void distance::hamming_distance(const T* seq1, const T* seq2) {
 }
 template void distance::hamming_distance(const char*, const char*);
 
-
-
-//function giving the distance between 2 partitions, by intersecting 
-//and calculating the relevant entropy
-
+/**
+ * Calcola le 4 possibili distanze tra partizioni lineari - Shannon, Shannon ridotto,
+ * topologica, topologica ridotta.
+ *
+ * I metodi sono estremamente efficienti, corrispondenti a operazioni bitwise e
+ * calcolo di entropie (che corrispondono alla maggior parte del tempo utilizzato).
+ *
+ * @param first Prima partizione lineare
+ * @param second Seconda partizione lineare
+ * @return Le distanze sono scritte nelle variabili interne dell'oggetto @c distance
+ */
 void distance::dist(const linear_partition &first, const linear_partition &second) {
 
     int N = first.N;
@@ -169,6 +189,7 @@ void distance::dist(const linear_partition &first, const linear_partition &secon
 
 
     //DISTANZA TOPOLOGICA
+    //per "coperture" si intende il numero di atomi di una partizione
     int coperture1 = 0, coperture2 = 0, coperture12 = 0;
     for (int i = 0; i < N; i++) {
         coperture1 += first.binary[i];
@@ -198,7 +219,7 @@ void distance::dist(const linear_partition &first, const linear_partition &secon
     for (int i = 0; i < N; i++)
         product_reduced[i] = reduced1[i] | reduced2[i];
     //  alternatively, one could XOR the unreduced partitions
-    //  intersection_reduced[i] =first->binary[i] ^ second->binary[i];
+    //  product_reduced[i] =first.binary[i] ^ second.binary[i];
     product_reduced[0] = 1;
 
     double hr1 = entropy_binary_partition(reduced1, N),
@@ -221,6 +242,17 @@ void distance::dist(const linear_partition &first, const linear_partition &secon
     //coperture_common, coperture1r, coperture1, coperture2r, coperture2, coperture12r);
 }
 
+/**
+ * Calcola la distanza tra due partizioni, utilizzando solamente i labels. Il metodo
+ * utilizzato consiste nel calcolare i label della partizione prodotto ed analizzare
+ * la loro entropia con il metodo distruttivo del sort.
+ * L'algoritmo e' incredibilmente
+ * piu' veloce di qualunque metodo alternativo -- sort accede alla memoria di un vettore
+ * in maniera ottimale, in modo impossibile da battere usando mappe ordinate di coppie
+ * o simili trucchi.
+ * @param p1 Prima fattore
+ * @param p2 Secondo fattore
+ */
 void distance::calc_distance(const general_partition &p1, const general_partition &p2) {
     for (int i = 0; i < N; i++) {
         product_t temp1 = p1.labels[i];
@@ -241,7 +273,7 @@ void distance::calc_distance(const general_partition &p1, const general_partitio
     this->dist_shan = 2 * H - h1 - h2;
     this->dist_top = 2 * mylog[n] - t1 - t2;
 
-    /*if (opts.graphics && (opts.topologia == RETICOLO_2D)) {
+    if (opts.graphics && (opts.topologia == RETICOLO_2D)) {
         static int imagecount = 0;
         char filename[255];
         imagecount++;
@@ -250,9 +282,15 @@ void distance::calc_distance(const general_partition &p1, const general_partitio
         imagecount++;
         sprintf(filename, "prodotto%03d.ppm", imagecount);
         ppmout(&product[0], opts.lato, filename);
-    }*/
+    }
 }
 
+/**@brief
+ * Semplice funzione template per scrivere brevemente in molti file
+ * @param where Nome del file in cui scrivere
+ * @param what Vettore contenente i dati da scrivere
+ * @return
+ */
 int WRITE(const char *where, const std::vector<double> & what) {
     FILE *out = fopen(where, "wb");
     int expected = opts.n_seq * opts.n_seq;
@@ -266,6 +304,15 @@ int WRITE(const char *where, const std::vector<double> & what) {
     }
 }
 
+/** @brief Dato un vettore di partizioni, ne scrive la matrice completa delle distanze.
+ *
+ * Dato un vettore di partizioni, semplici o generali, la funzione alloca la memoria necessaria,
+ * gli oggetti @ref distance e calcola in modo multithreaded la matrice delle distanze tra le
+ * partizioni considerate. Un'altra utile caratteristica e' la stima del tempo richiesto in
+ * real-time. Alla fine scrive (se necessario) i valori calcolati.
+ *
+ * @param X Vettore di partizioni (di qualunque tipo)
+ */
 template <typename partition_t>
 void calcola_matrice_distanze(const partition_t* X) {
 

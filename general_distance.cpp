@@ -1,8 +1,15 @@
-/* 
- * Author: Dawid Crivelli
+/**@file general_distance.cpp
  *
- * Started on January 11, 2012, 2:30 PM
+ * @author Dawid Crivelli
  *
+ * @brief File main(), legge, inizializza, calcola le partizioni e i dati necessari
+ * @date 11/01/2012
+ *
+ * 
+ * Version: 7.0, 2012/08/04
+ * -Complete documentation with Doxygen
+ * -Nicer output from time_series() and full command line control
+ * 
  * Version: 6.3, 2012/07/29
  * -Memory efficience guaranteed
  * -Improvements in findroot and is_equal
@@ -72,15 +79,25 @@
 #include "adj_handler.h"
 #include "distance.h"
 
+/// Variabile globale con le impostazioni
 extern options opts;
+/** @brief Tabella lookup dei logaritmi
+ *
+ * L'utilizzo del lookup aumenta di 6x la velocità del programma!
+ * È definita globalmente e calcolata nel main().
+ */
 double *mylog = 0;
 
+/**
+ * @brief Stampa numero medio di atomi nelle partizioni generate
+ * @param X Array di partizioni lineari
+ */
 void print_partition_stats(general_partition *X) {
     label_t min = X[0].N * 20, max = 0;
     double mean = 0, std = 0;
     for (int i = 0; i < opts.n_seq; i++) {
         if (X[i].n < 10)
-            printf("Pochi atomi in %d\n", i);
+            printf("Few atoms in partition: %d\n", i);
         min = std::min(X[i].n, min);
         max = std::max(X[i].n, max);
         mean += X[i].n;
@@ -91,14 +108,19 @@ void print_partition_stats(general_partition *X) {
     std /= opts.n_seq;
     std = std - mean*mean;
 
-    fprintf(stderr, "Partizioni: nr. frammenti tra [%d,%d], ", min, max);
-    fprintf(stderr, "media %.2f con %.2f siti/atomo\n", mean, opts.seq_len / mean);
+    fprintf(stderr,"Partitions: n. atoms between [%d,%d], ",min,max);
+    fprintf(stderr,"avg %.2f with %.2f sites/atom\n",mean,opts.seq_len/mean);
 
 }
 
+/**
+ * @brief Funzione main per la manipolazioni di oggetti @ref general_partition. Legge le configurazioni, stampa le statistiche, crea le partizioni, calcola le distanze.
+ *
+ */
 int main(int argc, char** argv) {
-
+    ///Imposta il tipo di partizione
     opts.partition_type = GENERAL_PARTITION;
+    ///Interpreta le opzioni da linea di comando
     set_program_options(opts, argc, argv);
 
     //
@@ -106,13 +128,14 @@ int main(int argc, char** argv) {
     //
     general_partition *Z = new general_partition[opts.n_seq];
 
+    ///Carica l'opportuna struttura di adiacenza, selezionata da linea di comando
     adj_struct topologia;
     switch (opts.topologia) {
         case(RETICOLO_2D):
             topologia = adiacenza_square_lattice(opts.lato);
             break;
         case(SIERPINSKI):
-            topologia = adiacenza_sierpinski(opts.sierpinski_gen,opts.seq_len);
+            topologia = adiacenza_sierpinski(opts.sierpinski_gen);
             break;
         case(FUZZY):
             topologia = adiacenza_fuzzy_line(opts.seq_len);
@@ -122,10 +145,13 @@ int main(int argc, char** argv) {
             break;
         default:
         case(FROM_FILE):
-            topologia = adiacenza_from_file(opts.adj_vec_1, opts.adj_vec_2, opts.seq_len);
+            topologia = adiacenza_from_file(opts.adj_vec_1, opts.adj_vec_2);
             break;
     }
-    
+    ///Il volume della partizione è determinato dalla sua struttura di adiacenza
+    opts.seq_len = topologia.N;
+
+    ///Stima la quantità di memoria utilizzata, per poter valutare se è sufficiente
     unsigned long memory_estimate =
             +topologia.n_link * 2 * sizeof (int) +topologia.N * sizeof (int) //struct adiacenza
             +opts.seq_len * sizeof (int) //caricamento sequenza
@@ -152,6 +178,9 @@ int main(int argc, char** argv) {
     //
     // SIMULATION case
     //
+    /**In caso di configurazioni generate tramite simulazione, non calcola la matrice completa delle distanze,
+     * ma la time_series() tra configurazioni e partizioni successive nel tempo.
+     */
     if(opts.letto_da == SIMULATION){
         time_series(topologia);
         return(0);
@@ -164,15 +193,18 @@ int main(int argc, char** argv) {
     for (int i = 0; i < opts.n_seq; i++) {
 
         if (opts.letto_da == FROM_FILE) {
+            ///Se le configurazioni sono da leggere da file, ne carica una alla volta e ne calcola la partizione
             int result = load_config(opts, num_buffer);
             if (!result)
                 break;
         }
         if (opts.letto_da == RANDOM)
+            ///In caso di configurazioni random, ne crea una per volta
             generate_next_sequence(num_buffer);
             
         if (opts.verbose)
             fprintf(stderr, "Loaded sequence %d, analysing\n", i + 1);
+        ///Generazione della partizione
         Z[i].from_configuration(num_buffer, topologia);
     }
 

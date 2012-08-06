@@ -1,14 +1,14 @@
-/* 
- * File:   adj_handler.cpp
- * Author: fake
- * 
- * Created on May 27, 2012, 8:31 PM
+/**
+ * @file   adj_handler.cpp
+ * @brief Definisce funzioni utili come adiacenza_square_lattice() o adiacenza_sierpinski() per la creazione di strutture di adiacenza
  */
 
 #include "adj_handler.h"
 #include "strutture.h"
 #include "smart_data_types.h"
+#include <cstdio>
 using std::vector;
+
 extern options opts;
 
 #define nnu(i) (i - (i % lato)+ ((i+lato-1)%lato))
@@ -16,6 +16,11 @@ extern options opts;
 #define nnl(i) (i+N-lato)%N
 #define nnr(i) (i+N+lato)%N
 
+/**
+ * @brief Genera struttura di adiacenza per il reticolo quadrato con condizioni periodiche toroidali
+ * @param lato Lato del quadrato
+ * @return adj_struct La struttura di adiacenza
+ */
 adj_struct adiacenza_square_lattice(int lato){    
     int N=lato*lato;
 
@@ -46,6 +51,11 @@ adj_struct adiacenza_square_lattice(int lato){
     return(temp);
 }
 
+/**
+ * @brief Genera struttura di adiacenza per la sequenza semplice, con un solo primo vicino (indietro)
+ * @param N lunghezza della sequenza
+ * @return adj_struct La struttura di adiacenza
+ */
 adj_struct adiacenza_simple_line(int N){ 
     vector<int> adi;
     vector<int> adj(N+1);
@@ -67,6 +77,11 @@ adj_struct adiacenza_simple_line(int N){
     return(temp);
 }
 
+/**
+ * @brief Adiacenza per sequenza con salto @ref options.fuzzy, corrispondente alla retta con `opts.fuzzy+1` primi vicini all'indietro
+ * @param N lunghezza della sequenza
+ * @return adj_struct La struttura di adiacenza
+ */
 adj_struct adiacenza_fuzzy_line(int N){
     vector<int> adi;
     vector<int> adj((opts.fuzzy+1)*N);
@@ -113,11 +128,16 @@ char *colori=new char[total_size];
         printf("Popolazione di %d: %.2f%%\n",i+1,(popcol[i]*100.0)/total_size);
 */  
 
-adj_struct adiacenza_sierpinski(int GEN, int &total_size){
+/**
+ * @brief Struttura di adiacenza per il gasket (o triangolo) di Sierpinski di generazione data
+ * @param GEN Generazione
+ * @return adj_struct
+ */
+adj_struct adiacenza_sierpinski(int GEN){
     int a0, a1, a2;
     int size, old_size;
 
-    total_size = 6;
+    int total_size = 6;
     for (int g = 2; g <= GEN; g++)
         total_size = 3 * total_size - 3;
     fprintf(stderr, "Generazione %d, size %d, links %d\n", GEN, total_size, total_size * 4 - 6);
@@ -248,8 +268,13 @@ adj_struct adiacenza_sierpinski(int GEN, int &total_size){
     return(temp);
 }
 
-#include <iostream>
-adj_struct adiacenza_from_file(const char *name_vec1,const char *name_vec2, int & N){
+/**
+ * @brief Legge matrice di adiacenza sparsa da file su disco e genera la struttura @ref adj_struct corrispondente
+ * @param name_vec1 Nome del file con gli indici di riga
+ * @param name_vec2 Nome del file con gli indici di colonna
+ * @return
+ */
+adj_struct adiacenza_from_file(const char *name_vec1,const char *name_vec2){
     FILE *vec1=fopen(name_vec1,"rb");
     FILE *vec2=fopen(name_vec2,"rb");
     if(vec1==0 || vec2==0){
@@ -296,7 +321,7 @@ adj_struct adiacenza_from_file(const char *name_vec1,const char *name_vec2, int 
     }
     
     //try detecting number of sites
-    N=tmp_index[M-1]-offset+1;
+    int N=tmp_index[M-1]-offset+1;
     fprintf(stderr,"ADJ READ Info: Reading vectors for %d elements, %ld nonempty links\n",N,M);
     vector<int> index(N+1);
        

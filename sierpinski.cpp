@@ -1,11 +1,12 @@
-/*
-  Date: 06/03/06 11:33
-  Description: Generazione matrice di adiacenza per gasket di sierpinski a generazione g = GEN. 
-  Autore: Elena Agliari
- 
+/**
+  @file sierpinski.cpp
+  @date 06/03/06 11:33
+  @brief Generazione matrice di adiacenza per gasket di Sierpinski di generazione g = GEN.
+  @author Elena Agliari
+
   Versione 2, 31/05/2012, Dawid Crivelli
-  -update in place
-  -utilizzo memoria ottimale
+  - update in place
+  - utilizzo memoria ottimale
 */
 
 
@@ -17,6 +18,11 @@
 
 int GEN = 2;
 
+/**
+ @brief Crea matrice di adiacenza e la stampa in formato sparse in due vettori.
+ *
+ * La generazione è letta da linea di comando
+ */
 int main(int argc, char **argv) {
     int a0, a1, a2;
     int size, old_size, total_size;
@@ -93,12 +99,11 @@ int main(int argc, char **argv) {
 
     for (int g = 2; g <= GEN; g++) {
         size = 3 * old_size - 3;
-        /*Costruzione dell gasket della generazione g*/
+        /**Costruzione dell gasket della generazione g*/
         
-        //triangolo 1 - copia identica
-        //nulla da fare
+        ///triangolo 1 - copia identica, nulla da fare
         
-        //triangolo 2, dimensione: oldsize-2
+        ///triangolo 2, dimensione: oldsize-2
         //for (int n=oldsize; n<2*oldsize-2; n++)
         for (int n = 1; n < old_size - 1; n++) {
             z(n + old_size - 1) = z(n);
@@ -110,7 +115,7 @@ int main(int argc, char **argv) {
                 else nn(n + old_size - 1, m) = nn(n, m) + old_size - 1;
             }
         }
-        //triangolo 3, dimensione: oldsize-1
+        ///triangolo 3, dimensione: oldsize-1
         //for (int n=2*oldsize-2; n<3*oldsize-3; i++)
         for (int n = 1; n < old_size; n++) {
             z(n + 2 * old_size - 3) = z(n);
@@ -121,7 +126,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        /* Vengono creati i link mancanti del gasket della generazione g*/
+        /** Vengono creati i link mancanti del gasket della generazione g*/
 		
         z(a1) = 4;
         nn(a1, 2) = old_size;
@@ -134,7 +139,7 @@ int main(int argc, char **argv) {
         nn(a2, 3) = 2 * old_size - 1;
 		
 
-        /*Individuo i siti di bordo del gasket generazione g*/
+        /**Individuo i siti di bordo del gasket generazione g, aggiorno*/
         a1 = a1 + old_size - 1;
         a2 = a2 + 2 * old_size - 3;
         old_size = size;
@@ -142,15 +147,18 @@ int main(int argc, char **argv) {
 
     } //chiudo ciclo g
 
-    /* Creazione vettori di adiacenza per matrice sparse in stile Matlab */
-    /* La funzione per caricare i dati cosi creati e':
-    -------------------------------
+    /**
+     * @note Creazione vettori di adiacenza per matrice sparse in stile Matlab
+     *
+     * La funzione per caricare i dati cosi creati è:
+    @code
     function adiacenza=load_sierpinski()
 	indici_riga=fread(fopen('vector1.bin','r'),inf,'int32');
 	indici_colonna=fread(fopen('vector2.bin','r'),inf,'int32');
 	N=max(max(indici_riga),max(indici_colonna));
 	adiacenza=sparse(indici_riga,indici_colonna,1,N,N);
     end
+    @endcode
     ******************************/
 
     int write = 1;

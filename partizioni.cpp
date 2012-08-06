@@ -1,3 +1,7 @@
+/**
+ * @file partizioni.cpp
+ * @brief Definisce tutti i metodi della classe @ref general_partition e l'essenziale funzione ordered_vector_entropy()
+ */
 #include <cstdlib>
 #include <cstdio>
 
@@ -60,11 +64,11 @@ general_partition::general_partition(int len) {
 
 /**@brief Calcola l'entropia di un range ordinato di dimensione N
  * Gli atomi sono individuati da un'etichetta diversa della precedente, il metodo e' lo stesso usato in
- * @ref product e @ref entropy_binary_partition.
+ * @ref general_partition::product() e @ref entropy_binary_partition()
  *
  * @param temp[] Vettore ordinato con le etichette di cui si vuole conoscere l'entropia
  * @param N lunghezza del vettore
- * @return La coppia |<H(double), n_atomi(int)>| di entropia e n */
+ * @return La coppia <(double) H, (int) n_atomi> di entropia e n */
 template <typename T> entropy_pair ordered_vector_entropy(const T *temp, int N){
     int label_count = 0;
     double H = 0;
@@ -217,7 +221,7 @@ void general_partition::reduce(const general_partition &p1, const general_partit
 
         /** Nel caso epsilon > 0, scorro ogni atomo della partizione 2 che ha qualche sito coincidente
          *  con l'atomo della partizione 1. Infatti atomo1 puo' essere eliminato da un qualunque
-         *  atomo della partizione2, bisogna controllare in maniera esaustiva.*/
+         *  atomo della partizione2, bisogna controllare in maniera esaustiva usando is_similar()*/
         if (epsilon) {
             //salto se l'atomo è sufficientemente piccolo
             bool almost_equal = 2 * size < epsilon;
@@ -253,7 +257,7 @@ void general_partition::reduce(const general_partition &p1, const general_partit
                 continue;
         } else {
             label_t atomo2 = p2.labels[*ii1];
-            /// Nel caso epsilon==0, l'uguaglianza secca è piu' veloce da implementare.
+            /// Nel caso epsilon==0, l'uguaglianza secca è implementata velocemente in is_equal()
             if(is_equal(ii1,end,p2.begin(atomo2),end))
                 continue;
         }
@@ -280,10 +284,8 @@ void general_partition::reduce(const general_partition &p1, const general_partit
     /** In fine si tiene conto dell'atomo sconnesso di background, formato dai pezzi comuni (o simili)
      * delle partizioni.
      * La dimensione è semplice da calcolare e nel caso di molti scarti da' un contributo entropico
-     * significativo.
-     * 
-     * L'atomo rappresentante la parte scartata non è copiata dalla partizione1, ma va calcolato appositamente.
-     * Si cerca sito per sito gli appartenenti all'atomo di fondo e si assegna opportunamente @ref prev_site di volta in volta.
+     * significativo. Le informazioni su questo atomo non sono presenti nella partizione iniziale, ma vanno calcolate appositamente.
+     * Ad esempio si cerca sito per sito gli appartenenti all'atomo di fondo e si assegna opportunamente @c prev_site di volta in volta.
      */
 
     //se la parte comune ha dim > 0...
@@ -675,6 +677,11 @@ void general_partition::product(const general_partition & p1, const general_part
     n = label_count;
 }
 
+/**
+ * @brief Genera un vettore @c next_site a partire da un vettore @c prev_site
+ * @param prev_site Vettore rappresentativo e membro della classe @ref general_partition
+ * @return Vettore @c next_site, che fornisce il sito successivo all'indice del vettore
+ */
 vector<label_t> get_forward_list(const vector<label_t> & prev_site){
     vector<label_t> next_site(prev_site.size());
 

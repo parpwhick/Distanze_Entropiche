@@ -1,3 +1,6 @@
+/** @file ising_simulation.cpp
+ * @brief Tutto il necessario per calcolare time_series() di grandezze calcolate da partizioni, implementa la classe ising_simulation::
+ */
 #include <vector>
 #include <cmath>
 #include "adj_handler.h"
@@ -21,6 +24,23 @@ options opts;
 using std::vector;
 double *myexp=0;
 #ifndef _GLIBCXX_DEBUG
+/**
+ * @brief Aiuto, via templates, per l'utilizzo dei prefetch in C++
+ *
+ * Per accessi in memoria random, la perfomance cala moltissimo. E' utile quindi, se si conosce
+ * l'indirizzo dell'elemento che si vuole leggere nel ciclo successivo, pre-caricare la memoria
+ * corrispondente. Il compilatore GCC fornisce una istruzione nonstandard per fare cio: @b __builtin_prefetch().
+ *
+ * Per permettere l'utilizzo trasparente con vari oggetti, vettori e altre strutture C++ bisogna prendere il
+ * giusto indirizzo in memoria - usando la forma \&element. L'utilizzo dei template permette di definire
+ * la funzione @b prefetch in modo trasparente e *sicuro*, cosa che usando un #define non sarebbe possibile.
+ *
+ * Come usare? Per precaricare un std::vector alla posizione 27, usare `prefetch(vettore[27]);`
+ *
+ * La funzione è disabilitata in modo trasparente in modalita' debugging.
+ * 
+ * @param element Elemento da precaricare in memoria
+ */
 template <typename T> inline void prefetch(T& element) {
     __builtin_prefetch(&element,0,0);
 }
@@ -29,9 +49,21 @@ template <typename T> inline void prefetch(T& element) {
 #endif
 
 std::vector<ising_simulation::config_t> ising_simulation::copy() {
-    return config;
+    if (!config.empty())
+        return config;
+    else
+        throw(std::runtime_error(std::string("Usata configurazione non inizializzata")));
 }
 
+/**
+ * @brief Riempie i vettori forniti con gli indici dei siti che fanno parte dei bordi, per poter
+ * eseguire un update separato
+ * @param N Numero di elementi nel triangolo di Sierpinski - serve per indovinare la generazione
+ * @param bordo_sinistro Vettore di indici del bordo destro
+ * @param bordo_destro Indici del bordo destro
+ * @param bordo_sotto Indici del bordo inferiore
+ * @return Dimensione dei bordi
+ */
 int generate_sierpinski_borders(int N, vector<int> &bordo_sinistro, vector<int> &bordo_destro, vector<int> &bordo_sotto){
     int gen=1;
     int size=6;
@@ -72,6 +104,12 @@ int generate_sierpinski_borders(int N, vector<int> &bordo_sinistro, vector<int> 
     return bordersize;
 }
 
+/**
+ * @brief Genera gli indici degli elementi facenti parte del bordo di un reticolo quadrato periodico
+ * @param lato Lato del reticolo quadrato in questione
+ * @param bsx Vettore che conterra gli indici del bordo sinistro
+ * @return Numero di elementi appartenenti al bordo
+ */
 int generate_square_border(int lato, vector<int> &bsx){
     bsx.resize(lato);
     
@@ -80,7 +118,13 @@ int generate_square_border(int lato, vector<int> &bsx){
     
     return(lato);
 }
-
+/**
+ * Conta il numero di passi da eseguire nell'intervallo di tempo considerato, tenendo presente il tempo da scartare per raggiungere
+ * la termalizzazione (sono scartati una sola volta infatti).
+ *
+ * Successivamente determina il tipo di update necessario. Nel caso di update microcanonico e di bordi nonvuoti, esegue un update
+ * di Metropolis alla fine di ogni iterazione su ogni bordo.
+ */
 void ising_simulation::step(int steps){
     if(skip){
         steps+=skip;
@@ -103,7 +147,12 @@ void ising_simulation::step(int steps){
                 metropolis_subset(border3);
         }
 }
-
+/**
+ * L'energia cinetica è correttamente calcolata e normalizzata, essendo una quantita' definita sui link.
+ * In particolare è la media del vettore (di interi) @c link_energies.
+ *
+ * @return Energia cinetica media per link
+ */
 double ising_simulation::energia_cinetica(){
     int totale = 0;
     for (int i = 0; i < NN.n_link; i++)
@@ -120,7 +169,13 @@ double ising_simulation::magnetizzazione(){
     return (std::abs(media));
 }
 
-
+/**
+ * Il calcolo dell'energia magnetica è la somma dei prodotti degli spin dei vicini, diviso 2 per tenere conto del
+ * overcounting delle coppie. Per ogni link, è semplice ottenere i due vertici su cui insiste, tramite i vettori
+ * @c adi e @c adj.
+ *
+ * @return L'energia magnetica media per link
+ */
 double ising_simulation::energia_magnetica() {
     int dH=0;
     // somma su i
@@ -149,7 +204,7 @@ void ising_simulation::metropolis_step() {
     /* Dinamica di Metropolis, 1 passo temporale */
     for (int j = 0; j < NN.N; j++) {
         // il generatore di numeri casuali influisce per un 5% sulla performance
-        // totale, in realta' e' l'accesso disordinato alla memoria che 
+        // totale, in realta' è l'accesso disordinato alla memoria che
         // uccide in confronto con s=j!
         s=s1;
         s1 = random.get_int() % NN.N;
@@ -166,7 +221,11 @@ void ising_simulation::metropolis_step() {
             config[s] = -config[s];
     }
 }
-
+/**
+ * L'update di tipo Metropolis coinvolge solo i siti indicati nel vettore @a subset. Supposti i bordi
+ * monodimensionali, l'update viene fatto sui siti pari e sui siti dispari, per migliorare la performance.
+ * @param subset
+ */
 void ising_simulation::metropolis_subset(vector<int> subset) {
     int s, z, somma_vicini, dH;
       
@@ -237,7 +296,7 @@ void ising_simulation::microcanonical_step() {
     /* Dinamica Microcanonica, 1 passo temporale */
     for (int j = 0; j < NN.N;) {
         // il generatore di numeri casuali influisce per un 5% sulla performance
-        // totale, in realta' e' l'accesso disordinato alla memoria che uccide 
+        // totale, in realta' è l'accesso disordinato alla memoria che uccide
         
         int accept1 = (randnum & (1 << 29)) != 0;
         int accept2 = (randnum & (1 << 30)) != 0;
@@ -248,12 +307,12 @@ void ising_simulation::microcanonical_step() {
         s2 = NN.adj[link];
         
         /*
-         L'accesso in memoria e' stato attentamente ottimizzato,
+         L'accesso in memoria è stato attentamente ottimizzato,
          precaricando i dati necessari all'iterazione corrente, poi generando 
          il link per l'iterazione successiva e caricando quello che dipende
          solo dal link prescelto.
          
-         La differenza e' un 50% di tempo in piu' se si rimuovono i prefetch!
+         La differenza è un 50% di tempo in piu' se si rimuovono i prefetch!
          */
         prefetch(NN.index[s1]);
         prefetch(NN.index[s2]);
@@ -269,7 +328,7 @@ void ising_simulation::microcanonical_step() {
         
         if (!(accept1 || accept2))
             continue;
-	//se la mossa e' stata accettata, allora contala
+	//se la mossa è stata accettata, allora contala
 	j++;
 
         //energia dai vicini di s1, se cambia                
@@ -302,7 +361,7 @@ void ising_simulation::microcanonical_step() {
             if (accept1) config[s1] = -config[s1];
             if (accept2) config[s2] = -config[s2];
         } else if (dH < 0 || linkenergy >= dH) {
-            //dH < 0: l'energia del link e' incrementata
+            //dH < 0: l'energia del link è incrementata
             //dH > 0: il link cede energia ai siti
             linkenergy -= dH;
 
@@ -347,9 +406,8 @@ void ising_simulation::init_config() {
 
 ising_simulation::ising_simulation(const adj_struct & NN1, simulation_t TT,
         int time_length,int initial_time_skip) : NN(NN1) {
-    max_link_energy = 8;
-    beta = 0.45;
-    running = false;
+    max_link_energy = opts.max_link_energy;
+    beta = opts.beta;
     steps_per_time=time_length;
     skip=initial_time_skip;
     
@@ -372,6 +430,12 @@ void ising_simulation::test_run(int T){
     measure();
 }
 
+/**
+ * @brief Scrive (appende) l'array nel file specificato
+ * @param array Array da scrivere
+ * @param N Numero di elementi
+ * @param filename Nome del file
+ */
 template <typename data_t> void write_binary_array(const data_t *array, int N, const char *filename){
     FILE *out;
 
@@ -388,6 +452,20 @@ template <typename data_t> void write_binary_array(const data_t *array, int N, c
 }
 
 #ifndef SOLO_SIMULAZIONE
+/**
+ * @brief Genera una time-series di configurazioni sulla struttura data, calcola le partizioni, le distanze e altre statistiche.
+ *
+ * Per il calcolo delle statistiche tutte le variabili usate sono del tipo auto_stats::. \n
+ * Viene inizializzato un oggetto ising_simulation::, impostate le caratteristiche come la temperatura, generati i bordi ove opportuno.
+ * Successivamente si procede ad evolvere la configurazione nel tempo.\n
+ * Dalle nuove configurazioni viene generata la partizione Z2,
+ * mentre la partizione Z1 corrisponde all'istante precedente (a fine iterazione vengono riassegnate).\n
+ * Sono calcolate le distanze tra Z1 e Z2 ed altri parametri su Z2,
+ * per poi stampare i risultati nei file @c "medie.txt" e @c "varianze.txt".
+ *
+ * @param adj Struttura di adiacenza
+ * @param opts Legge le variabili globali
+ */
 void time_series(const adj_struct &adj){
     general_partition Z1, Z2;
     distance dist(adj.N);
@@ -409,12 +487,17 @@ void time_series(const adj_struct &adj){
        
     Z1.from_configuration(sim.config_reference(),adj);
         
-    /** Piccola nota sulla distribuzione delle energie:
-     * se f(En) = exp(-beta * En) a meno di costante
-     * allora <En> = 1 / (exp(beta) - 1) ====> beta = log[(1 + 1 / <En>]
-     * delta(beta) = -1/[(<En>+1)*<En>)]  * sigma(En)/sqrt(N)
+    /**@note
+     * Se le energie \f$E_n\f$ sono discrete e distribuite Boltzmann-like \f[f(E_n) = \beta^{-1} \exp(-\beta  E_n)\f]
+     * si ha che l'energia media è \f[ \langle E_n \rangle = \frac{1}{\exp(\beta) - 1}\f]
+     * allora la stima della temperatura è diversa dal caso di energie continue: \f[\beta = \log\left(1 + \frac{1}{\langle E_n \rangle}\right)\f]
+     * l'errore sulla stima è: \f[\Delta\beta = -\frac{1}{(\langle E_n \rangle+1)\langle E_n \rangle}\;\cdot\; \frac{\sigma(E_n)}{\sqrt{N}} \f]
      */
-    printf("%%t,\tatomi,\tH,\te_kin,\te_mag,\tdist,\tdist_r,\tM,\tbeta_est\n");
+    std::ofstream out0("output.txt", std::ios::app);
+    out0 << std::fixed << std::setprecision(4)
+            << "%options: " << opts.command_line << endl
+            << "%t,\tbeta,\tatomi,\tH,\te_kin,\te_mag,\tdist,\tdist_r,\tdist_t,\tdist_tr\tM" << endl;
+    //printf("%%t,\tatomi,\tH,\te_kin,\te_mag,\tdist,\tdist_r,\tM,\tbeta_est\n");
     
     for (int i = 1; i < opts.n_seq + 1; i++) {
         //calcolo quantita' da stampare
@@ -428,8 +511,20 @@ void time_series(const adj_struct &adj){
         d_top_r = dist.dist_top_r;
         n_atomi = Z1.n;
         H = Z1.entropia_shannon;
+     
         //stampa
-        printf("%d\t", i);
+	out0 << i << " \t"
+	    << beta_est << " \t"
+            << n_atomi << "\t"
+            << H << " \t"
+            << E_kin << " \t"
+            << E_mag << "\t"
+            << d_shan << " \t"
+            << d_shan_r << " \t"
+            << d_top << " \t"
+            << d_top_r << " \t"
+            << mag << endl;
+        /*printf("%d\t", i);
         printf("%d\t", (int) n_atomi);
         printf("%.4f\t",(double) H);
         printf("%.4f\t",(double) E_kin);
@@ -439,7 +534,7 @@ void time_series(const adj_struct &adj){
         printf("%.4f\t",(double) mag);
         printf("%.4f\t",(double) beta_est);
         printf("\n");
-
+	*/
         //simulation step
         sim.step();
         //aggiornamento partizione

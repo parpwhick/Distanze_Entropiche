@@ -1,8 +1,9 @@
-/* 
- * File:   strutture.h
- * Author: fake
+/**
+ * @file   strutture.h
+ * @author Dawid Crivelli
+ * @date January 13, 2012, 10:51 PM
  *
- * Created on January 13, 2012, 10:51 PM
+ * @brief Definisce le opzioni globali (@ref options) e gli enum che caratterizzano le opzioni
  */
 
 #ifndef STRUTTURE_H
@@ -12,39 +13,64 @@
 #include <string>
 #include <stdint.h>
 
+///Le etichette delle partizioni sono interi a 32bit con segno (per avere anche etichetta -1). Questo limita a 2^32 il volume delle partizioni.
 typedef int32_t label_t;
+///Il prodotto è una coppia di labels, quindi è rappresentabile come un intero senza segno a 64bit. Nel caso di labels a 64bit, bisogna usare coppie std::pair<label_t,label_t>
 typedef uint64_t product_t;
 
+///Tipo di update per la simulazione
 enum simulation_t {
+    ///Metropolis
     METROPOLIS,
+    ///Microcanonico eventualmente con bordi termostatati
     MICROCANONICAL
 };
 
+///Definisce i tipi di partizione usati, il che comporta una diversa scelta di algoritmi
 enum part_type {
+    ///partizioni generali
     GENERAL_PARTITION,
+    ///partizioni lineari rappresentate in modo binario
     LINEAR_PARTITION
 };
 
+///Definisce i tipi di distanze da calcolare, usato in options::da_calcolare
 enum DISTANZE {
+    ///Shannon
     SHAN = 1,
+    ///topologica
     TOP = 1 << 1,
+    ///Shannon ridotta
     RID = 1 << 2,
+    ///topologica ridotta
     RID_TOP = 1 << 3,
+    ///Hamming
     HAMM = 1 << 20
 };
 
+///Tipi di sorgente per le configurazioni e i tipi di topologie supportate
 enum source {
+    ///sequenze lineari senza salto
     LINEARE,
+    ///reticolo quadrato con C.C periodiche toroidali
     RETICOLO_2D,
+    ///triangolo di Sierpinski di generazione options::sierpinski_gen
     SIERPINSKI,
+    ///sequenze lineari con salto (ovvero molti primi vicini)
     FUZZY,
+    ///configurazioni generate a random
     RANDOM,
+    ///configurazioni o adiacenza letta da file
     FROM_FILE,
+    ///configurazioni generate via evoluzione temporale
     SIMULATION,
 };
 
+///Tipo di riduzione da usare
 enum red_strategy{
+    ///tramite partizione comune
     COMUNE,
+    ///eliminando atomi simili tra le due partizioni
     DIRETTA
 };
 
@@ -113,10 +139,6 @@ public:
 
 } options;
 
-class general_partition;
-class linear_partition;
-
-
 //start and load functions
 void set_program_options(options &opt, int argc, char**argv);
 void fill_entries_randomly(std::string *entries);
@@ -125,6 +147,7 @@ void generate_next_sequence(int *num_entry);
 int load_config(options &opts, int *num_entry);
 
 //more general 
+///Coppia <entropia_shannon, numero_atomi>
 typedef std::pair<double,int> entropy_pair;
 template <typename T>  entropy_pair ordered_vector_entropy(const T *temp, int N);
 template <typename partition_t> void calcola_matrice_distanze(const partition_t *X);

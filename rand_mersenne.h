@@ -1,3 +1,9 @@
+/**
+ * @file rand_mersenne.h
+ * @author Shawn Cokus (Cokus@math.washington.edu)
+ * @date March 8, 1998
+ * @brief Classe per generare numeri tramite Mersenne Prime Twister, @ref RandMT
+ */
 #ifndef _RANDMT_H_
 #define _RANDMT_H_
 
