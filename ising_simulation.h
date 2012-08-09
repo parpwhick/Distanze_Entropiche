@@ -21,7 +21,7 @@ public:
 private:
     ///update micranonico(con bordi?) o metropolis
     simulation_t update_rule;
-    ///informazioni read-only sulla topologia
+    ///link alle informazioni read-only sulla topologia
     const adj_struct & NN;
     ///volume della struttura (in siti)
     int N;

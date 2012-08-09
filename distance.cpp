@@ -30,12 +30,10 @@ void distance::allocate(int n) {
         reduced2.resize(n);
         product_reduced.resize(n);
         binary_product.resize(n);
-    } else
-        /*BUG FIXME !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-         * product.resize funziona completamente diverso da product.reserve,
-         * perche??????????????????????
-         */
-        product.reserve(n);
+    } else {
+        product.resize(n);
+        //label_pair.resize(n);
+    }
 }
 
 distance::distance(int n) {
@@ -60,7 +58,7 @@ distance::distance(const distance &d1) {
 void distance::dist(const general_partition& e1, const general_partition& e2) {
     if (opts.da_calcolare & RID) {
         if (opts.riduzione == COMUNE) {
-            partizione_comune.linear_intersection(e1, e2);
+            partizione_comune.common_subfactor(e1, e2);
             ridotto1.reduce(e1, partizione_comune);
             ridotto2.reduce(e2, partizione_comune);
         } else if (opts.riduzione == DIRETTA) {
@@ -257,12 +255,15 @@ void distance::calc_distance(const general_partition &p1, const general_partitio
     for (int i = 0; i < N; i++) {
         product_t temp1 = p1.labels[i];
         product_t temp2 = p2.labels[i];
-
+    
         product[i] = (temp1 << 32) | temp2;
+        //label_pair[i]=(std::make_pair(p2.labels[i],p1.labels[i]));
     }
     
     std::sort(product.begin(), product.end());
     std::pair<double,int> entropie = ordered_vector_entropy(product.data(),N);
+    //std::sort(label_pair.begin(),label_pair.end());
+    //entropy_pair entropie = ordered_vector_entropy(label_pair.data(),N);
     int n = entropie.second;
     double H = entropie.first;
 

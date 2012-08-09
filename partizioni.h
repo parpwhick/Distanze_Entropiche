@@ -71,6 +71,10 @@ public:
     label_t start;
     ///Ultimo sito. Il vettore @c prev_site collega @e end a @e start attraverso tutto l'atomo.
     label_t end;
+
+    bool operator==(const atom & other) const {
+        return (size == other.size && start == other.start && end == other.end);
+    }
 };
 
 /**@brief Partizione di tipo completamente generale.
@@ -89,12 +93,16 @@ private:
     void entropy_calculation();
     ///Dopo la percolazione, corregge i @ref labels e riempie le strutture necessarie.
     void relabel();
+    ///Genera next_site a partire da prev_site
+    void generate_forward_linking();
 
 
     ///Etichetta (ovvero l'indice dell'atomo partendo da zero), corrispondente al sito i-esimo: labels[i]
     vector<label_t> labels;
     ///Sito precedente (o uguale) facente parte dello stesso atomo del sito i-esimo: prev_site[i]
     vector<label_t> prev_site;
+    ///Sito precedente (o uguale) facente parte dello stesso atomo del sito i-esimo: prev_site[i]
+    vector<label_t> next_site;
     ///Vettore di atomi, numerati in [0,n). Contiene le informazioni essenziali per manipolare tutti gli atomi della partizione. L'allocazione è ottimizzata, il vettore è lungo @e n.
     vector<atom> atomi;
 

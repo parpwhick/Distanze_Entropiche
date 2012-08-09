@@ -31,6 +31,8 @@ private:
     //partizioni generiche:
     ///Vettore dei label del prodotto, per il calcolo delle entropie
     std::vector<product_t> product;
+    ///Vettore coppie di label del prodotto, per il calcolo delle entropie
+    std::vector<std::pair<label_t,label_t> > label_pair;
     ///Partizione buffer per la riduzione di 1 con 2
     general_partition ridotto1;
     ///Partizione buffer per la riduzione di 2 con 1

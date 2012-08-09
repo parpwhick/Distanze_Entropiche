@@ -109,6 +109,7 @@ template <typename T> entropy_pair ordered_vector_entropy(const T *temp, int N){
 template entropy_pair ordered_vector_entropy(const label_t *temp, int N);
 template entropy_pair ordered_vector_entropy(const product_t *temp, int N);
 template entropy_pair ordered_vector_entropy(const char *temp, int N);
+template entropy_pair ordered_vector_entropy(const std::pair<label_t,label_t> *temp, int N);
 
 /**
  * Crea un array temporaneo in cui copia i labels per usare il sort, che distruggerebbe l'ordine iniziale, modificando la partizione.
@@ -300,6 +301,7 @@ void general_partition::reduce(const general_partition &p1, const general_partit
         labels[dove] = n;
         atomi[n].start = dove;
         label_t prev = dove;
+        prev_site[dove] = dove;
 
         //cercare il resto dei siti, e collegarli ai precenti
         for(dove++; dove < N; dove++){
@@ -449,6 +451,8 @@ void general_partition::relabel() {
         labels[i] = atom_label;
         prev_site[i] = std::min(atomi[atom_label].end, i);
         atomi[atom_label].end = i;
+        label_t & atom_start = atomi[atom_label].start;
+        atom_start = std::min(atom_start, i);
     }
 }
 
@@ -460,7 +464,7 @@ void general_partition::relabel() {
  *  
  * @return La partizione risultante è l'intersezione (op. simmetrica) di p1 con p2.
  */
-void general_partition::linear_intersection(const general_partition &p1, const general_partition &p2) {
+void general_partition::common_subfactor(const general_partition &p1, const general_partition &p2) {
     label_t s1, s2;
     allocate(p1.N);
 
@@ -474,33 +478,33 @@ void general_partition::linear_intersection(const general_partition &p1, const g
 
         //usa come primo vicino il sito dalla partizione 1
         s2 = p1.prev_site[s1];
-        if (s1 == s2 || s2 < 0)
-            continue;
-        r2 = findroot(s2, &labels[0]);
-        if (r1 != r2) {
-            if (labels[r1] >= labels[r2]) {
-                labels[r2] += labels[r1];
-                labels[r1] = r2;
-                r1 = r2;
-            } else {
-                labels[r1] += labels[r2];
-                labels[r2] = r1;
+        if (s1 != s2 && s2 >= 0) {
+            r2 = findroot(s2, &labels[0]);
+            if (r1 != r2) {
+                if (labels[r1] >= labels[r2]) {
+                    labels[r2] += labels[r1];
+                    labels[r1] = r2;
+                    r1 = r2;
+                } else {
+                    labels[r1] += labels[r2];
+                    labels[r2] = r1;
+                }
             }
         }
 
         //usa come secondo vicino il sito dalla partizione 2
         s2 = p2.prev_site[s1];
-        if (s1 == s2 || s2 < 0)
-            continue;
-        r2 = findroot(s2, &labels[0]);
-        if (r1 != r2) {
-            if (labels[r1] >= labels[r2]) {
-                labels[r2] += labels[r1];
-                labels[r1] = r2;
-                r1 = r2;
-            } else {
-                labels[r1] += labels[r2];
-                labels[r2] = r1;
+        if (s1 != s2 && s2 >= 0) {
+            r2 = findroot(s2, &labels[0]);
+            if (r1 != r2) {
+                if (labels[r1] >= labels[r2]) {
+                    labels[r2] += labels[r1];
+                    labels[r1] = r2;
+                    r1 = r2;
+                } else {
+                    labels[r1] += labels[r2];
+                    labels[r2] = r1;
+                }
             }
         }
     }
@@ -586,9 +590,6 @@ void general_partition::print_cluster_adjacency() {
     printf("Elementi nonnulli della matrice di adiacenza: %d\n", totale);
 }
 
-#define ATOM atomi[label_count-1]
-#define LAST_POS product[i-1].second
-#define THIS_POS product[i].second
 /** Calcolo della partizione prodotto (simmetrico).
  * Il risultato è un oggetto partizione completo, con tutte le proprieta' definite.
  * Per il calcolo di una distanza è eccessivo - meglio usare la classe distance,
@@ -599,82 +600,86 @@ void general_partition::print_cluster_adjacency() {
  * @return L'oggetto partizione prodotto
  */
 void general_partition::product(const general_partition & p1, const general_partition & p2) {
-    label_t label_count = 0;
-    double H = 0;
     label_t mu;
     label_t begin;
     allocate(p1.N);
+    atomi.resize(N);
 
     /** I label del prodotto sono rappresentati dalle coppie (pair<label_t, label_t>)
-     * di label dei fattori. Il vettore product contiene la coppia <label_prodotto, indice>.\n
-     * Per riconoscere gli atomi, ordino il vettore product rispetto al label del prodotto:
-     *  il risultato sara' un vettore ordinato, per cui riconosciamo gli atomi come elementi
+     * di label dei fattori. Il vettore @c label_index contiene la coppia <label_prodotto, indice>.\n
+     * Per riconoscere gli atomi, ordino il vettore label_index:
+     *  il risultato sarà un vettore ordinato, per cui riconosciamo gli atomi come elementi
      *  contigui con lo stesso label. Il label è temporaneo, gli atomi avranno indice
      *  progressivo.
      */
 
-    /** Il vettore @e product contiene i seguenti membri:
-     *  - product[i].first - indice (temp) del prodotto.
-     *  - product[i].second - indica la posizione del sito nella partizione,
+    /** Il vettore @e label_index contiene i seguenti membri:
+     *  - label_index[i].first - indice (temp) del prodotto.
+     *  - label_index[i].second - indica la posizione del sito nella partizione,
      *     è utilizzato per indicizzare i cambiamenti e gli accessi ai vettori labels[], ecc.
      */
-    vector<pair<pair<label_t, label_t>, label_t> > product(N);
-
+    vector<pair<pair<label_t, label_t>, label_t> > label_index(N);
+    label_index.resize(N);
     for (label_t i = 0; i < N; i++)
-        product[i] = make_pair(make_pair(p1.labels[i], p2.labels[i]), i);
+        label_index[i] = make_pair(make_pair(p1.labels[i], p2.labels[i]), i);
 
-    sort(product.begin(), product.end());
+    sort(label_index.begin(), label_index.end());
 
     /* Dopo il sort, riconosciamo gli atomi. Il primo sito sicuramente inizia un nuovo
      * atomo, per i successivi riconosciamo un atomo non appena il label cambia
      */
     begin = 0;
-    label_count = 1;
-    pair<label_t, label_t> old_val = product[0].first;
+    n = 0;
+    pair<label_t, label_t> old_val = label_index[0].first;
 
     //we skip over the first value, so initialize here
-    labels[product[0].second] = label_count;
-    prev_site[product[0].second] = product[0].second;
+    labels[label_index[0].second] = n;
+    prev_site[label_index[0].second] = label_index[0].second;
 
     for (label_t i = 1; i < N; i++) {
+        label_t & LAST_POS = label_index[i - 1].second;
+        label_t & THIS_POS = label_index[i].second;
         //whenever we find a new atom
-        if (product[i].first != old_val) {
+        if (label_index[i].first != old_val) {
             //a new atom starts
 
             //the closed (old)atom's length is calculated
             mu = i - begin;
-            ATOM.start = product[begin].second;
-            ATOM.size = mu;
-            ATOM.end = LAST_POS;
+            atomi[n].start = label_index[begin].second;
+            atomi[n].size = mu;
+            atomi[n].end = LAST_POS;
             //the new one is ready to go
             //prev_site del sito corrente è il sito stesso
             prev_site[THIS_POS] = THIS_POS;
-            label_count++;
+            n++;
             begin = i;
             //cache the new label to check
-            old_val = product[i].first;
+            old_val = label_index[i].first;
 
             //we add the entropy, with the trick mu>0 and when mu=1 the log is 0
             if (mu > 1)
-                H += (double) mu * mylog[mu];
-        } else
+                entropia_shannon += (double) mu * mylog[mu];
+        } else {
             //prev site del sito corrente è il precedente trovato nello stesso atomo
             prev_site[THIS_POS] = LAST_POS;
-
-        labels[THIS_POS] = label_count;
+            //il sito attuale è sicuramente l'ultima posizione trovata per l'atomo corrente
+            atomi[n].end = THIS_POS;
+        }
+        //relabel anyway con l'indice di atomo corrente
+        labels[THIS_POS] = n;
     }
     //the last one, so it's not left hanging
     mu = N - begin;
-    ATOM.start = product[begin].second;
-    ATOM.size = mu;
-    ATOM.end = product[N - 1].second;
-    H += mu * mylog[mu];
+    atomi[n].start = label_index[begin].second;
+    atomi[n].size = mu;
+    atomi[n].end = label_index[N - 1].second;
+    entropia_shannon += mu * mylog[mu];
+    //il numero di atomi trovati è l'indice corrente +1
+    n++;
 
     //normalize the entropy
-    H = -H / N + mylog[N];
-
-    entropia_topologica = mylog[label_count];
-    n = label_count;
+    entropia_shannon = -entropia_shannon / N + mylog[N];
+    entropia_topologica = mylog[n];
 }
 
 /**
@@ -682,15 +687,12 @@ void general_partition::product(const general_partition & p1, const general_part
  * @param prev_site Vettore rappresentativo e membro della classe @ref general_partition
  * @return Vettore @c next_site, che fornisce il sito successivo all'indice del vettore
  */
-vector<label_t> get_forward_list(const vector<label_t> & prev_site){
-    vector<label_t> next_site(prev_site.size());
-
-    for(std::size_t i=0; i < prev_site.size(); i++)
-        next_site[i]=i;
+void general_partition::generate_forward_linking(){    
+    next_site.resize(prev_site.size());
 
     for(label_t i=0; i < (label_t)prev_site.size(); i++){
+        next_site[i]=i;
         if(prev_site[i] != i)
             next_site[prev_site[i]]=i;
     }
-    return next_site;
 }
