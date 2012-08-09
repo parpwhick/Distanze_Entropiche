@@ -174,7 +174,12 @@ int main(int argc, char** argv) {
     for (int i = 1; i < lunghezza; i++)
         mylog[i] = log(i);
     mylog[0] = 0;
-    
+
+    //
+    // DEMO
+    //
+    demo();
+    return 0;    
     //
     // SIMULATION case
     //
@@ -226,4 +231,52 @@ int main(int argc, char** argv) {
     delete []mylog;
     delete []num_buffer;
     return 0;
+}
+
+#include <iostream>
+#include <iomanip>
+using namespace std;
+void demo() {
+    general_partition A;
+    general_partition B;
+    general_partition comune, prodotto;
+
+    adj_struct sierp_topology = adiacenza_sierpinski(14);
+    opts.seq_len = sierp_topology.N;
+    vector<int> num_buffer(opts.seq_len);
+
+    while(1){
+    generate_next_sequence(num_buffer.data());
+    A.from_configuration(num_buffer.data(),sierp_topology);
+    generate_next_sequence(num_buffer.data());
+    B.from_configuration(num_buffer.data(),sierp_topology);
+
+    prodotto.product(A,B);
+    comune.common_subfactor(B,A);
+    if(comune.n > 1)
+        break;
+    printf("Discarded,looking for next\n");
+    }
+
+    cout.setf(ios::boolalpha);
+    cout << endl
+    << "Demo, using Sierpinski gasket generation 15" << endl
+    << "A,B - partitions" << endl
+    << "A^B - common subfactor" << endl
+    << "AvB - product" << endl
+    << endl
+    << "A   == B  : " << (A == B) << "\n"
+    << "A   <= B  : " << (A <= B) << "\n"
+    << "A^B <= A  : " << (comune <= A) << "\n"
+    << "A^B >= B  : " << (B <= comune) << "\n"
+    << "A   <= AvB: " << (A <= prodotto) << "\n"
+    << "B   => AvB: " << (prodotto <= B) << "\n"
+    << endl;
+
+    general_partition temp1;
+    temp1.common_subfactor(prodotto,B);
+    cout << "(AvB)^B == B: " << (temp1 == B) << "\n";
+    temp1.product(comune,A);
+    cout << "(A^B)vA == A: " << (temp1 == A) << "\n";
+
 }

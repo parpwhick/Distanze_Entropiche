@@ -696,3 +696,105 @@ void general_partition::generate_forward_linking(){
             next_site[prev_site[i]]=i;
     }
 }
+
+bool general_partition::operator<=(const general_partition & p2) const {
+    for (label_t atom_label2 = 0; atom_label2 < p2.n; atom_label2++) {
+       Iter_t ii = p2.begin(atom_label2);
+       const label_t atom_label1 = labels[*ii];
+       for (; ii != end(); ii++)
+           if(atom_label1 != labels[*ii])
+               return false;
+    }
+    return true;
+}
+
+bool general_partition::operator==(const general_partition & p2) const {
+    //metodo1 - distanza
+    /*typedef std::vector<std::pair<label_t,label_t>> vec;
+    vec label_pair(N);
+    for (int i = 0; i < N; i++)
+        label_pair[i]=std::make_pair(p2.labels[i],labels[i]);
+    std::sort(label_pair.begin(),label_pair.end());
+    vec::iterator end_of_unique = std::unique(label_pair.begin(),label_pair.end());
+    int n_prodotto = std::distance(label_pair.begin(),end_of_unique);
+    return (2*n_prodotto - n - p2.n == 0);
+     */
+
+    //metodo2 - confronto tra strutture di tipo "atom"
+    for (label_t atom_label1 = 0; atom_label1 < n; atom_label1++) {
+        const atom & atomo1 = atomi[atom_label1];
+        const atom & atomo2 = p2.find_atom(atomo1);
+        if(! (atomo1 == atomo2))
+            return false;
+    }
+    return true;
+}
+
+bool general_partition::consistency_check()  {
+    bool failed = false;
+
+    //counting the real number of atoms by the labels
+    vector<label_t> temp(labels);
+    sort(temp.begin(),temp.end());
+    vector<label_t>::iterator end_of_unique = std::unique(temp.begin(),temp.end());
+    int n_from_unique = std::distance(temp.begin(),end_of_unique);
+    if(n!=n_from_unique){
+        printf("Number of atoms is wrong, is %d, should be %d\n",n,n_from_unique);
+        failed = true;}
+
+    //atoms & labels
+    for (label_t atom_label1 = 0; atom_label1 < n; atom_label1++) {
+        for (Iter_t ii = reverse_iterator(atomi[atom_label1].end, & prev_site[0]); ii != end(); ii++) {
+            if (labels[*ii] != atom_label1) {
+                printf("Self consistency, backward iterator check 1 failed: %d instead of %d, at %d\n", labels[*ii], atom_label1, *ii);
+                printf("Atom %d, from %d to %d\n",atom_label1,atomi[atom_label1].start,atomi[atom_label1].end);
+                failed = true;
+                break;
+            }
+        }
+    }
+    //checking that by the iterators, all the partition can be covered
+    int count = 0;
+    for (label_t atom_label1 = 0; atom_label1 < n; atom_label1++)
+        for (Iter_t ii = reverse_iterator(atomi[atom_label1].end, & prev_site[0]); ii != end(); ii++)
+            count++;
+    if (count != N) {
+        printf("Self consistency, backward iterator check 2 failed: count is %d (/%d)\n", count, N);
+        for (label_t atom_label1 = 0; atom_label1 < n; atom_label1++)
+        printf("Atom %d, from %d to %d\n",atom_label1,atomi[atom_label1].start,atomi[atom_label1].end);
+        failed = true;
+    }
+
+    generate_forward_linking();
+
+    //checking that the end and start of every atom are well set
+    for (label_t atom_label1 = 0; atom_label1 < n; atom_label1++) {
+        int inizio = atomi[atom_label1].start;
+        if(inizio !=  prev_site[inizio]){
+            printf("[%2d] should begin at %d, begins at %d\n",atom_label1,inizio,prev_site[inizio]);
+            failed=true;
+        }
+        int finish = atomi[atom_label1].end;
+        if(finish !=  next_site[finish]){
+            printf("[%2d] should end at %d, ends at %d\n",atom_label1,finish,next_site[finish]);
+            failed=true;
+        }
+    }
+    //operators <= and == check
+    bool uguale =  *this == *this;
+    bool minore_uguale = *this <= *this;
+    if(!uguale || !minore_uguale){
+        printf("Failed equality test: == %d, <= %d\n",uguale,minore_uguale);
+        failed = true;
+    }
+
+    //print summary of the partition
+    if (failed) {
+        label_t quanto = std::min(N, (label_t) 50);
+        printf("n: %d\n", n);
+        print_array(&labels[0], quanto, "labels");
+        print_array(&prev_site[0], quanto, "prev_s");
+        print_array(&next_site[0], quanto, "next_s");
+    }
+    return failed;
+}

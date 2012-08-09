@@ -145,7 +145,7 @@ void fill_entries_randomly(std::string *entries);
 void fill_seq_from_file(options &opts, std::string* entries);
 void generate_next_sequence(int *num_entry);
 int load_config(options &opts, int *num_entry);
-
+void demo();
 //more general 
 ///Coppia <entropia_shannon, numero_atomi>
 typedef std::pair<double,int> entropy_pair;

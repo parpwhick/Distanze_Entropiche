@@ -120,11 +120,17 @@ public:
     ///A partire da due partizioni p1 e p2, genera nell'oggetto la partizione ridotta
     void reduce(const general_partition &p1, const general_partition &p2);
     ///Genera la partizione intersezione di p1 con p2
-    void linear_intersection(const general_partition &p1, const general_partition &p2);
+    void common_subfactor(const general_partition &p1, const general_partition &p2);
     ///Genera la partizione prodotto di p1 con p2
     void product(const general_partition & p1, const general_partition & p2);
+    ///Determina se la partizione corrente è meno fine dell'altra
+    bool operator<=(const general_partition & other) const;
+    ///Uguaglianza tra due partizioni tramite confronto degli atomi
+    bool operator==(const general_partition & other) const;
 
     void print();
+    ///Controlla che la partizione sia bene realizzata
+    bool consistency_check() ;
     ///Stampa matrice di adiacenza intra-cluster
     void print_cluster_adjacency();
     ///Restituisce un riferimento read-only per accedere alle etichette
@@ -208,6 +214,18 @@ public:
     ///Iteratore banale per riconoscere la fine di un atomo
     reverse_iterator end() const {
         return reverse_iterator(-1, 0);
+    }
+
+    Iterator rbegin(const int where){
+        if(next_site.empty())
+            generate_forward_linking();
+        return Iterator(atomi[where].start, & next_site[0]);
+    }
+    ///Restituisce l'iteratore per l'atomo richiesto
+    Iterator rbegin(const atom &where){
+        if(next_site.empty())
+            generate_forward_linking();
+        return Iterator(where.start, & next_site[0]);
     }
 };
 
