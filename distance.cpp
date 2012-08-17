@@ -31,8 +31,7 @@ void distance::allocate(int n) {
         product_reduced.resize(n);
         binary_product.resize(n);
     } else {
-        product.resize(n);
-        //label_pair.resize(n);
+        label_index.resize(n);
     }
 }
 
@@ -252,21 +251,22 @@ void distance::dist(const linear_partition &first, const linear_partition &secon
  * @param p2 Secondo fattore
  */
 void distance::calc_distance(const general_partition &p1, const general_partition &p2) {
-    for (int i = 0; i < N; i++) {
-        product_t temp1 = p1.labels[i];
-        product_t temp2 = p2.labels[i];
-    
-        product[i] = (temp1 << 32) | temp2;
-        //label_pair[i]=(std::make_pair(p2.labels[i],p1.labels[i]));
+    label_t count = 0;
+    label_t old_count = 0;
+    int fiddle = 0;
+    for (label_t atom_index = 0; atom_index < p1.n; atom_index++) {
+        fiddle = (fiddle) ? 0 : (1<<31);
+        for (Iter_t ii = p1.begin(atom_index); ii != p1.end(); ii++)
+            label_index[count++] = fiddle | p2.labels[*ii];
+
+        std::sort(&label_index[old_count], &label_index[count]);
+        old_count = count;
     }
-    
-    std::sort(product.begin(), product.end());
-    std::pair<double,int> entropie = ordered_vector_entropy(product.data(),N);
-    //std::sort(label_pair.begin(),label_pair.end());
-    //entropy_pair entropie = ordered_vector_entropy(label_pair.data(),N);
+
+    std::pair<double, int> entropie = ordered_vector_entropy(label_index.data(), N);
     int n = entropie.second;
     double H = entropie.first;
-
+    
     double h1 = p1.entropia_shannon,
             h2 = p2.entropia_shannon,
             t1 = p1.entropia_topologica,

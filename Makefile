@@ -64,6 +64,7 @@ rand55.o: rand55.cpp rand55.h
 clean:
 	rm -f *.o
 	rm -vf *.bin
+	rm -vf *.txt
 
 zip: ${files} ${file_supporto}
 	zip -9 prog_distanze.zip ${files} ${file_supporto}

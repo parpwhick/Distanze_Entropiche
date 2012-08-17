@@ -34,6 +34,7 @@ void print_help() {
             //          "  -translate        Translate protein sequence into reduced 10 letter code [off]\n"
             "  -v [-v -v]        Turns on increasingly verbose messages to stderr [off]\n"
             "  -help             Shows this message\n"
+            "  -demo             Only shows examples of partition algebra [off]\n"
             ;
     const char *message2 =
             "  -graphics         Make .ppm graphics when using square lattice topology\n"
@@ -85,6 +86,7 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.fuzzy = 0;
     opts.riduzione = DIRETTA;
     opts.threads = 2;
+    opts.demo = false;
     opts.da_calcolare = 0
             | SHAN | TOP
             | RID | RID_TOP
@@ -95,7 +97,7 @@ void set_program_options(options &opts, int argc, char**argv) {
     string command_line;
     for(int i=0; i<argc; i++){
         command_line += argv[i];
-        command_line +=" ";
+        command_line += " ";
     }
     opts.command_line=command_line;
     string input;
@@ -265,6 +267,10 @@ void set_program_options(options &opts, int argc, char**argv) {
             } else if (input == "-h" || input == "-help" || input == "--help") {
                 print_help();
                 killswitch = 1;
+            } else if (input == "-demo") {
+                fprintf(stderr, "Demo mode on!\n");
+                opts.demo = true;
+                opts.n_seq = 6;
             } else {
                 fprintf(stderr, "Unknown option: %s\n", input.c_str());
                 print_help();

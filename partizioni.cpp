@@ -110,6 +110,7 @@ template entropy_pair ordered_vector_entropy(const label_t *temp, int N);
 template entropy_pair ordered_vector_entropy(const product_t *temp, int N);
 template entropy_pair ordered_vector_entropy(const char *temp, int N);
 template entropy_pair ordered_vector_entropy(const std::pair<label_t,label_t> *temp, int N);
+template entropy_pair ordered_vector_entropy(const uint32_t *temp, int N);
 
 /**
  * Crea un array temporaneo in cui copia i labels per usare il sort, che distruggerebbe l'ordine iniziale, modificando la partizione.
@@ -611,6 +612,12 @@ void general_partition::product(const general_partition & p1, const general_part
      *  il risultato sarà un vettore ordinato, per cui riconosciamo gli atomi come elementi
      *  contigui con lo stesso label. Il label è temporaneo, gli atomi avranno indice
      *  progressivo.
+     * Esempio:
+     * (0,1) - 1
+     * (0,2) - 2
+     * (1,0) - 3
+     * (1,0) - 3
+     * (1,2) - 4
      */
 
     /** Il vettore @e label_index contiene i seguenti membri:
@@ -618,20 +625,43 @@ void general_partition::product(const general_partition & p1, const general_part
      *  - label_index[i].second - indica la posizione del sito nella partizione,
      *     è utilizzato per indicizzare i cambiamenti e gli accessi ai vettori labels[], ecc.
      */
-    vector<pair<pair<label_t, label_t>, label_t> > label_index(N);
-    label_index.resize(N);
-    for (label_t i = 0; i < N; i++)
-        label_index[i] = make_pair(make_pair(p1.labels[i], p2.labels[i]), i);
+    vector<pair<uint32_t, label_t> > label_index(N);
+    n = 0;
+    entropia_shannon = 0;
 
-    sort(label_index.begin(), label_index.end());
+    label_t count = 0;
+    label_t old_count = 0;
+    int fiddle = 0;
+    /** Gli elementi sono ordinati atomo-per-atomo. Per ogni sito dell'atomo1, si controllano
+     * tutti i label di appartenenza per la partizione2 - i diversi atomi incontrati
+     * formano un diverso atomo della partizione prodotto!
+     * Si utilizza sempre il sort, ma stavolta per ogni atomo della partizione 1,
+     * riducendo trasticamente i tempi, poiché sono state struttate le informazioni sulla
+     * disposizione dei vari elementi.
+     */
+    for (label_t atom_index = 0; atom_index < p1.n; atom_index++) {
+        /* fiddle factor serve per distinguere atomi con il primo indice diverso:
+         * infatti salviamo solo le etichette dell'atomo2, quindi se queste sono identiche,
+         * ma differiscono per l'atomo1, vanno distinte!
+         * Si vuole evitare il seguente caso:
+         * (0,1)
+         * (1,1)
+         * che sarebbero riconosciuti come uguali. Per cui si setta il primo bit del label,
+         * alternativamente 0 e 1, per distinguere i vari atomi.
+         */
+        fiddle = (fiddle) ? 0 : (1<<(sizeof(label_t)*8-1));
+        for (Iter_t ii = p1.begin(atom_index); ii != p1.end(); ii++)
+            label_index[count++] = make_pair(fiddle | p2.labels[*ii], *ii);
 
+        sort(&label_index[old_count], &label_index[count]);
+        old_count = count;
+    }
     /* Dopo il sort, riconosciamo gli atomi. Il primo sito sicuramente inizia un nuovo
      * atomo, per i successivi riconosciamo un atomo non appena il label cambia
      */
     begin = 0;
-    n = 0;
-    pair<label_t, label_t> old_val = label_index[0].first;
-
+    uint32_t old_val = label_index[0].first;
+    
     //we skip over the first value, so initialize here
     labels[label_index[0].second] = n;
     prev_site[label_index[0].second] = label_index[0].second;
@@ -709,17 +739,6 @@ bool general_partition::operator<=(const general_partition & p2) const {
 }
 
 bool general_partition::operator==(const general_partition & p2) const {
-    //metodo1 - distanza
-    /*typedef std::vector<std::pair<label_t,label_t>> vec;
-    vec label_pair(N);
-    for (int i = 0; i < N; i++)
-        label_pair[i]=std::make_pair(p2.labels[i],labels[i]);
-    std::sort(label_pair.begin(),label_pair.end());
-    vec::iterator end_of_unique = std::unique(label_pair.begin(),label_pair.end());
-    int n_prodotto = std::distance(label_pair.begin(),end_of_unique);
-    return (2*n_prodotto - n - p2.n == 0);
-     */
-
     //metodo2 - confronto tra strutture di tipo "atom"
     for (label_t atom_label1 = 0; atom_label1 < n; atom_label1++) {
         const atom & atomo1 = atomi[atom_label1];
@@ -736,15 +755,27 @@ bool general_partition::consistency_check()  {
     //counting the real number of atoms by the labels
     vector<label_t> temp(labels);
     sort(temp.begin(),temp.end());
-    vector<label_t>::iterator end_of_unique = std::unique(temp.begin(),temp.end());
-    int n_from_unique = std::distance(temp.begin(),end_of_unique);
-    if(n!=n_from_unique){
-        printf("Number of atoms is wrong, is %d, should be %d\n",n,n_from_unique);
-        failed = true;}
+    entropy_pair entropie = ordered_vector_entropy(temp.data(),N);
+    int n_calculated = entropie.second;
+    double H = entropie.first;
+    if(n!=n_calculated){
+        printf("Number of atoms is wrong, is %d, should be %d\n",n,n_calculated);
+        failed = true;
+    }
+    if(abs(H-entropia_shannon)>1e-9){
+        printf("Entropy is wrong, is %.5f, should be %.5f\n",H,entropia_shannon);
+        failed=true;
+    }
 
     //atoms & labels
     for (label_t atom_label1 = 0; atom_label1 < n; atom_label1++) {
         for (Iter_t ii = reverse_iterator(atomi[atom_label1].end, & prev_site[0]); ii != end(); ii++) {
+            if(*ii >= N){
+                printf("Iterator is wrong, returned next site %d\n",*ii);
+                print_array(&prev_site[0], N, "prev_s");
+                failed = true;
+                break;
+            }
             if (labels[*ii] != atom_label1) {
                 printf("Self consistency, backward iterator check 1 failed: %d instead of %d, at %d\n", labels[*ii], atom_label1, *ii);
                 printf("Atom %d, from %d to %d\n",atom_label1,atomi[atom_label1].start,atomi[atom_label1].end);

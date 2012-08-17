@@ -88,6 +88,8 @@ extern options opts;
  */
 double *mylog = 0;
 
+void demo(const adj_struct &topology);
+
 /**
  * @brief Stampa numero medio di atomi nelle partizioni generate
  * @param X Array di partizioni lineari
@@ -178,8 +180,10 @@ int main(int argc, char** argv) {
     //
     // DEMO
     //
-    demo();
-    return 0;    
+    if (opts.demo) {
+        demo(topologia);
+        return 0;
+    }
     //
     // SIMULATION case
     //
@@ -235,48 +239,105 @@ int main(int argc, char** argv) {
 
 #include <iostream>
 #include <iomanip>
+#include <ctime>
 using namespace std;
-void demo() {
+void demo(const adj_struct &topology) {
     general_partition A;
     general_partition B;
     general_partition comune, prodotto;
 
-    adj_struct sierp_topology = adiacenza_sierpinski(14);
-    opts.seq_len = sierp_topology.N;
+    opts.seq_len = topology.N;
     vector<int> num_buffer(opts.seq_len);
 
-    while(1){
-    generate_next_sequence(num_buffer.data());
-    A.from_configuration(num_buffer.data(),sierp_topology);
-    generate_next_sequence(num_buffer.data());
-    B.from_configuration(num_buffer.data(),sierp_topology);
+    while (1) {
+        generate_next_sequence(num_buffer.data());
+        A.from_configuration(num_buffer.data(), topology);
+        generate_next_sequence(num_buffer.data());
+        B.from_configuration(num_buffer.data(), topology);
 
-    prodotto.product(A,B);
-    comune.common_subfactor(B,A);
-    if(comune.n > 1)
-        break;
-    printf("Discarded,looking for next\n");
+        comune.common_subfactor(B, A);
+        prodotto.product(A, B);
+        //if(comune.n > 1)
+        if (!(A == B))
+            break;
     }
+
+    A.consistency_check();
+    B.consistency_check();
+    prodotto.consistency_check();
+    comune.consistency_check();
 
     cout.setf(ios::boolalpha);
     cout << endl
-    << "Demo, using Sierpinski gasket generation 15" << endl
-    << "A,B - partitions" << endl
-    << "A^B - common subfactor" << endl
-    << "AvB - product" << endl
-    << endl
-    << "A   == B  : " << (A == B) << "\n"
-    << "A   <= B  : " << (A <= B) << "\n"
-    << "A^B <= A  : " << (comune <= A) << "\n"
-    << "A^B >= B  : " << (B <= comune) << "\n"
-    << "A   <= AvB: " << (A <= prodotto) << "\n"
-    << "B   => AvB: " << (prodotto <= B) << "\n"
-    << endl;
+            << "Demo, using partitions long " << opts.seq_len << endl
+            << "A,B - partitions" << endl
+            << "A^B - common subfactor" << endl
+            << "AvB - product" << endl
+            << endl
+            << "A   == B  : " << (A == B) << "\n"
+            << "A   <= B  : " << (A <= B) << "\n"
+            << "A^B <= A  : " << (comune <= A) << "\n"
+            << "A^B <= B  : " << (comune <= B) << "\n"
+            << "A   <= AvB: " << (A <= prodotto) << "\n"
+            << "B   <= AvB: " << (B <= prodotto) << "\n"
+            << endl;
 
     general_partition temp1;
-    temp1.common_subfactor(prodotto,B);
+    temp1.common_subfactor(prodotto, B);
     cout << "(AvB)^B == B: " << (temp1 == B) << "\n";
-    temp1.product(comune,A);
+    temp1.product(comune, A);
     cout << "(A^B)vA == A: " << (temp1 == A) << "\n";
+    cout << endl;
 
+    std::clock_t start;
+    double time_diff = 0;
+    int RETRIES = 0;
+
+    start = std::clock();
+    while (time_diff < 250) {
+        temp1.product(A, B);
+        RETRIES++;
+        time_diff = (std::clock() - start) * 1000. / (double) CLOCKS_PER_SEC;
+    }
+    RETRIES *= 4;
+    RETRIES += 2;
+
+    start = std::clock();
+    for (int k = 0; k < RETRIES; k++)
+        temp1.product(A, B);
+    time_diff = (std::clock() - start) * 1000. / (double) CLOCKS_PER_SEC / RETRIES;
+    fprintf(stdout, "Product      in %.3g ms\n", time_diff);
+
+    /*start = std::clock();
+    for(int k=0; k< RETRIES; k++)
+        temp1.quick_product(A,B);
+    time_diff = (std::clock() - start) / (double) CLOCKS_PER_SEC / RETRIES;
+    fprintf(stdout, "Quick prod   in %.3e seconds\n", time_diff);*/
+
+    start = std::clock();
+    for (int k = 0; k < RETRIES; k++)
+        temp1.common_subfactor(A, B);
+    time_diff = (std::clock() - start) * 1000. / (double) CLOCKS_PER_SEC / RETRIES;
+    fprintf(stdout, "Intersection in %.3g ms\n", time_diff);
+    
+    start = std::clock();
+    for (int k = 0; k < RETRIES; k++)
+        temp1.reduce(A, B);
+    time_diff = (std::clock() - start) * 1000. / (double) CLOCKS_PER_SEC / RETRIES;
+    fprintf(stdout, "Reduction    in %.3g ms\n", time_diff);
+
+    ::distance dist(A.N);
+    opts.da_calcolare = SHAN;
+    start = std::clock();
+    for (int k = 0; k < RETRIES; k++)
+        dist(A, B);
+    time_diff = (std::clock() - start) * 1000. / (double) CLOCKS_PER_SEC / RETRIES;
+    fprintf(stdout, "Dist(short)  in %.3g ms\n", time_diff); 
+    
+    opts.da_calcolare = SHAN | RID;
+    start = std::clock();
+    for (int k = 0; k < RETRIES; k++)
+        dist(A, B);
+    time_diff = (std::clock() - start) * 1000. / (double) CLOCKS_PER_SEC / RETRIES;
+    fprintf(stdout, "Dist(+red)   in %.3g ms\n", time_diff);
 }
