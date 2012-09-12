@@ -1,4 +1,4 @@
-COPTS= -O3 -march=native
+COPTS= -O3 -march=native 
 # debugging symbols
 #COPTS+=-g2
 # debugging the STL library
@@ -61,8 +61,10 @@ rand_mersenne.o: rand_mersenne.cpp rand_mersenne.h
 rand55.o: rand55.cpp rand55.h
 	g++ ${COPTS} -c rand55.cpp
 
-clean:
+clean: clean_temp_files
 	rm -f *.o
+
+clean_temp_files:
 	rm -vf *.bin
 	rm -vf *.txt
 

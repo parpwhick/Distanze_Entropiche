@@ -21,6 +21,8 @@ extern
 #endif
 options opts;
 
+template <typename data_t> void write_binary_array(const data_t *array, int N, const char *filename);
+
 using std::vector;
 double *myexp=0;
 #ifndef _GLIBCXX_DEBUG
@@ -76,7 +78,7 @@ int generate_sierpinski_borders(int N, vector<int> &bordo_sinistro, vector<int> 
 	bordersize = 2*bordersize;
     }
     
-    bordo_sinistro.resize(bordersize);
+    bordo_sinistro.resize(bordersize+1);
     bordo_destro.resize(bordersize);
     bordo_sotto.resize(bordersize);
     bordo_sinistro[0]=1;
@@ -99,7 +101,8 @@ int generate_sierpinski_borders(int N, vector<int> &bordo_sinistro, vector<int> 
 	size = 3*size -3;
 	bordersize = 2*bordersize;
     }
-    for(int i=0; i< bordersize; i++)
+    bordo_sinistro[bordersize]=0;
+    for(int i=1; i< bordersize-1; i++)
         bordo_sotto[i] = N-1-i;
     return bordersize;
 }
@@ -110,11 +113,21 @@ int generate_sierpinski_borders(int N, vector<int> &bordo_sinistro, vector<int> 
  * @param bsx Vettore che conterra gli indici del bordo sinistro
  * @return Numero di elementi appartenenti al bordo
  */
-int generate_square_border(int lato, vector<int> &bsx){
-    bsx.resize(lato);
-    
-    for(int i=0; i < lato; i++)
-        bsx[i]=i;
+int generate_square_border(int lato, vector<int> &b1, vector<int> &b2){
+    b1.resize(lato);
+    b2.resize(lato);
+
+    //normale quadrato
+    for(int i=0; i < lato; i++){
+        b1[i]=i;
+        b2[i]=lato*(lato-1)+i;
+    }
+
+    //toro, bordi a 1/4 e a 3/4 del sistema
+    /*for(int i=0; i < lato; i++){
+        b1[i]=lato*(lato/4)+i;
+        b2[i]=lato*((3*lato)/4)+i;
+    }*/
     
     return(lato);
 }
@@ -140,11 +153,11 @@ void ising_simulation::step(int steps){
         for(int i=0; i<steps; i++){
             microcanonical_step();
             if(!border1.empty())
-                metropolis_subset(border1);
+                metropolis_subset(border1, beta);
             if(!border2.empty())
-                metropolis_subset(border2);
+                metropolis_subset(border2, beta);
             if(!border3.empty())
-                metropolis_subset(border3);
+                metropolis_subset(border3, beta);
         }
 }
 /**
@@ -155,9 +168,10 @@ void ising_simulation::step(int steps){
  */
 double ising_simulation::energia_cinetica(){
     int totale = 0;
-    for (int i = 0; i < NN.n_link; i++)
-        totale += link_energies[i];
-    return (totale+0.0)/NN.n_link;
+    for (int i = 0; i < NN.n_link; i++){
+        totale += (NN.adi[i] < NN.adj[i]) * link_energies[i];
+    }
+    return (totale+0.0)*2/NN.n_link;
 }
 
 double ising_simulation::magnetizzazione(){
@@ -167,6 +181,21 @@ double ising_simulation::magnetizzazione(){
     double media = totale;
     media /= N;
     return (std::abs(media));
+}
+
+vector<double> ising_simulation::local_energy(){
+    vector<double> local_temp(N);
+
+    for (int i = 0; i < N; i++){
+        int z = NN.fetch(i);
+        int where = NN.index[i];
+        local_temp[i]=0;
+        for (int m = 0; m < z; m++)
+            local_temp[i] += link_energies[where+m];
+        local_temp[i] /= z;
+    }
+
+    return local_temp;
 }
 
 /**
@@ -226,15 +255,15 @@ void ising_simulation::metropolis_step() {
  * monodimensionali, l'update viene fatto sui siti pari e sui siti dispari, per migliorare la performance.
  * @param subset
  */
-void ising_simulation::metropolis_subset(vector<int> subset) {
+void ising_simulation::metropolis_subset(vector<int> subset, double local_beta) {
     int s, z, somma_vicini, dH;
       
-    if (myexp == 0) {
+    if (myexp == 0)
         myexp = new double[NN.zmax + 2];
-        for (int i = 0; i <= NN.zmax + 1; i++)
-            myexp[i] = exp(-2 * beta * i);
-    }
-    
+
+    for (int i = 0; i <= NN.zmax + 1; i++)
+            myexp[i] = exp(-2 * local_beta * i);
+        
     /* Dinamica di Metropolis, 1 passo temporale */
     
     //update pari
@@ -286,8 +315,9 @@ void ising_simulation::microcanonical_step() {
             //link_energies[i] = random.get_int() % max_link_energy;
             
             //distribuzione esponenziale inversa
-            //N = -1/lambda * ln(1-r) -1   poi da ceil'are.
-            link_energies[i] = std::ceil(-1/opts.beta * std::log(1-random.get_double()) - 1);
+            //N = -1/(4*beta) * ln(1-r) -1   poi da ceil'are per 4
+            link_energies[i] = 4 * std::ceil(-1 / 3. / opts.beta * std::log(1 - random.get_double()) - 1);
+        //write_binary_array(this->energy_reference(),NN.n_link,"energie_start.bin");
     }
 
     uint32_t randnum = random.get_int();
@@ -326,7 +356,7 @@ void ising_simulation::microcanonical_step() {
         prefetch(NN.adi[link]);
         prefetch(NN.adj[link]);
         
-        if (!(accept1 || accept2))
+        if (!(accept1 || accept2) || (s1 > s2))
             continue;
 	//se la mossa è stata accettata, allora contala
 	j++;
@@ -479,9 +509,10 @@ void time_series(const adj_struct &adj){
     ising_simulation sim(adj,opts.simulation_type,opts.sweeps,opts.skip);
     sim.set_beta(opts.beta);
     sim.set_max_energy(opts.max_link_energy);
-    if(opts.topologia == SIERPINSKI){
+    if(opts.topologia == SIERPINSKI)
         generate_sierpinski_borders(adj.N,sim.border1,sim.border2,sim.border3);
-    }        
+    else if( opts.topologia == TORO_2D || opts.topologia == RETICOLO_2D)
+        generate_square_border(opts.lato,sim.border1,sim.border2);
     //sim.init_config();
     sim.step();
        
@@ -493,7 +524,7 @@ void time_series(const adj_struct &adj){
      * allora la stima della temperatura è diversa dal caso di energie continue: \f[\beta = \log\left(1 + \frac{1}{\langle E_n \rangle}\right)\f]
      * l'errore sulla stima è: \f[\Delta\beta = -\frac{1}{(\langle E_n \rangle+1)\langle E_n \rangle}\;\cdot\; \frac{\sigma(E_n)}{\sqrt{N}} \f]
      */
-    std::ofstream out0("output.txt", std::ios::app);
+    std::ofstream out0("output.txt", std::ios::out);
     out0 << std::fixed << std::setprecision(4)
             << "%options: " << opts.command_line << endl
             << "%t,\tbeta,\tatomi,\tH,\te_kin,\te_mag,\tdist,\tdist_r,\tdist_t,\tdist_tr\tM" << endl;
@@ -504,14 +535,14 @@ void time_series(const adj_struct &adj){
         E_kin = sim.energia_cinetica();
         E_mag = sim.energia_magnetica();
         mag = sim.magnetizzazione();
-        beta_est = std::log(1. + 1. / E_kin);
+        beta_est = 0.25 * std::log(1. + 4. / E_kin);
         d_shan = dist.dist_shan;
         d_shan_r = dist.dist_shan_r;
         d_top = dist.dist_top;
         d_top_r = dist.dist_top_r;
         n_atomi = Z1.n;
         H = Z1.entropia_shannon;
-     
+
         //stampa
 	out0 << i << " \t"
 	    << beta_est << " \t"
@@ -524,17 +555,7 @@ void time_series(const adj_struct &adj){
             << d_top << " \t"
             << d_top_r << " \t"
             << mag << endl;
-        /*printf("%d\t", i);
-        printf("%d\t", (int) n_atomi);
-        printf("%.4f\t",(double) H);
-        printf("%.4f\t",(double) E_kin);
-        printf("%.4f\t",(double) E_mag);
-        printf("%.4f\t",(double) d_shan);
-        printf("%.4f\t",(double) d_shan_r);
-        printf("%.4f\t",(double) mag);
-        printf("%.4f\t",(double) beta_est);
-        printf("\n");
-	*/
+
         //simulation step
         sim.step();
         //aggiornamento partizione
@@ -549,6 +570,7 @@ void time_series(const adj_struct &adj){
         //adesso Z1 conterra' la vecchia partizione, Z2 la prossima
         std::swap(Z1, Z2);
     }
+    //write_binary_array(sim.energy_reference(),adj.n_link,"energie_end.bin");
     //stampa medie
     std::ofstream out1("medie.txt", std::ios::app);
     out1 << std::fixed << std::setprecision(4)
@@ -590,7 +612,8 @@ int main(int argc, char** argv) {
 //    int N = 0;
     int T = 1000;
     int max_link_energy=4;
-    adj_struct da_file = adiacenza_square_lattice(50);
+    adj_struct da_file = adiacenza_open_square_lattice(16);
+    adiacenza_to_file(da_file);
 
     if (argc > 1)
         T = atoi(argv[1]);

@@ -577,7 +577,7 @@ void general_partition::print_cluster_adjacency() {
         /** Creazione vettori di adiacenza per matrice sparse in stile Matlab
          La funzione per caricare i dati cosi creati è:
         @code
-        function adiacenza=load_sierpinski()
+        function adiacenza=load_adjacency()
             indici_riga=fread(fopen('vector1.bin','r'),inf,'int32');
             indici_colonna=fread(fopen('vector2.bin','r'),inf,'int32');
             N=max(max(indici_riga),max(indici_colonna));

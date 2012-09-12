@@ -53,6 +53,8 @@ enum source {
     ///sequenze lineari senza salto
     LINEARE,
     ///reticolo quadrato con C.C periodiche toroidali
+    TORO_2D,
+    ///reticolo quadrato con bordi aperti
     RETICOLO_2D,
     ///triangolo di Sierpinski di generazione options::sierpinski_gen
     SIERPINSKI,

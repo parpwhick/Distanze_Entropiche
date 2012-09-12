@@ -41,7 +41,7 @@ private:
     RandMT random;
 
     ///Esegue un update di tipo metropolis, con temperatura beta, per i siti elencati nel vettore @param subset
-    void metropolis_subset(std::vector<int> subset);
+    void metropolis_subset(std::vector<int> subset, double local_beta);
 public:
     ///Esegue uno sweep con Metropolis
     void metropolis_step();
@@ -70,7 +70,12 @@ public:
         else
             throw(std::runtime_error(std::string("Usata configurazione non inizializzata")));
     }
-    
+    const config_t *energy_reference() {
+        if(!link_energies.empty())
+	    return link_energies.data();
+        else
+            throw(std::runtime_error(std::string("Usata configurazione non inizializzata")));
+    }
     vector<int> border1;
     vector<int> border2;
     vector<int> border3;
@@ -80,6 +85,9 @@ public:
     double energia_magnetica();
     ///Calcola la magnetizzazione media per sito
     double magnetizzazione();
+    ///Restituisce un vettore con l'energia media attorno ad ogni sito
+    vector<double> local_energy();
+
 };
 ///Funzione globale che esegue il calcolo delle distanze e altre statistiche tra configurazioni successive
 void time_series(const adj_struct & adj);

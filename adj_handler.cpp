@@ -21,7 +21,7 @@ extern options opts;
  * @param lato Lato del quadrato
  * @return adj_struct La struttura di adiacenza
  */
-adj_struct adiacenza_square_lattice(int lato){    
+adj_struct adiacenza_toroidal_lattice(int lato){
     int N=lato*lato;
 
     vector<int> adi(4*N+1);
@@ -47,6 +47,98 @@ adj_struct adiacenza_square_lattice(int lato){
     adj_struct temp(adi,adj,index);
     temp.N=N;
     temp.n_link=4*N;
+    temp.zmax=4;
+    return(temp);
+}
+
+/**
+ * @brief Genera struttura di adiacenza per il reticolo quadrato senza condizioni periodiche
+ * @param lato Lato del quadrato
+ * @return adj_struct La struttura di adiacenza
+ */
+adj_struct adiacenza_square_lattice(int lato){
+    int N=lato*lato;
+
+    vector<int> adi(4*N+1);
+    vector<int> adj(4*N+1);
+    vector<int> index(N+1);
+    int count=0;
+    for (int i=0; i<N; i++){
+        index[i]=count;
+
+        //periodic UP
+        adi[count] = i;
+        adj[count++] = nnu(i);
+
+        //periodic DOWN
+        adi[count] = i;
+        adj[count++] = nnd(i);
+
+        //open left
+        if(i-lato >= 0){
+            //has LEFT neighbor
+            adi[count] = i;
+            adj[count++] = i-lato;
+        }
+        //open right
+        if(i+lato < N){
+            //has RIGHT neighbor
+            adi[count] = i;
+            adj[count++] = i+lato;
+        }
+    }
+    adj[count]=LEAST;
+    index[N]=count;
+
+    adj_struct temp(adi,adj,index);
+    temp.N=N;
+    temp.n_link=count;
+    temp.zmax=4;
+    return(temp);
+}
+
+/**
+ * @brief Genera struttura di adiacenza per il reticolo quadrato senza condizioni periodiche
+ * @param lato Lato del quadrato
+ * @return adj_struct La struttura di adiacenza
+ */
+adj_struct adiacenza_open_square_lattice(int lato){
+    int N=lato*lato;
+
+    vector<int> adi(4*N+1);
+    vector<int> adj(4*N+1);
+    vector<int> index(N+1);
+    int count=0;
+    for (int i=0; i<N; i++){
+        index[i]=count;
+
+        if((i % lato) !=0){
+            //has UP neighbor
+            adi[count] = i;
+            adj[count++] = i-1;
+        }
+        if((i+1) % lato){
+            //has DOWN neighbor
+            adi[count] = i;
+            adj[count++] = i+1;
+        }
+        if(i-lato >= 0){
+            //has LEFT neighbor
+            adi[count] = i;
+            adj[count++] = i-lato;
+        }
+        if(i+lato < N){
+            //has RIGHT neighbor
+            adi[count] = i;
+            adj[count++] = i+lato;
+        }
+    }
+    adj[count]=LEAST;
+    index[N]=count;
+
+    adj_struct temp(adi,adj,index);
+    temp.N=N;
+    temp.n_link=count;
     temp.zmax=4;
     return(temp);
 }
@@ -375,3 +467,16 @@ adj_struct adiacenza_from_file(const char *name_vec1,const char *name_vec2){
     fclose(vec2);
     return(temp);
 }
+
+/**
+ * @brief Da una struttura di adiacenza scrive due file con le righe e le colonne degli elementi nonnulli della matrice di adiacenza
+ * @param adj Struttura di adiacenza da scrivere su file
+ */
+void adiacenza_to_file(const adj_struct & nn){
+    FILE *vec1 = fopen("vector1.bin", "wb");
+    FILE *vec2 = fopen("vector2.bin", "wb");
+    fwrite(nn.adi.data(), sizeof (label_t), nn.n_link, vec1);
+    fwrite(nn.adj.data(), sizeof (label_t), nn.n_link, vec2);
+    fclose(vec1);
+    fclose(vec2);
+ }

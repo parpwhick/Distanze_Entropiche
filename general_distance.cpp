@@ -5,48 +5,48 @@
  * @brief File main(), legge, inizializza, calcola le partizioni e i dati necessari
  * @date 11/01/2012
  *
- * 
+ *
  * Version: 7.0, 2012/08/04
  * -Complete documentation with Doxygen
  * -Nicer output from time_series() and full command line control
- * 
+ *
  * Version: 6.3, 2012/07/29
  * -Memory efficience guaranteed
  * -Improvements in findroot and is_equal
  * -Unified entropy calculation
  * -Product of partitions
  * -Cleanup and comments in the code
- * 
+ *
  * Version: 6.2, 2012/07/13
  * -Improved simulation, with time series output
  * -23x speed improvement over version 6.0!
  * -Using STL classes and methods
  * -Using a more optimized reduction (without common part)
- * 
+ *
  * Version: 6.1, 2012/06/21
  * -Added simulation class
  * -Improved entropy calculation, 2x speedup
  * -New random number generator, for simulation use
  * -Cleanups and memory usage reduction
- * 
+ *
  * Version: 6.0, 2012/06/01
  * -General adjacency vector input
  * -Removed hashing and unused functions
- *   
+ *
  * Version: 5.2, 2012/03/22
  * -Iterators for the linked list
  * -General cleanups
- * 
+ *
  * Version: 5.1, 2012/03/11
  * -Super optimized reduction
  * -Hashing implemented everywhere
  * -Reduced number of algorithms
  * -Multidimensional inputs
- * 
+ *
  * Version: 5.0, 2012/03/05
  * -Fully working general reduction
  * -with interchangable algorithms
- * 
+ *
  * Version: 4.1, 2012/01/27
  * -Common partition factor by percolation
  * -Similarity distance
@@ -54,17 +54,17 @@
  * Version: 4.0, 2012/01/20
  * -Multithreading
  * -Algorithm optimization and automatic selection
- *  
+ *
  * Version: 3.0, 2012/01/15
  * -Generic partition building
  * -Partitioning of arbitrary symbol strings
  * -Generic intersection and (unreduced) distance
- *  
+ *
  * Version: 2.0, 2012/01/13
  * -Reading from files
- * -Help system 
+ * -Help system
  * -Thorough input options
- * 
+ *
  * Version: 1.0, 2012/01/12
  * -Partitioning
  * -Distance matrix calculation
@@ -136,6 +136,9 @@ int main(int argc, char** argv) {
         case(RETICOLO_2D):
             topologia = adiacenza_square_lattice(opts.lato);
             break;
+        case(TORO_2D):
+            topologia = adiacenza_toroidal_lattice(opts.lato);
+            break;
         case(SIERPINSKI):
             topologia = adiacenza_sierpinski(opts.sierpinski_gen);
             break;
@@ -169,7 +172,7 @@ int main(int argc, char** argv) {
             + sizeof(ising_simulation::config_t) * (topologia.N + topologia.n_link) ;
     memory_estimate >>= 20;
     fprintf(stderr,"Estimated memory usage: %lu MB\n",memory_estimate+1);
-            
+
     //logarithm lookup table, 6x program speedup
     int lunghezza = std::max(opts.seq_len, opts.n_seq) + 10;
     mylog = new double[ lunghezza ];
@@ -194,10 +197,10 @@ int main(int argc, char** argv) {
         time_series(topologia);
         return(0);
     }
-    
+
     //
     // RANDOM or FROM_FILE
-    // 
+    //
     int *num_buffer = new int[opts.seq_len];
     for (int i = 0; i < opts.n_seq; i++) {
 
@@ -210,7 +213,7 @@ int main(int argc, char** argv) {
         if (opts.letto_da == RANDOM)
             ///In caso di configurazioni random, ne crea una per volta
             generate_next_sequence(num_buffer);
-            
+
         if (opts.verbose)
             fprintf(stderr, "Loaded sequence %d, analysing\n", i + 1);
         ///Generazione della partizione
@@ -220,13 +223,13 @@ int main(int argc, char** argv) {
     printf("Loaded %d sequences long %d\n", opts.n_seq, opts.seq_len);
     print_partition_stats(Z);
     printf("\n");
-    
+
     //
     //  DISTANCE MEASUREMENTS
     //
     if (opts.distance == false)
         return(0);
-	
+
     calcola_matrice_distanze(Z);
     //
     //  PROGRAM EXIT
@@ -319,7 +322,7 @@ void demo(const adj_struct &topology) {
         temp1.common_subfactor(A, B);
     time_diff = (std::clock() - start) * 1000. / (double) CLOCKS_PER_SEC / RETRIES;
     fprintf(stdout, "Intersection in %.3g ms\n", time_diff);
-    
+
     start = std::clock();
     for (int k = 0; k < RETRIES; k++)
         temp1.reduce(A, B);
@@ -332,8 +335,8 @@ void demo(const adj_struct &topology) {
     for (int k = 0; k < RETRIES; k++)
         dist(A, B);
     time_diff = (std::clock() - start) * 1000. / (double) CLOCKS_PER_SEC / RETRIES;
-    fprintf(stdout, "Dist(short)  in %.3g ms\n", time_diff); 
-    
+    fprintf(stdout, "Dist(short)  in %.3g ms\n", time_diff);
+
     opts.da_calcolare = SHAN | RID;
     start = std::clock();
     for (int k = 0; k < RETRIES; k++)

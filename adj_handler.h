@@ -70,8 +70,11 @@ public:
 
 adj_struct adiacenza_fuzzy_line(int N);
 adj_struct adiacenza_simple_line(int N);
+adj_struct adiacenza_toroidal_lattice(int lato);
+adj_struct adiacenza_open_square_lattice(int lato);
 adj_struct adiacenza_square_lattice(int lato);
 adj_struct adiacenza_from_file(const char *name_vec1, const char *name_vec2);
 adj_struct adiacenza_sierpinski(int GEN);
+void adiacenza_to_file(const adj_struct & nn);
 #endif	/* ADJ_HANDLER_H */
 

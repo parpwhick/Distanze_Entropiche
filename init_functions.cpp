@@ -47,7 +47,8 @@ void print_help() {
             "Options the choice of a topology:\n"
             "  -sequence         Linear open sequence topology with 2 nearest neighbours\n"
             "  -fuzzy N          Linear open sequence with N nearest neighbours\n"
-            "  -square L         The configuration is from a square of side L [default, 25]\n"
+            "  -torus L          The configuration is from a periodic square of side L\n"
+            "  -square L         The configuration is from an open square of side L [default, 25]\n"
             "  -sierpinski G     Use the Sierpinski gasket of generation G\n"
             "  -adj file1 file2  The files encode a generic adiacency matrix by its\n"
             "                    nonzero elements, with rows and cols in the files, eg \n"
@@ -72,7 +73,10 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.n_seq = 2550;
     opts.epsilon = 0;
     opts.n_symbols = 2;
-    opts.topologia = RETICOLO_2D;
+    if (opts.partition_type == GENERAL_PARTITION)
+        opts.topologia = RETICOLO_2D;
+    else
+        opts.topologia = LINEARE;
     opts.letto_da = RANDOM;
     opts.simulation_type = MICROCANONICAL;
     opts.beta = 0.45;
@@ -163,6 +167,15 @@ void set_program_options(options &opts, int argc, char**argv) {
                 opts.topologia = RETICOLO_2D;
                 opts.lato = atoi(argv[read_argvs++]);
                 fprintf(stderr, "Using square lattice topology, with side %d\n", opts.lato);
+            } else if (input == "-torus") {
+                if (argc - read_argvs < 1)
+                    error("Need to specify lattice side length\n");
+                if (argv[read_argvs][0] == '-')
+                    error("Expecting argument, not another option\n");
+
+                opts.topologia = TORO_2D;
+                opts.lato = atoi(argv[read_argvs++]);
+                fprintf(stderr, "Using toroidal lattice topology, with side %d\n", opts.lato);
             } else if (input == "-sierpinski") {
                 if (argc - read_argvs < 1)
                     error("Need to specify generation\n");
@@ -283,9 +296,6 @@ void set_program_options(options &opts, int argc, char**argv) {
     }
     if (killswitch)
         exit(0);
-
-    if (opts.topologia == RETICOLO_2D)
-        opts.seq_len = opts.lato * opts.lato;
 
     fprintf(stderr, "\n");
 
