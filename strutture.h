@@ -22,8 +22,10 @@ typedef uint64_t product_t;
 enum simulation_t {
     ///Metropolis
     METROPOLIS,
+    ///Creutz microcanonical evolution
+    CREUTZ,
     ///Microcanonico eventualmente con bordi termostatati
-    MICROCANONICAL
+    MICROCANONICAL    
 };
 
 ///Definisce i tipi di partizione usati, il che comporta una diversa scelta di algoritmi

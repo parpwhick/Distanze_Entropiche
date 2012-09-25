@@ -42,11 +42,15 @@ private:
 
     ///Esegue un update di tipo metropolis, con temperatura beta, per i siti elencati nel vettore @param subset
     void metropolis_subset(std::vector<int> subset, double local_beta);
+    ///Pone i link attigui ai siti elencati in subset, alla temperatura data
+    void thermalize_subset(vector<int> subset, double local_beta);
 public:
     ///Esegue uno sweep con Metropolis
     void metropolis_step();
     ///Uno sweep microcanonico
     void microcanonical_step();
+    ///Uno sweep di Creutz
+    void creutz_step();
     ///Costruttore per impostare i primi valori
     ising_simulation(const adj_struct & NN1, simulation_t TT, int time_length=1,int initial_time_skip=0);
     ///Imposta beta per il sistema e ricalcola le esponenziali
