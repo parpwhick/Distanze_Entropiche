@@ -149,6 +149,10 @@ void ising_simulation::step(int steps){
         for(int i=0; i<steps; i++)
             metropolis_step();
     
+    if(update_rule==CREUTZ)
+        for(int i=0; i<steps; i++)
+            creutz_step();
+    
     else if(update_rule==MICROCANONICAL)
         for(int i=0; i<steps; i++){
             microcanonical_step();
@@ -160,18 +164,27 @@ void ising_simulation::step(int steps){
                 metropolis_subset(border3, beta);
         }
 }
+
 /**
  * L'energia cinetica è correttamente calcolata e normalizzata, essendo una quantita' definita sui link.
  * In particolare è la media del vettore (di interi) @c link_energies.
  *
  * @return Energia cinetica media per link
  */
-double ising_simulation::energia_cinetica(){
+double ising_simulation::energia_cinetica() {
     int totale = 0;
-    for (int i = 0; i < NN.n_link; i++){
-        totale += (NN.adi[i] < NN.adj[i]) * link_energies[i];
+    if (update_rule == CREUTZ) {
+        for (label_t i = 0; i < NN.N; i++)
+            totale += link_energies[i];
+        return (totale + 0.0) / link_energies.size();
     }
-    return (totale+0.0)*2/NN.n_link;
+    else if (update_rule == MICROCANONICAL) {
+        for (label_t i = 0; i < NN.n_link; i++)
+            totale += (NN.adi[i] < NN.adj[i]) * link_energies[i];
+        return (totale + 0.0)*2 / NN.n_link;
+    }
+    else
+        return 0.0;
 }
 
 double ising_simulation::magnetizzazione(){
@@ -186,14 +199,18 @@ double ising_simulation::magnetizzazione(){
 vector<double> ising_simulation::local_energy(){
     vector<double> local_temp(N);
 
-    for (int i = 0; i < N; i++){
-        int z = NN.fetch(i);
-        int where = NN.index[i];
-        local_temp[i]=0;
-        for (int m = 0; m < z; m++)
-            local_temp[i] += link_energies[where+m];
-        local_temp[i] /= z;
-    }
+    if (update_rule == CREUTZ)
+        local_temp.assign(link_energies.begin(), link_energies.end());
+
+    else if (update_rule == MICROCANONICAL)
+        for (int i = 0; i < N; i++) {
+            int z = NN.fetch(i);
+            int where = NN.index[i];
+            local_temp[i] = 0;
+            for (int m = 0; m < z; m++)
+                local_temp[i] += link_energies[where + m];
+            local_temp[i] /= z;
+        }
 
     return local_temp;
 }
@@ -297,6 +314,28 @@ void ising_simulation::metropolis_subset(vector<int> subset, double local_beta) 
     }
 }
 
+/**
+ * Pone i link interessati dai siti nel vettore @a subset alla temperatura desiderata, senza passare da un update di tipo Metropolis.
+ * @param subset Un vector<int> contenente i siti con temperatura da stabilizzare
+ * @param local_beta La temperatura desiderata
+ */
+void ising_simulation::thermalize_subset(vector<int> subset, double local_beta) {
+    int s, z;
+
+    if (update_rule == MICROCANONICAL) {
+        for (size_t j = 0; j < subset.size(); j++) {
+            s = subset[j];
+            z = NN.fetch(s);
+            for (int m = 0; m < z; m++)
+                link_energies[NN.index[s] + m] = 4 * std::ceil(-1 / 4. / local_beta * std::log(1 - random.get_double()) - 1);
+        }
+    }
+    if (update_rule == CREUTZ) {
+        for (size_t j = 0; j < subset.size(); j++)
+                link_energies[j] = 4 * std::ceil(-1 / 4. / local_beta * std::log(1 - random.get_double()) - 1);
+    }
+}
+
 void ising_simulation::microcanonical_step() {
     int dH;
     int somma_vicini;
@@ -316,7 +355,7 @@ void ising_simulation::microcanonical_step() {
             
             //distribuzione esponenziale inversa
             //N = -1/(4*beta) * ln(1-r) -1   poi da ceil'are per 4
-            link_energies[i] = 4 * std::ceil(-1 / 3. / opts.beta * std::log(1 - random.get_double()) - 1);
+            link_energies[i] = 4 * std::ceil(-1 / 4. / opts.beta * std::log(1 - random.get_double()) - 1);
         //write_binary_array(this->energy_reference(),NN.n_link,"energie_start.bin");
     }
 
@@ -400,6 +439,44 @@ void ising_simulation::microcanonical_step() {
             if (accept2) config[s2] = -config[s2];
         }
         
+    }
+}
+
+void ising_simulation::creutz_step() {
+    int s, z, somma_vicini, dH;
+
+    if (config.empty()) {
+        config.resize(NN.N);
+        for (int i = 0; i < NN.N; i++)
+            config[i] = 2 * (random.get_double() < 0.2) - 1 ;
+    }
+
+    if (link_energies.empty()) {
+        link_energies.resize(NN.N);
+        for (int i = 0; i < NN.N; i++)
+            //distribuzione esponenziale inversa
+            link_energies[i] = 4 * std::ceil(-1 / 4. / opts.beta * std::log(1 - random.get_double()) - 1);
+        //write_binary_array(this->energy_reference(),NN.n_link,"energie_start.bin");
+    }
+    
+    int s1 = random.get_int() % NN.N;    
+    for (int j = 0; j < NN.N; j++) {
+        s=s1;
+        s1 = random.get_int() % NN.N;
+        prefetch(config[s1]);
+        prefetch(NN.index[s1]);
+        prefetch(link_energies[s1]);
+        
+        z = NN.fetch(s);
+        somma_vicini = 0;
+        for (int m = 0; m < z; m++)
+            somma_vicini += config[NN.vicini[m]];
+
+        dH = config[s] * somma_vicini;
+        if (dH <= 0 || dH <= link_energies[s]){
+            config[s] = -config[s];
+            link_energies[s] -= dH;
+        }
     }
 }
 
@@ -570,13 +647,15 @@ void time_series(const adj_struct &adj){
         //adesso Z1 conterra' la vecchia partizione, Z2 la prossima
         std::swap(Z1, Z2);
     }
+        write_binary_array(sim.local_energy().data(),adj.N,"local_energies.bin");
     //write_binary_array(sim.energy_reference(),adj.n_link,"energie_end.bin");
     //stampa medie
     std::ofstream out1("medie.txt", std::ios::app);
     out1 << std::fixed << std::setprecision(4)
             << "%options: " << opts.command_line << endl
-            << "%beta,\tatomi,\tH,\te_kin,\te_mag,\tdist,\tdist_r,\tdist_t,\tdist_tr\tM" << endl;
-    out1 << beta_est.mean() << " \t"
+            << "%beta,\tbetaEST,\tatomi,\tH,\te_kin,\te_mag,\tdist,\tdist_r,\tdist_t,\tdist_tr\tM" << endl;
+    out1 << opts.beta << "\t"
+            <<beta_est.mean() << " \t"
             << n_atomi.mean() << "\t"
             << H.mean() << " \t"
             << E_kin.mean() << " \t"
@@ -590,8 +669,9 @@ void time_series(const adj_struct &adj){
     std::ofstream out2("varianze.txt", std::ios::app);
     out2 << std::fixed << std::setprecision(4)
             << "%options: " << opts.command_line << endl
-            << "%beta,\tatomi,\tH,\te_kin,\te_mag,\tdist,\tdist_r,\tdist_t,\tdist_tr\tM" << endl;
-    out2 << beta_est.var() << " \t"
+            << "%zero,\tbeta,\tatomi,\tH,\te_kin,\te_mag,\tdist,\tdist_r,\tdist_t,\tdist_tr\tM" << endl;
+    out2 << 0 << "\t" 
+            << beta_est.var() << " \t"
             << n_atomi.var() << "\t"
             << H.var() << " \t"
             << E_kin.var() << " \t"
