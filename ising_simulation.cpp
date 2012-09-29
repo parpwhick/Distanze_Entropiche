@@ -164,18 +164,27 @@ void ising_simulation::step(int steps){
                 metropolis_subset(border3, beta);
         }
 }
+
 /**
  * L'energia cinetica è correttamente calcolata e normalizzata, essendo una quantita' definita sui link.
  * In particolare è la media del vettore (di interi) @c link_energies.
  *
  * @return Energia cinetica media per link
  */
-double ising_simulation::energia_cinetica(){
+double ising_simulation::energia_cinetica() {
     int totale = 0;
-    for (size_t i = 0; i < link_energies.size(); i++){
-        totale += (NN.adi[i] < NN.adj[i]) * link_energies[i];
+    if (update_rule == CREUTZ) {
+        for (label_t i = 0; i < NN.N; i++)
+            totale += link_energies[i];
+        return (totale + 0.0) / link_energies.size();
     }
-    return (totale+0.0)*2/NN.n_link;
+    else if (update_rule == MICROCANONICAL) {
+        for (label_t i = 0; i < NN.n_link; i++)
+            totale += (NN.adi[i] < NN.adj[i]) * link_energies[i];
+        return (totale + 0.0)*2 / NN.n_link;
+    }
+    else
+        return 0.0;
 }
 
 double ising_simulation::magnetizzazione(){
@@ -190,14 +199,18 @@ double ising_simulation::magnetizzazione(){
 vector<double> ising_simulation::local_energy(){
     vector<double> local_temp(N);
 
-    for (int i = 0; i < N; i++){
-        int z = NN.fetch(i);
-        int where = NN.index[i];
-        local_temp[i]=0;
-        for (int m = 0; m < z; m++)
-            local_temp[i] += link_energies[where+m];
-        local_temp[i] /= z;
-    }
+    if (update_rule == CREUTZ)
+        local_temp.assign(link_energies.begin(), link_energies.end());
+
+    else if (update_rule == MICROCANONICAL)
+        for (int i = 0; i < N; i++) {
+            int z = NN.fetch(i);
+            int where = NN.index[i];
+            local_temp[i] = 0;
+            for (int m = 0; m < z; m++)
+                local_temp[i] += link_energies[where + m];
+            local_temp[i] /= z;
+        }
 
     return local_temp;
 }
@@ -302,9 +315,9 @@ void ising_simulation::metropolis_subset(vector<int> subset, double local_beta) 
 }
 
 /**
- * L'update di tipo Metropolis coinvolge solo i siti indicati nel vettore @a subset. Supposti i bordi
- * monodimensionali, l'update viene fatto sui siti pari e sui siti dispari, per migliorare la performance.
- * @param subset
+ * Pone i link interessati dai siti nel vettore @a subset alla temperatura desiderata, senza passare da un update di tipo Metropolis.
+ * @param subset Un vector<int> contenente i siti con temperatura da stabilizzare
+ * @param local_beta La temperatura desiderata
  */
 void ising_simulation::thermalize_subset(vector<int> subset, double local_beta) {
     int s, z;
@@ -314,11 +327,12 @@ void ising_simulation::thermalize_subset(vector<int> subset, double local_beta) 
             s = subset[j];
             z = NN.fetch(s);
             for (int m = 0; m < z; m++)
-                link_energies[NN.index[s + m]] = 4 * std::ceil(-1 / 4. / local_beta * std::log(1 - random.get_double()) - 1);
+                link_energies[NN.index[s] + m] = 4 * std::ceil(-1 / 4. / local_beta * std::log(1 - random.get_double()) - 1);
         }
     }
     if (update_rule == CREUTZ) {
-
+        for (size_t j = 0; j < subset.size(); j++)
+                link_energies[j] = 4 * std::ceil(-1 / 4. / local_beta * std::log(1 - random.get_double()) - 1);
     }
 }
 
