@@ -7,6 +7,7 @@ COPTS= -O3 -march=native
 #COPTS+= -pg
 # STL profiling
 #COPTS+= -D_GLIBCXX_PROFILE
+COPTS+=-I /usr/include/arpack++/
 ifeq ($(shell hostname),Atomowy-linux)
    CC=g++
 else
@@ -17,9 +18,12 @@ COPTS +=-Wall
 
 ifeq (${CC},g++)
     COPTS+=-fopenmp
-    LINK_OPTS = -lgomp
+    LINK_OPTS = -lgomp -lblas -llapack -larpack -larpack++
 else
     COPTS+=-xHOST -ipo -no-prec-div
+    COPTS+=-mkl
+    LINK_OPTS =-mkl -larpack -larpack++
+    INTEL_DEFINES =-DEIGEN_USE_MKL_ALL
 endif
 COPTS +=-std=c++0x
 
@@ -27,7 +31,7 @@ files=*.cpp *.h Makefile Doxyfile
 file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
 
 OBJ_LIST= init_functions.o distance.o partizioni.o adj_handler.o rand_mersenne.o 
-DIST_GEN_OBJ = general_distance.o ising_simulation.o
+DIST_GEN_OBJ = general_distance.o ising_simulation.o dopon_problem.o nagaoka_simulation.o
 
 all: distanze_generiche distanze_lineari #sierpinski ising
 
@@ -57,6 +61,7 @@ ising_simulation.o: ising_simulation.cpp ising_simulation.h adj_handler.h distan
 
 nagaoka_simulation.o: nagaoka_simulation.cpp smart_data_types.h
 	${CC} ${COPTS} -c nagaoka_simulation.cpp
+
 
 init_functions.o: strutture.h init_functions.cpp
 	${CC} ${COPTS} -c init_functions.cpp

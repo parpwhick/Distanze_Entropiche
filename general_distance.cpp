@@ -196,7 +196,10 @@ int main(int argc, char** argv) {
      * ma la time_series() tra configurazioni e partizioni successive nel tempo.
      */
     if(opts.letto_da == SIMULATION){
-        time_series(topologia);
+        if(opts.electrons)
+            nagaoka_run(topologia);
+        else
+            time_series(topologia);
         return(0);
     }
 
