@@ -1,0 +1,236 @@
+/* 
+ * File:   dopon_problem.cpp
+ * Author: fake
+ * 
+ * Created on September 30, 2012, 2:48 PM
+ */
+
+#include "dopon_problem.h"
+
+template <typename spin_t> void dopon_problem<spin_t>::construct_problem_matrix(int spin) {
+    H.resize(NN.N, NN.N);
+    H.setZero();
+    int z, sum_nn;
+
+    for (int k = 0; k < NN.N; k++) {
+
+        z = NN.fetch(k);
+        sum_nn = 0;
+        for (int m = 0; m < z; m++) {
+            sum_nn += s[NN.vicini[m]];
+            H(NN.vicini[m], k) = t;
+        }
+
+        H(k, k) = lambda * (s[k] == spin) + spin * 0.25 * sum_nn;
+
+        //spin +- 1
+        //H(k, k) = lambda * 0.5 * (s[k] == 1);
+        //H(k, k) += +0.25 * sum_nn;
+        //spin +- 1/2
+        //H(k, k) = lambda * (0.5 * s[k] + 0.25 + 0.5 * sum_nn);
+    }
+}
+template void dopon_problem<char>::construct_problem_matrix(int spin);
+
+
+
+template <typename spin_t> double dopon_problem<spin_t>::calculate_lowest_energy() {
+    SelfAdjointEigenSolver<MatrixXf> eigenproblem;
+
+    //energy for spin up polaron
+    double E_up;
+    construct_problem_matrix(+1);
+    eigenproblem.compute(H, EigenvaluesOnly);
+
+    if (eigenproblem.info() != Success) {
+        fprintf(stderr, "Did not manage to find eigenvalues\n");
+        E_up = 10000.0;
+    }
+    E_up = eigenproblem.eigenvalues().coeff(0);
+    //std::cout << "The eigenvalues of H_up are: " << eigenproblem.eigenvalues().transpose() << std::endl;
+
+    //energy for spin down polaron
+    double E_down;
+    construct_problem_matrix(-1);
+    eigenproblem.compute(H, EigenvaluesOnly);
+
+    if (eigenproblem.info() != Success) {
+        fprintf(stderr, "Did not manage to find eigenvalues\n");
+        E_down = 10000.0;
+    }
+    E_down = eigenproblem.eigenvalues().coeff(0);
+    //std::cout << "The eigenvalues of H_down are: " << eigenproblem.eigenvalues().transpose() << std::endl;
+
+    if (E_down < E_up) {
+        last_gs_spin = -1;
+        return E_down;
+    } else {
+        last_gs_spin = +1;
+        return E_up;
+    }
+}
+template double dopon_problem<char>::calculate_lowest_energy();
+
+template <class spin_t> template <typename T> void dopon_problem<spin_t>::MultMv(T*in, T*out) {
+
+    const int & spin = probed_spin;
+    int z, sum_nn;
+
+    for (int k = 0; k < NN.N; k++) {
+        //set the resulting vector element to 0
+        out[k] = 0;
+        //iterate over the neighbors
+        z = NN.fetch(k);
+        sum_nn = 0;
+        for (int m = 0; m < z; m++) {
+            sum_nn += s[NN.vicini[m]];
+            //action of the "offdiagonal" terms, picking a t for every neighbor
+            out[k] += in[NN.vicini[m]] * t;
+        }
+        //diagonal element, dopon spin dependent
+        out[k] += (lambda * (s[k] == spin) + J * spin * 0.25 * sum_nn) * in[k];
+    }
+}
+template void dopon_problem<char>::MultMv(double *in, double*out);
+
+template<class FLOAT, class EIGPROB>
+void Solution(dopon_problem<char> &A, EIGPROB &Prob)
+/*
+  This function prints eigenvalues and eigenvetors on standard "cout"
+  stream and exemplifies how to retrieve information from ARPACK++ classes.
+*/
+
+{
+    using namespace std;
+  int   i, n, nconv, mode;
+  FLOAT *Ax;
+  FLOAT *ResNorm;
+
+  /*
+     ARPACK++ includes some functions that provide information
+     about the problem. For example, GetN furnishes the dimension
+     of the problem and ConvergedEigenvalues the number of
+     eigenvalues that attained the required accuracy. GetMode
+     indicates if the problem was solved in regular,
+     shift-and-invert or other mode.
+  */
+
+  n     = Prob.GetN();
+  nconv = Prob.ConvergedEigenvalues();
+  mode  = Prob.GetMode();
+/*
+  cout << endl << endl << "Testing ARPACK++ class ARSymEig \n";
+  cout << "Real symmetric eigenvalue problem: A*x - lambda*x" << endl;
+  switch (mode) {
+  case 1:
+    cout << "Regular mode" << endl << endl;
+    break;
+  case 3:
+    cout << "Shift and invert mode" << endl << endl;
+  }
+
+  cout << "Dimension of the system            : " << n             << endl;
+  cout << "Number of 'requested' eigenvalues  : " << Prob.GetNev() << endl;
+  cout << "Number of 'converged' eigenvalues  : " << nconv         << endl;
+  cout << "Number of Arnoldi vectors generated: " << Prob.GetNcv() << endl;
+  cout << endl;
+*/
+  /*
+    EigenvaluesFound is a boolean function that indicates
+    if the eigenvalues were found or not. Eigenvalue can be
+    used to obtain one of the "converged" eigenvalues. There
+    are other functions that return eigenvectors elements,
+    Schur vectors elements, residual vector elements, etc.
+  */
+
+  if (Prob.EigenvaluesFound()) {
+    cout << "Eigenvalues:" << endl;
+    for (i=0; i<nconv; i++) {
+      cout << "  lambda[" << (i+1) << "]: " << Prob.Eigenvalue(i) << endl;
+    }
+    cout << endl;
+  }
+
+  /*
+    EigenvectorsFound indicates if the eigenvectors are
+    available. RawEigenvector is one of the functions that
+    provide raw access to ARPACK++ output data. Other functions
+    of this type include RawEigenvalues, RawEigenvectors,
+    RawSchurVector, RawResidualVector, etc.
+  */
+
+  if (Prob.EigenvectorsFound()) {
+
+    // Printing the residual norm || A*x - lambda*x ||
+    // for the nconv accurately computed eigenvectors.
+
+    Ax      = new FLOAT[n];
+    ResNorm = new FLOAT[nconv];
+
+    for (i=0; i<nconv; i++) {
+      A.MultMv(Prob.RawEigenvector(i),Ax);
+      axpy(n, -Prob.Eigenvalue(i), Prob.RawEigenvector(i), 1, Ax, 1);
+      ResNorm[i] = nrm2(n, Ax, 1) / fabs(Prob.Eigenvalue(i));
+    }
+
+    for (i=0; i<nconv; i++) {
+      cout << "||A*x(" << (i+1) << ") - lambda(" << (i+1);
+      cout << ")*x(" << (i+1) << ")||: " << ResNorm[i] << "\n";
+    }
+    cout << "\n";
+
+    delete[] Ax;
+    delete[] ResNorm;
+
+  }
+
+} // Solution
+
+
+template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(bool verbose){
+
+    int nconv;
+    double E_up=1e4, E_down=1e4;
+
+    // Defining what we need: the four eigenvectors of A with smallest magnitude.
+
+    ARSymStdEig<double, dopon_problem<char> >
+            dprob(NN.N, 1, this, &dopon_problem<char>::MultMv, "SA");
+
+    dprob.ChangeTol(1.0e-8);
+    dprob.ChangeMaxit(5000);
+
+    if (last_gs_spin != 1) {
+        dprob.ChangeNcv(10);
+        probed_spin = -1;
+        nconv = dprob.FindEigenvalues();
+
+        if (nconv)
+            E_down = dprob.Eigenvalue(0) / J;
+        else
+            fprintf(stderr, "Did not manage to find eigenvalue for spin down dopons\n");
+    }
+
+    if (last_gs_spin != -1) {
+        probed_spin = +1;
+        dprob.ChangeNcv(10);
+        nconv = dprob.FindEigenvalues();
+
+        if (nconv)
+            E_up = dprob.Eigenvalue(0) / J;
+        else 
+            fprintf(stderr, "Did not manage to find eigenvalue for spin up dopons\n");
+    }
+
+    if (verbose)
+        fprintf(stderr, "E(+) = %f, E(-) = %f\n", E_up, E_down);
+
+    if(abs(E_down - E_up) > 1)
+        last_gs_spin = (E_down < E_up) ? -1 : 1;
+    else
+        last_gs_spin = 0;
+
+    last_energy = std::min(E_up,E_down);
+    return last_energy;
+} 
+template double dopon_problem<char>::lanczos_lowest_energy(bool);

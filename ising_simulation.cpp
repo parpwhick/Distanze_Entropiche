@@ -176,7 +176,7 @@ double ising_simulation::energia_cinetica() {
     if (update_rule == CREUTZ || update_rule == MICROCANONICAL) {
         for (size_t i = 0; i < link_energies.size(); i++)
             totale += static_cast<double>(link_energies[i]);
-        return totale / link_energies.size();
+        return totale;
     }
     else
         return 4.0/(exp(4*avg_beta)-1);
@@ -597,7 +597,7 @@ void time_series(const adj_struct &adj){
         E_kin = sim.energia_cinetica();
         E_mag = sim.energia_magnetica();
         mag = sim.magnetizzazione();
-        beta_est = 0.25 * std::log(1. + 4. / E_kin);
+        beta_est = 0.25 * std::log(1. + 4. * sim.link_energies.size() / E_kin);
         d_shan = dist.dist_shan;
         d_shan_r = dist.dist_shan_r;
         d_top = dist.dist_top;
