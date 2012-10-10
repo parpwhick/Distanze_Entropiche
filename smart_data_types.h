@@ -13,6 +13,7 @@
 #include <cstdio>
 #include <stdexcept>
 #include <sstream>
+#include <algorithm>
 
 ///Funziona come una normale variabile, ma con nome, statistiche interne e storia completa
 /**
@@ -53,39 +54,53 @@ class auto_stats{
         operator T(){
             return value;
         }
-        ///Media
-        double mean(){
-            return sum/counter;
+	///Media
+	double mean(){
+		if(counter)
+
+			return sum/counter;
+		else
+			return 0.0;
+	}
+	///Variazione standard con attenzione a troncamenti numerici per evitare radici di numeri negativi
+	double std(){
+		if (var()<1e-13)
+			return 0;
+		else
+			return std::sqrt(var());
+	}
+	///Varianza
+	double var(){
+		if(counter)
+			return (sum2/counter - sum/counter*sum/counter);
+		else return 0.0;
+	}
+        ///Max
+        T max(){
+            return *(std::max_element(history.begin(),history.end()));
         }
-        ///Variazione standard con attenzione a troncamenti numerici per evitare radici di numeri negativi
-        double std(){
-            if (var()<1e-13)
-                return 0;
-            else
-                return std::sqrt(var());
+        ///Max
+        T min(){
+            return *(std::min_element(history.begin(),history.end()));
         }
-        ///Varianza
-        double var(){
-            return (sum2/counter - sum/counter*sum/counter);
-        }
-        ///Stampa delle statistiche
-        void print(){
-            printf("%s\t %.3g \t %.3g\n",name.c_str(),mean(),std());
-        }
-        ///Quanti valori contiene
-        int size(){
-            return counter;
-        }
-        ///Restituisce storia read-only
-        const std::vector<T> & read_history(){
-            return history;
-        }
-        ///Costruttore con valore di default zero e battesimo della variabile
-        auto_stats(std::string _name="") : counter(0), sum(0.0), sum2(0.0), name(_name) {}
-        ///Distruttore che stampa automaticamente le statistiche accumulate
-        ~auto_stats(){
-            print();
-        }
+	///Stampa delle statistiche
+	void print(){
+		printf("%s\t %.3g \t %.3g\n",name.c_str(),mean(),std());
+	}
+	///Quanti valori contiene
+	int size(){
+		return counter;
+	}
+	///Restituisce storia read-only
+	const std::vector<T> & read_history(){
+		return history;
+	}
+	///Costruttore con valore di default zero e battesimo della variabile
+	auto_stats(std::string _name="") : counter(0), sum(0.0), sum2(0.0), name(_name) {}
+	///Distruttore che stampa automaticamente le statistiche accumulate
+	~auto_stats(){
+		print();
+	}
 };
 
 /**
@@ -95,8 +110,8 @@ class auto_stats{
  matrix<int> mat(3,3); //inizializza a zero una matrice 3x3
  mat(27,3) = 2;         //prova ad accedere all'elemento (27,1) -> errore!
 
- //terminate called after throwing an instance of 'std::out_of_range'
- //what():  Requesting matrix element out of bounds at (27,3)!
+//terminate called after throwing an instance of 'std::out_of_range'
+//what():  Requesting matrix element out of bounds at (27,3)!
    @endcode
  */
 template <typename data_t>

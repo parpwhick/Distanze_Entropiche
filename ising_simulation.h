@@ -18,7 +18,8 @@ class ising_simulation {
 public:
     ///tipo di variabile utilizzata, un semplice byte
     typedef char config_t;
-private:
+    typedef double energy_t;
+public:
     ///update micranonico(con bordi?) o metropolis
     simulation_t update_rule;
     ///link alle informazioni read-only sulla topologia
@@ -28,23 +29,20 @@ private:
     ///configurazione/stato del sistema
     vector<config_t> config;
     ///energie dei link, per update microcanonico
-    vector<config_t> link_energies;
+    vector<energy_t> link_energies;
     ///Nr. di sweep del sistema per intervallo di tempo
     int steps_per_time;
     ///Quanti istanti di tempo saltare all'inizio per termalizzare
     int skip;
-    ///Nel caso di una distribuzione random uniforme di energie, l'energia massima
-    int max_link_energy;
-    ///temperatura inversa per il sistema (o i suoi bordi)
-    double beta;
     ///Generatore di numeri casuali, uno per simulazione, per poter procedere parallelamente
     RandMT random;
-
     ///Esegue un update di tipo metropolis, con temperatura beta, per i siti elencati nel vettore @param subset
     void metropolis_subset(std::vector<int> subset, double local_beta);
     ///Pone i link attigui ai siti elencati in subset, alla temperatura data
     void thermalize_subset(vector<int> subset, double local_beta);
-public:
+    ///Nr. di bordi da termalizzare (0 per non fare nulla)
+    int n_borders_thermalize;
+
     ///Esegue uno sweep con Metropolis
     void metropolis_step();
     ///Uno sweep microcanonico
@@ -52,11 +50,7 @@ public:
     ///Uno sweep di Creutz
     void creutz_step();
     ///Costruttore per impostare i primi valori
-    ising_simulation(const adj_struct & NN1, simulation_t TT, int time_length=1,int initial_time_skip=0);
-    ///Imposta beta per il sistema e ricalcola le esponenziali
-    void set_beta(double bt) { beta = bt;}
-    ///Imposta la massima energia per i link
-    void set_max_energy (int m){ max_link_energy = m;}
+    ising_simulation(const adj_struct & NN1);
     ///Stampa alcune misure (non utilizzato)
     void measure();
     ///Esegue il giusto numero di sweep con l'update selezionato
@@ -67,6 +61,8 @@ public:
     void init_config();
     ///Restituisce una copia della configurazione
     vector<config_t> copy();
+    ///temperatura inversa per il sistema (o i suoi bordi)
+    double avg_beta;
     ///Restituisce un puntatore read-only alla configurazione (che puo' cambiare nel frattempo!)
     const config_t *config_reference() {
         if(!config.empty())
@@ -74,15 +70,17 @@ public:
         else
             throw(std::runtime_error(std::string("Usata configurazione non inizializzata")));
     }
-    const config_t *energy_reference() {
+    const energy_t *energy_reference() {
         if(!link_energies.empty())
 	    return link_energies.data();
         else
-            throw(std::runtime_error(std::string("Usata configurazione non inizializzata")));
+            throw(std::runtime_error(std::string("Usate energie non inizializzate")));
     }
-    vector<int> border1;
-    vector<int> border2;
-    vector<int> border3;
+    int energy_size(){
+        return link_energies.size();
+    }
+    ///Vettore contenente i vettori che rappresentano i bordi
+    vector<vector<int> > borders;
     ///Calcola l'energia cinetica media per sito
     double energia_cinetica();
     ///Calcola l'energia magnetica media per sito
@@ -92,9 +90,12 @@ public:
     ///Restituisce un vettore con l'energia media attorno ad ogni sito
     vector<double> local_energy();
 
+
 };
 ///Funzione globale che esegue il calcolo delle distanze e altre statistiche tra configurazioni successive
 void time_series(const adj_struct & adj);
+///Simulazione con variabili ed output specializzati per il problema t-J(z) e vedere la bolla
+void nagaoka_run(const adj_struct & adj);
 
 #endif	/* ISING_SIMULATION_H */
 

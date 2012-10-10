@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
 
 #include "strutture.h"
 #include "rand_mersenne.h"
@@ -17,6 +18,21 @@ void error(const char* message) {
     exit(1);
 }
 
+std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
+    std::stringstream ss(s);
+    std::string item;
+    while(std::getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
+    return elems;
+}
+
+std::vector<std::string> split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    return split(s, delim, elems);
+}
+
+
 void print_help() {
     const char *message =
             "Usage: distanze [-option1 [arg]] [-option2 [arg]]...\n"
@@ -26,7 +42,6 @@ void print_help() {
             "  -file FILENAME    Read configurations from FILENAME [off]\n"
             "  -simulation       Configurations from temporal evolution\n"
             "  -num N            Limits the number of configurations to N [2550]\n"
-            "  -length N         Limits configuration length to N [600]\n"
             "  -nodistance       Doesn't calculate any distance matrix\n"
             "  -symbols N        Generate random strings with N symbols [2]\n"
             "  -nowrite          Don't write the distance matrices [off]\n"
@@ -45,7 +60,7 @@ void print_help() {
             "  -direct           Reduce two partitions against each other [default]\n"
             "\n"
             "Options the choice of a topology:\n"
-            "  -sequence         Linear open sequence topology with 2 nearest neighbours\n"
+            "  -sequence N       Linear open sequence topology with 2 nearest neighbours long N\n"
             "  -fuzzy N          Linear open sequence with N nearest neighbours\n"
             "  -torus L          The configuration is from a periodic square of side L\n"
             "  -square L         The configuration is from an open square of side L [default, 25]\n"
@@ -56,11 +71,17 @@ void print_help() {
             "\n"
             "Simulation options:\n"
             "  -microcanonical   Evolution according to microcanonical law [default]\n"
-            "  -link_energy N    Max of the microcanonical kinetic energy [10]\n"
             "  -metropolis       Evolution according to Metropolis rule\n"
-            "  -beta B           Floating point beta parameter [0.45]\n"
+            "  -creutz           Evolution according to Creutz rule\n"
+            "  -beta B[,B2,..]   Floating point beta parameter for the (many) borders [0.45]\n"
             "  -sweeps N         Number of full sweeps in a time unit [1]\n"
             "  -skip N           Skip N time units to thermalize the system [50000]\n"
+            "\n"
+            "Quantum Hamiltonian:\n"
+            "  -electrons        Calculate at each iteration the electron energy\n"
+            "  -t X              Set hopping parameter to X [1.0]\n"
+            "  -J X              Set J to X [0.01]\n"
+            "\n"
             ;
     fprintf(stderr, "%s", message);
     if (opts.partition_type == GENERAL_PARTITION)
@@ -79,8 +100,6 @@ void set_program_options(options &opts, int argc, char**argv) {
         opts.topologia = LINEARE;
     opts.letto_da = RANDOM;
     opts.simulation_type = MICROCANONICAL;
-    opts.beta = 0.45;
-    opts.max_link_energy = 10;
     opts.skip = 50000;
     opts.sweeps = 1;
     opts.graphics = false;
@@ -91,6 +110,9 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.riduzione = DIRETTA;
     opts.threads = 2;
     opts.demo = false;
+    opts.electrons = false;
+    opts.hopping = 1.0;
+    opts.J = 0.01;
     opts.da_calcolare = 0
             | SHAN | TOP
             | RID | RID_TOP
@@ -124,9 +146,6 @@ void set_program_options(options &opts, int argc, char**argv) {
                 strncpy(opts.state_filename, argv[read_argvs++], 255);
                 fprintf(stderr, "Reading from filename: %s\n", opts.state_filename);
                 opts.letto_da = FROM_FILE;
-            } else if (input == "-sequence") {
-                fprintf(stderr, "Analyzing 1d sequences\n");
-                opts.topologia = LINEARE;
             } else if (input == "-adj") {
                 if (argc - read_argvs < 2)
                     error("Need to specify two vector files\n");
@@ -136,15 +155,16 @@ void set_program_options(options &opts, int argc, char**argv) {
                 strncpy(opts.adj_vec_1, argv[read_argvs++], 255);
                 strncpy(opts.adj_vec_2, argv[read_argvs++], 255);
                 opts.topologia = FROM_FILE;
-            } else if (input == "-length") {
+            } else if (input == "-sequence") {
                 if (argc - read_argvs < 1)
                     error("Need to specify sequence length\n");
                 if (argv[read_argvs][0] == '-')
                     error("Expecting argument, not another option\n");
 
                 opts.seq_len = atoi(argv[read_argvs++]);
-                fprintf(stderr, "Sequence length limited to %d\n", opts.seq_len);
-            }  else if (input == "-epsilon") {
+                opts.topologia = LINEARE;
+                fprintf(stderr, "Analyzing 1d sequences long %d\n", opts.seq_len);
+            } else if (input == "-epsilon") {
                 if (argc - read_argvs < 1)
                     error("Need to specify epsilon\n");
                 if (argv[read_argvs][0] == '-')
@@ -212,16 +232,13 @@ void set_program_options(options &opts, int argc, char**argv) {
                 if (argv[read_argvs][0] == '-')
                     error("Expecting argument, not another option\n");
 
-                opts.beta = atof(argv[read_argvs++]);
-                fprintf(stderr, "Beta set to: %.2f\n", opts.beta);
-            } else if (input == "-link_energy") {
-                if (argc - read_argvs < 1)
-                    error("Missing max link energy\n");
-                if (argv[read_argvs][0] == '-')
-                    error("Expecting argument, not another option\n");
-
-                opts.max_link_energy = atoi(argv[read_argvs++]);
-                fprintf(stderr, "Max link energy set to: %d\n", opts.max_link_energy);
+                std::vector<string> input_beta = split(argv[read_argvs++],',');
+                for(size_t i=0; i<input_beta.size(); i++)
+                    opts.beta.push_back(atof(input_beta[i].c_str()));
+                fprintf(stderr, "Beta set to: ");
+                for(size_t i=0; i<opts.beta.size(); i++)
+                    fprintf(stderr,"%.2f ",opts.beta[i]);
+                fprintf(stderr,"\n");
             } else if (input == "-sweeps") {
                 if (argc - read_argvs < 1)
                     error("Missing number of sweeps\n");
@@ -246,6 +263,29 @@ void set_program_options(options &opts, int argc, char**argv) {
                 fprintf(stderr, "Temporal with Metropolis rule\n");
                 opts.simulation_type = METROPOLIS;
                 opts.letto_da = SIMULATION;
+            } else if (input == "-creutz") {
+                fprintf(stderr, "Temporal series with Creutz rule\n");
+                opts.simulation_type = CREUTZ;
+                opts.letto_da = SIMULATION;
+            } else if (input == "-electrons") {
+                fprintf(stderr, "Calculating Hamiltonian at each iteration\n");
+                opts.electrons = true;
+            } else if (input == "-t") {
+                if (argc - read_argvs < 1)
+                    error("Missing t\n");
+                if (argv[read_argvs][0] == '-')
+                    error("Expecting argument, not another option\n");
+
+                opts.hopping = atof(argv[read_argvs++]);
+                fprintf(stderr, "Hoping parameter set to %f\n", opts.hopping);
+            } else if (input == "-J") {
+                if (argc - read_argvs < 1)
+                    error("Missing J\n");
+                if (argv[read_argvs][0] == '-')
+                    error("Expecting argument, not another option\n");
+
+                opts.J = atof(argv[read_argvs++]);
+                fprintf(stderr, "J interaction set to %f\n", opts.J);
             } else if (input == "-v") {
                 opts.verbose++;
                 fprintf(stderr, "Verbosity at %d\n", opts.verbose);
@@ -296,6 +336,8 @@ void set_program_options(options &opts, int argc, char**argv) {
     }
     if (killswitch)
         exit(0);
+    if(opts.beta.empty())
+        opts.beta.push_back(0.44);
 
     fprintf(stderr, "\n");
 

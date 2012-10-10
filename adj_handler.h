@@ -10,6 +10,9 @@
 #include <cstdlib>
 #include <vector>
 
+using std::pair;
+using std::vector;
+
 #define LEAST -1
 
 /** @brief Struttura equivalente a una matrice di adiacenza sparsa, ma con accesso rapido.
@@ -27,7 +30,9 @@ class adj_struct {
 public:
     ///Volume dello spazio della configurazione
     int N;
-    ///Numero di link
+    ///Numero di link (n. elementi nonnulli della matrice di adiacenza)
+    int n_total_links;
+    ///Numero link con i>j
     int n_link;
     ///Massimo numero di coordinazione
     int zmax;
@@ -37,6 +42,8 @@ public:
     std::vector<int> adj;
     ///Indica dove iniziano i link per il sito richiesto
     std::vector<int> index;
+    ///Coppie di elementi adiacenti, i~j, con i>j
+    std::vector<pair<int,int> > positive_links;
     ///Array per il veloce accesso ai vicini, tramite l'indice
     mutable const int *vicini;
 
@@ -62,6 +69,7 @@ public:
         return(z);
     }
 
+    void normalize();
     ///Costruttore per allocare direttamente i vettori
     adj_struct(std::vector<int> _adi, std::vector<int> _adj , std::vector<int> _index)
             : adi(_adi), adj(_adj), index(_index) {}

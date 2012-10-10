@@ -54,10 +54,12 @@ enum DISTANZE {
 enum source {
     ///sequenze lineari senza salto
     LINEARE,
-    ///reticolo quadrato con C.C periodiche toroidali
+    ///reticolo quadrato con C.C. periodiche toroidali
     TORO_2D,
     ///reticolo quadrato con bordi aperti
     RETICOLO_2D,
+    ///reticolo quadrato con C.C. su un lato solo
+    CILINDRO_2D,
     ///triangolo di Sierpinski di generazione options::sierpinski_gen
     SIERPINSKI,
     ///sequenze lineari con salto (ovvero molti primi vicini)
@@ -130,8 +132,8 @@ public:
     int sweeps;
     ///Numero di istanti temporali da saltare inizialmente
     int skip;
-    ///Temperatura inversa per metropolis [default: 0.45]
-    double beta;
+    ///Temperatura inversa per simulazioni, un vettore contenente un valore per ogni lato [default: 0.45]
+    std::vector<double> beta;
     ///Massima energia per link nel caso di distribuzione random uniforme
     int max_link_energy;
 
@@ -142,6 +144,12 @@ public:
     //bool translate;
     ///Mostrare la demo di operazioni tra partizioni
     bool demo;
+    //Calcolare le energie degli elettroni ad ogni iterazione?
+    bool electrons;
+    ///Hopping parameter t
+    double hopping;
+    ///Interazione J per l'hamiltoniana t-J(z)
+    double J;
 
 } options;
 

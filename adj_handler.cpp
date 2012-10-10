@@ -46,7 +46,7 @@ adj_struct adiacenza_toroidal_lattice(int lato){
     
     adj_struct temp(adi,adj,index);
     temp.N=N;
-    temp.n_link=4*N;
+    temp.n_total_links=4*N;
     temp.zmax=4;
     return(temp);
 }
@@ -92,7 +92,7 @@ adj_struct adiacenza_square_lattice(int lato){
 
     adj_struct temp(adi,adj,index);
     temp.N=N;
-    temp.n_link=count;
+    temp.n_total_links=count;
     temp.zmax=4;
     return(temp);
 }
@@ -138,7 +138,7 @@ adj_struct adiacenza_open_square_lattice(int lato){
 
     adj_struct temp(adi,adj,index);
     temp.N=N;
-    temp.n_link=count;
+    temp.n_total_links=count;
     temp.zmax=4;
     return(temp);
 }
@@ -164,7 +164,7 @@ adj_struct adiacenza_simple_line(int N){
 
     adj_struct temp(adi,adj,index);
     temp.N=N;
-    temp.n_link=N;
+    temp.n_total_links=N;
     temp.zmax=1;
     return(temp);
 }
@@ -194,7 +194,7 @@ adj_struct adiacenza_fuzzy_line(int N){
 
     adj_struct temp(adi,adj,index);
     temp.N=N;
-    temp.n_link=adj_count;
+    temp.n_total_links=adj_count;
     temp.zmax=opts.fuzzy+1;
     return(temp);
 }
@@ -348,7 +348,7 @@ adj_struct adiacenza_sierpinski(int GEN){
     index[total_size] = scritti;
     adj_struct temp(adi,adj,index);
     temp.N=total_size;
-    temp.n_link=scritti;
+    temp.n_total_links=scritti;
     temp.zmax=4;
     
 //    // test!
@@ -459,7 +459,7 @@ adj_struct adiacenza_from_file(const char *name_vec1,const char *name_vec2){
     
     
     adj_struct temp(tmp_index,adj,index);
-    temp.n_link=M;
+    temp.n_total_links=M;
     temp.N=N;
     temp.zmax=zmax;
     
@@ -475,8 +475,23 @@ adj_struct adiacenza_from_file(const char *name_vec1,const char *name_vec2){
 void adiacenza_to_file(const adj_struct & nn){
     FILE *vec1 = fopen("vector1.bin", "wb");
     FILE *vec2 = fopen("vector2.bin", "wb");
-    fwrite(nn.adi.data(), sizeof (label_t), nn.n_link, vec1);
-    fwrite(nn.adj.data(), sizeof (label_t), nn.n_link, vec2);
+    fwrite(nn.adi.data(), sizeof (label_t), nn.n_total_links, vec1);
+    fwrite(nn.adj.data(), sizeof (label_t), nn.n_total_links, vec2);
     fclose(vec1);
     fclose(vec2);
  }
+
+void adj_struct::normalize(){
+    n_link = n_total_links/2;
+    int counter = 0;
+    positive_links.resize(n_link);
+
+    for (int i = 0; i < n_total_links; i++)
+        if (adi[i] > adj[i])
+            positive_links[counter++] = std::make_pair(adi[i],adj[i]);
+
+    if(n_link != counter){
+        fprintf(stderr,"ADJ NORMALIZE: Asymmetric adjacency matrix\n");
+        exit(1);
+    }
+}

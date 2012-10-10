@@ -153,12 +153,14 @@ int main(int argc, char** argv) {
             topologia = adiacenza_from_file(opts.adj_vec_1, opts.adj_vec_2);
             break;
     }
+    //crea strutture contenenti solo link i~j, in cui i>j
+    topologia.normalize();
     ///Il volume della partizione è determinato dalla sua struttura di adiacenza
     opts.seq_len = topologia.N;
 
     ///Stima la quantità di memoria utilizzata, per poter valutare se è sufficiente
     unsigned long memory_estimate =
-            +topologia.n_link * 2 * sizeof (int) +topologia.N * sizeof (int) //struct adiacenza
+            +topologia.n_total_links * 2 * sizeof (int) +topologia.N * sizeof (int) //struct adiacenza
             +opts.seq_len * sizeof (int) //caricamento sequenza
             +opts.seq_len * sizeof (double) //logaritmo
             +opts.seq_len * sizeof (product_t) * opts.threads; //temp product
@@ -169,7 +171,7 @@ int main(int argc, char** argv) {
     else
         memory_estimate+=
              opts.seq_len * 2 * sizeof (label_t) * ( 2 +1) //partizioni: fisso + max_variabile/3
-            + sizeof(ising_simulation::config_t) * (topologia.N + topologia.n_link) ;
+            + sizeof(ising_simulation::config_t) * (topologia.N + topologia.n_total_links) ;
     memory_estimate >>= 20;
     fprintf(stderr,"Estimated memory usage: %lu MB\n",memory_estimate+1);
 
