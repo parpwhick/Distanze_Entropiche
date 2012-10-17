@@ -21,7 +21,7 @@ template <typename spin_t> void dopon_problem<spin_t>::construct_problem_matrix(
             H(NN.vicini[m], k) = t;
         }
 
-        H(k, k) = lambda * (s[k] == spin) + spin * 0.25 * sum_nn;
+        H(k, k) = lambda * (s[k] == spin) + J * spin * 0.25 * sum_nn;
 
         //spin +- 1
         //H(k, k) = lambda * 0.5 * (s[k] == 1);
@@ -31,10 +31,12 @@ template <typename spin_t> void dopon_problem<spin_t>::construct_problem_matrix(
     }
 }
 template void dopon_problem<char>::construct_problem_matrix(int spin);
+template void dopon_problem<int>::construct_problem_matrix(int spin);
+template void dopon_problem<double>::construct_problem_matrix(int spin);
 
 
 
-template <typename spin_t> double dopon_problem<spin_t>::calculate_lowest_energy() {
+template <typename spin_t> double dopon_problem<spin_t>::calculate_lowest_energy(bool verbose) {
     SelfAdjointEigenSolver<MatrixXf> eigenproblem;
 
     //energy for spin up polaron
@@ -46,7 +48,7 @@ template <typename spin_t> double dopon_problem<spin_t>::calculate_lowest_energy
         fprintf(stderr, "Did not manage to find eigenvalues\n");
         E_up = 10000.0;
     }
-    E_up = eigenproblem.eigenvalues().coeff(0);
+    E_up = eigenproblem.eigenvalues().coeff(0) / J;
     //std::cout << "The eigenvalues of H_up are: " << eigenproblem.eigenvalues().transpose() << std::endl;
 
     //energy for spin down polaron
@@ -58,9 +60,11 @@ template <typename spin_t> double dopon_problem<spin_t>::calculate_lowest_energy
         fprintf(stderr, "Did not manage to find eigenvalues\n");
         E_down = 10000.0;
     }
-    E_down = eigenproblem.eigenvalues().coeff(0);
+    E_down = eigenproblem.eigenvalues().coeff(0) / J;
     //std::cout << "The eigenvalues of H_down are: " << eigenproblem.eigenvalues().transpose() << std::endl;
 
+    if (verbose)
+        fprintf(stderr, "E(+) = %f, E(-) = %f\n", E_up, E_down);
     if (E_down < E_up) {
         last_gs_spin = -1;
         return E_down;
@@ -69,12 +73,15 @@ template <typename spin_t> double dopon_problem<spin_t>::calculate_lowest_energy
         return E_up;
     }
 }
-template double dopon_problem<char>::calculate_lowest_energy();
+template double dopon_problem<char>::calculate_lowest_energy(bool);
+template double dopon_problem<int>::calculate_lowest_energy(bool);
+template double dopon_problem<double>::calculate_lowest_energy(bool);
 
 template <class spin_t> template <typename T> void dopon_problem<spin_t>::MultMv(T*in, T*out) {
 
     const int & spin = probed_spin;
-    int z, sum_nn;
+    int z;
+    double sum_nn;
 
     for (int k = 0; k < NN.N; k++) {
         //set the resulting vector element to 0
@@ -92,6 +99,8 @@ template <class spin_t> template <typename T> void dopon_problem<spin_t>::MultMv
     }
 }
 template void dopon_problem<char>::MultMv(double *in, double*out);
+template void dopon_problem<double>::MultMv(double *in, double*out);
+template void dopon_problem<int>::MultMv(double *in, double*out);
 
 template<class FLOAT, class EIGPROB>
 void Solution(dopon_problem<char> &A, EIGPROB &Prob)
@@ -188,14 +197,13 @@ void Solution(dopon_problem<char> &A, EIGPROB &Prob)
 
 
 template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(bool verbose){
-
     int nconv;
     double E_up=1e4, E_down=1e4;
 
     // Defining what we need: the four eigenvectors of A with smallest magnitude.
 
-    ARSymStdEig<double, dopon_problem<char> >
-            dprob(NN.N, 1, this, &dopon_problem<char>::MultMv, "SA");
+    ARSymStdEig<double, dopon_problem<spin_t> >
+            dprob(NN.N, 1, this, &dopon_problem<spin_t>::MultMv, "SA");
 
     dprob.ChangeTol(1.0e-8);
     dprob.ChangeMaxit(5000);
@@ -234,3 +242,5 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(b
     return last_energy;
 } 
 template double dopon_problem<char>::lanczos_lowest_energy(bool);
+template double dopon_problem<double>::lanczos_lowest_energy(bool);
+template double dopon_problem<int>::lanczos_lowest_energy(bool);

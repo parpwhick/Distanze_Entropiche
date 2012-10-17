@@ -47,6 +47,9 @@ ising: ising_simulation.cpp adj_handler.o adj_handler.h rand_mersenne.o
 sierpinski: sierpinski.cpp smart_data_types.h
 	${CC} -o sierpinski -O3 -Wall sierpinski.cpp
 
+energy_test: energy_test.o dopon_problem.o adj_handler.o
+	${CC} -o energy_test energy_test.o init_functions.o adj_handler.o dopon_problem.o rand_mersenne.o ${LINK_OPTS}
+
 general_distance.o: general_distance.cpp strutture.h partizioni.h distance.h adj_handler.h
 	${CC} ${COPTS} -c general_distance.cpp
 
@@ -80,6 +83,9 @@ rand_mersenne.o: rand_mersenne.cpp rand_mersenne.h
 
 dopon_problem.o: dopon_problem.h dopon_problem.cpp adj_handler.h
 	${CC} ${COPTS} ${INTEL_DEFINES} -I /usr/include/eigen3/ -I/usr/include/arpack++/ -c dopon_problem.cpp
+
+energy_test.o: energy_test.cpp dopon_problem.h adj_handler.h
+	${CC} ${COPTS} ${INTEL_DEFINES} -I /usr/include/eigen3/ -I/usr/include/arpack++/ -c energy_test.cpp
 
 rand55.o: rand55.cpp rand55.h
 	${CC} ${COPTS} -c rand55.cpp

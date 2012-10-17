@@ -27,7 +27,7 @@ public:
         last_gs_spin = 0;
     };
 
-    double calculate_lowest_energy();
+    double calculate_lowest_energy(bool verbose = false);
     double lanczos_lowest_energy(bool verbose=false);
     double get_ground_state();
     
