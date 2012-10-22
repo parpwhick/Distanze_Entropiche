@@ -69,7 +69,10 @@ template <typename data_t> void write_binary_array(const data_t *array, int N, c
 void nagaoka_simulation::step_wh(int steps){
     if (update_rule == METROPOLIS)
         for (int i = 0; i < steps; i++)
-            metropolis_wh();
+            if(opts.beta.size()==1)
+                metropolis_wh();
+            else
+                metropolis_gradient();
 
     if (update_rule == CREUTZ)
         for (int i = 0; i < steps; i++) {
@@ -98,7 +101,7 @@ void nagaoka_simulation::metropolis_wh() {
         config[s] = -config[s];
 
         dH += quantum_energy.lanczos_lowest_energy() - old_gs_energy;
-        if (dH > 0 && random.get_double() > exp(-2 * avg_beta * dH)) {
+        if (dH > 0 && random.get_double() > exp(-2 * opts.beta[0] * dH)) {
             //if the energy difference is unwanted, restore the previous state
             //of the spins
             config[s] = -config[s];
@@ -217,6 +220,8 @@ void nagaoka_run(const adj_struct &adj) {
     
     init_AFM(sim.config);
     sim.step_wh(opts.skip);
+    if (opts.verbose)
+            write_binary_array(sim.config_reference(), adj.N, "configurations.bin", "ab");
     vector<double> avg_local_energy = sim.local_energy();
     std::ofstream out0("output.txt", std::ios::app);
     out0 << std::fixed << std::setprecision(4)
@@ -235,7 +240,7 @@ void nagaoka_run(const adj_struct &adj) {
         beta_est = 1 / E_kin / opts.J;//0.25 * std::log(1. + 4. * sim.link_energies.size() / E_kin);
 
         //simulation step
-        sim.step_wh(opts.sweeps);
+        sim.step_wh(opts.sweeps);        
         if (opts.verbose) {
             write_binary_array(sim.config_reference(), adj.N, "configurations.bin", "ab");
             //calcolo energie medie per ogni iterazione
