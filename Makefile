@@ -8,10 +8,10 @@ COPTS= -O3 -march=native
 # STL profiling
 #COPTS+= -D_GLIBCXX_PROFILE
 COPTS+=-I /usr/include/arpack++/
-ifeq ($(shell hostname),Atomowy-linux)
-   CC=g++
-else
+ifeq ($(shell hostname),marcin)
    CC=icc
+else
+   CC=g++
 endif
 
 COPTS +=-Wall

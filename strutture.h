@@ -134,8 +134,8 @@ public:
     int skip;
     ///Temperatura inversa per simulazioni, un vettore contenente un valore per ogni lato [default: 0.45]
     std::vector<double> beta;
-    ///Massima energia per link nel caso di distribuzione random uniforme
-    int max_link_energy;
+    ///File in cui scrivere le configurazioni
+    std::string config_out;
 
     ///Grado di verbosita', da 0 [default: 0]
     int verbose;

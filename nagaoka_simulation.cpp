@@ -48,6 +48,7 @@ public:
     void metropolis_gradient();
     void creutz_wh();
     void step_wh(int steps=1);
+    void special_thermalization(vector<int> subset, double local_beta);
 };
 
 template <typename data_t> void write_binary_array(const data_t *array, int N, const char *filename, const char * mode){
@@ -78,9 +79,14 @@ void nagaoka_simulation::step_wh(int steps){
         for (int i = 0; i < steps; i++) {
             creutz_wh();
             for (int b = 0; b < n_borders_thermalize; b++)
-                thermalize_subset(borders[b],opts.beta[b]);
+                special_thermalization(borders[b],opts.beta[b]);
 
         }
+}
+
+void nagaoka_simulation::special_thermalization(vector<int> subset, double local_beta) {
+    for (size_t j = 0; j < subset.size(); j++)
+        link_energies[subset[j]] = -1 / local_beta * std::log(random.get_double());
 }
 
 void nagaoka_simulation::metropolis_wh() {
@@ -121,7 +127,7 @@ void nagaoka_simulation::metropolis_gradient() {
         s = random.get_int() % NN.N;
 
         //position along the gradient expressed in the interval [0..1]
-        double position = ((s / N) + 0.0) / (N-1);
+        double position = ((s / opts.lato) + 0.0) / (opts.lato-1);
         //local T
         double T = 1/opts.beta[0] + position * (1/opts.beta[1] - 1/opts.beta[0]);
         //local beta
@@ -221,7 +227,7 @@ void nagaoka_run(const adj_struct &adj) {
     init_AFM(sim.config);
     sim.step_wh(opts.skip);
     if (opts.verbose)
-            write_binary_array(sim.config_reference(), adj.N, "configurations.bin", "ab");
+            write_binary_array(sim.config_reference(), adj.N, opts.config_out.c_str(), "ab");
     vector<double> avg_local_energy = sim.local_energy();
     std::ofstream out0("output.txt", std::ios::app);
     out0 << std::fixed << std::setprecision(4)
@@ -237,12 +243,12 @@ void nagaoka_run(const adj_struct &adj) {
 
         mag = sim.magnetizzazione();
         radius = sqrt(mag / 3.1415);
-        beta_est = 1 / E_kin / opts.J;//0.25 * std::log(1. + 4. * sim.link_energies.size() / E_kin);
+        beta_est = sim.link_energies.size() / (E_kin / opts.J);//0.25 * std::log(1. + 4. * sim.link_energies.size() / E_kin);
 
         //simulation step
         sim.step_wh(opts.sweeps);        
         if (opts.verbose) {
-            write_binary_array(sim.config_reference(), adj.N, "configurations.bin", "ab");
+            write_binary_array(sim.config_reference(), adj.N, opts.config_out.c_str(), "ab");
             //calcolo energie medie per ogni iterazione
             vector<double> local_energy = sim.local_energy();
             for (int k = 0; k < adj.N; k++)
