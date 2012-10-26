@@ -42,13 +42,27 @@ public:
         quantum_energy.set_t(opts.hopping);
         quantum_energy.set_lambda(300 * opts.hopping);
         quantum_energy.set_J(opts.J);
+        quantum_energy.set_L(opts.lato);
+        quantum_energy.set_V(0);
+        setup_bordering_links();
     }
 
+    void step_wh(int steps=1);
+    
+    //measurements
+    double average_position(double *ground_state);
+    void print_temperature_profile(){;};
+    
+    //quantity
+    std::vector<std::vector<int> > bordering_links;
+    
+private:
     void metropolis_wh();
     void metropolis_gradient();
     void creutz_wh();
-    void step_wh(int steps=1);
-    void special_thermalization(vector<int> subset, double local_beta);
+    void microcanonical_wh();
+    
+    void setup_bordering_links();
 };
 
 template <typename data_t> void write_binary_array(const data_t *array, int N, const char *filename, const char * mode){
@@ -67,6 +81,26 @@ template <typename data_t> void write_binary_array(const data_t *array, int N, c
     fclose(out);
 }
 
+void nagaoka_simulation::setup_bordering_links(){    
+    bordering_links.resize(borders.size());
+
+    for (int link = 0; link < NN.n_link; link++) {
+        int s1 = NN.positive_links[link].first;
+        int s2 = NN.positive_links[link].second;
+
+        /* easy method for squares
+         * if(s1 < L || s2 < L)
+             bordering_links[0].push_back(link);
+           else if( s1 >= L*(L-1) || s2 >= L*(L-1))
+             bordering_links[1].push_back(link);
+         */
+        for (size_t b = 0; b < borders.size(); b++)
+            if (std::binary_search(borders[b].begin(), borders[b].end(), s1) ||
+                    std::binary_search(borders[b].begin(), borders[b].end(), s2))
+                bordering_links[b].push_back(link);
+    }
+}
+
 void nagaoka_simulation::step_wh(int steps){
     if (update_rule == METROPOLIS)
         for (int i = 0; i < steps; i++)
@@ -78,15 +112,23 @@ void nagaoka_simulation::step_wh(int steps){
     if (update_rule == CREUTZ)
         for (int i = 0; i < steps; i++) {
             creutz_wh();
+            
+            //heat up the sites making up the borders
             for (int b = 0; b < n_borders_thermalize; b++)
-                special_thermalization(borders[b],opts.beta[b]);
-
+                for (size_t j = 0; j < borders[b].size(); j++)
+                        link_energies[borders[b][j]] = -1 / opts.beta[b] * std::log(random.get_double());
         }
-}
 
-void nagaoka_simulation::special_thermalization(vector<int> subset, double local_beta) {
-    for (size_t j = 0; j < subset.size(); j++)
-        link_energies[subset[j]] = -1 / local_beta * std::log(random.get_double());
+    if(update_rule == MICROCANONICAL)
+        for (int i = 0; i < steps; i++) {
+            microcanonical_wh();
+            
+            //heat up the links adjacent to the borders
+            for (int b = 0; b < n_borders_thermalize; b++)
+                for (size_t j = 0; j < bordering_links[b].size(); j++)
+                         link_energies[bordering_links[b][j]] = -1 / opts.beta[b] * std::log(random.get_double());
+
+        }        
 }
 
 void nagaoka_simulation::metropolis_wh() {
@@ -178,30 +220,92 @@ void nagaoka_simulation::creutz_wh() {
 
     }
 }
-/* microcanonical piece of code
 
- if (check_quantum_energy) {
-            double old_gs_energy = quantum_energy.last_energy;
-            if (accept1) config[s1] = -config[s1];
-            if (accept2) config[s2] = -config[s2];
+void nagaoka_simulation::microcanonical_wh() {
+    double dH;
+    int somma_vicini;
+    int z;
 
-            dH += quantum_energy.lanczos_lowest_energy() - old_gs_energy;
+    int s1,s2;
+    /* Dinamica Microcanonica, 1 passo temporale */
+    for (int j = 0; j < NN.N;) {
+        // il generatore di numeri casuali influisce per un 5% sulla performance
+        // totale, in realta' è l'accesso disordinato alla memoria che uccide
+        
+        uint32_t randnum = random.get_int();
+        int link = randnum % NN.n_link;
+        int flip1 = (randnum & (1 << 29)) != 0;
+        int flip2 = (randnum & (1 << 30)) != 0;
+        int flip12 = flip1 && flip2;
 
-            if (dH <= 0 || linkenergy >= dH)
-                linkenergy -= dH;
-            else {
-                if (accept1) config[s1] = -config[s1];
-                if (accept2) config[s2] = -config[s2];
-                quantum_energy.last_energy = old_gs_energy;
-            }
+        s1 = NN.positive_links[link].first;
+        s2 = NN.positive_links[link].second;
+        
+        energy_t &linkenergy = link_energies[link];
+                
+        if (!(flip1 || flip2) )
+            continue;
+	j++;
+        
+        if (flip1) {
+            // z numero dei vicini di s1
+            z = NN.fetch(s1);
+            somma_vicini = 0;
+            for (int m = 0; m < z; m++)
+                somma_vicini += config[NN.vicini[m]];
+            dH = J * 2 * config[s1] * somma_vicini;
+        } else
+            dH = 0;
+
+        //energia dai vicini di s2, se cambia 
+        if (flip2) {
+            z = NN.fetch(s2);
+            somma_vicini = 0;
+            for (int m = 0; m < z; m++)
+                somma_vicini += config[NN.vicini[m]];
+            dH += J * 2 * config[s2] * somma_vicini;
         }
- */
+
+        //energia dal flip simultaneo di s1 e s2
+        if (flip12)
+            dH -= J * 4 * config[s1] * config[s2];
+
+        double old_gs_energy = quantum_energy.last_energy;
+        if (flip1) config[s1] = -config[s1];
+        if (flip2) config[s2] = -config[s2];
+
+        dH += quantum_energy.lanczos_lowest_energy() - old_gs_energy;
+
+        if (dH <= 0 || linkenergy >= dH)
+            linkenergy -= dH;
+        else {
+            if (flip1) config[s1] = -config[s1];
+            if (flip2) config[s2] = -config[s2];
+            quantum_energy.last_energy = old_gs_energy;
+        }
+    }
+}
+
+double nagaoka_simulation::average_position(double *ground_state){
+    int side = opts.lato;
+    double position=0.0;
+    
+    for(int i=0; i < N; i++){   
+        double rho = ground_state[i]*ground_state[i];
+        position+= (i/side) * rho;
+    }
+    return position;
+}
 
 template <typename T> void init_AFM(std::vector<T> &config) {
     int side = opts.lato;
     for (int col = 0; col < side; col++)
         for (int row = 0; row < side; row++)
             config[col * side + row ] = 2 * ((row + col) % 2) - 1;
+    
+    for (int col = side/2-2; col < side/2+2; col++)
+        for (int row = side/2-2; row < side/2+2; row++)
+            config[col * side + row ] = 1;
 }
 
 void nagaoka_run(const adj_struct &adj) {
@@ -213,6 +317,8 @@ void nagaoka_run(const adj_struct &adj) {
     auto_stats<double> E_kin("Energy: K"), E_mag("Energy: M");
     auto_stats<double> E_tot("Energy: H+M");
     auto_stats<double> E_micro("Energy: H+M+K");
+    auto_stats<double> position("Position:");
+    double *ground_state;
     nagaoka_simulation sim(adj);
 
     init_AFM(sim.config);
@@ -244,6 +350,10 @@ void nagaoka_run(const adj_struct &adj) {
         mag = sim.magnetizzazione();
         radius = sqrt(mag / 3.1415);
         beta_est = sim.link_energies.size() / (E_kin / opts.J);//0.25 * std::log(1. + 4. * sim.link_energies.size() / E_kin);
+        
+        ground_state = sim.quantum_energy.get_ground_state();
+        position = sim.average_position(ground_state);
+        sim.print_temperature_profile();
 
         //simulation step
         sim.step_wh(opts.sweeps);        
@@ -275,6 +385,7 @@ void nagaoka_run(const adj_struct &adj) {
     fprintf(stderr, "\n");
     if (opts.simulation_type != METROPOLIS)
             write_binary_array(sim.energy_reference(), sim.energy_size(), "energies_end.bin", "wb");
+    write_binary_array(sim.quantum_energy.get_ground_state(),sim.N, "electron_eigenstate.bin","wb");
 
 
     //stampa medie

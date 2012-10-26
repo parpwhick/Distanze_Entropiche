@@ -31,7 +31,6 @@ template <typename spin_t> void dopon_problem<spin_t>::construct_problem_matrix(
     }
 }
 template void dopon_problem<char>::construct_problem_matrix(int spin);
-template void dopon_problem<int>::construct_problem_matrix(int spin);
 template void dopon_problem<double>::construct_problem_matrix(int spin);
 
 
@@ -74,7 +73,6 @@ template <typename spin_t> double dopon_problem<spin_t>::calculate_lowest_energy
     }
 }
 template double dopon_problem<char>::calculate_lowest_energy(bool);
-template double dopon_problem<int>::calculate_lowest_energy(bool);
 template double dopon_problem<double>::calculate_lowest_energy(bool);
 
 template <class spin_t> template <typename T> void dopon_problem<spin_t>::MultMv(T*in, T*out) {
@@ -96,11 +94,12 @@ template <class spin_t> template <typename T> void dopon_problem<spin_t>::MultMv
         }
         //diagonal element, dopon spin dependent
         out[k] += (lambda * (s[k] == spin) + J * spin * 0.25 * sum_nn) * in[k];
+        //voltage gradient
+        out[k] += V * (k / L) / (L - 1) * in[k];
     }
 }
 template void dopon_problem<char>::MultMv(double *in, double*out);
 template void dopon_problem<double>::MultMv(double *in, double*out);
-template void dopon_problem<int>::MultMv(double *in, double*out);
 
 template<class FLOAT, class EIGPROB>
 void Solution(dopon_problem<char> &A, EIGPROB &Prob)
@@ -195,6 +194,28 @@ void Solution(dopon_problem<char> &A, EIGPROB &Prob)
 
 } // Solution
 
+template <typename spin_t> double* dopon_problem<spin_t>::get_ground_state() {
+    int nconv;
+
+    ARSymStdEig<double, dopon_problem<spin_t> >
+            dprob(NN.N, 1, this, &dopon_problem<spin_t>::MultMv, "SA");
+
+    dprob.ChangeTol(1.0e-8);
+    dprob.ChangeMaxit(5000);
+    dprob.ChangeNcv(10);
+
+    probed_spin = last_gs_spin;
+    nconv = dprob.FindEigenvectors();
+
+    if (nconv)
+        return dprob.RawEigenvector(0);
+    else {
+        fprintf(stderr, "Did not manage to find ground state\n");
+        return 0;
+    }
+}
+template double* dopon_problem<double>::get_ground_state();
+template double* dopon_problem<char>::get_ground_state();
 
 template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(bool verbose){
     int nconv;
@@ -205,11 +226,11 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(b
     ARSymStdEig<double, dopon_problem<spin_t> >
             dprob(NN.N, 1, this, &dopon_problem<spin_t>::MultMv, "SA");
 
-    dprob.ChangeTol(1.0e-8);
+    dprob.ChangeTol(1.0e-7);
     dprob.ChangeMaxit(5000);
 
     if (last_gs_spin != 1) {
-        dprob.ChangeNcv(10);
+        dprob.ChangeNcv(7);
         probed_spin = -1;
         nconv = dprob.FindEigenvalues();
 
@@ -221,7 +242,7 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(b
 
     if (last_gs_spin != -1) {
         probed_spin = +1;
-        dprob.ChangeNcv(10);
+        dprob.ChangeNcv(7);
         nconv = dprob.FindEigenvalues();
 
         if (nconv)
@@ -243,4 +264,3 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(b
 } 
 template double dopon_problem<char>::lanczos_lowest_energy(bool);
 template double dopon_problem<double>::lanczos_lowest_energy(bool);
-template double dopon_problem<int>::lanczos_lowest_energy(bool);

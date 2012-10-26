@@ -22,14 +22,14 @@ class dopon_problem {
 public:
 
     dopon_problem(double t1, double J1, double lambda1, const adj_struct & adj) :
-    NN(adj), t(t1), J(J1), lambda(lambda1) {
+    NN(adj), t(t1), J(J1), lambda(lambda1), V(0) {
         last_energy = 0;
         last_gs_spin = 0;
     };
 
     double calculate_lowest_energy(bool verbose = false);
     double lanczos_lowest_energy(bool verbose=false);
-    double get_ground_state();
+    double* get_ground_state();
     
     void set_spin_array(const spin_t *spin_array) {
         s = spin_array;
@@ -50,6 +50,14 @@ public:
     void set_J(double J_new){
         J = J_new;
     }
+    
+    void set_V(double V_new){
+        V = V_new;
+    }
+    
+    void set_L(double L_new){
+        L = L_new;
+    }
 
     double last_energy;
 
@@ -62,6 +70,9 @@ private:
     double t;
     double J;
     double lambda;
+    double V;
+    
+    double L;
     int last_gs_spin;
     int probed_spin;
 

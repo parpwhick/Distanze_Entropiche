@@ -62,9 +62,8 @@ translation.o: strutture.h translation.cpp
 ising_simulation.o: ising_simulation.cpp ising_simulation.h adj_handler.h distance.h partizioni.h smart_data_types.h
 	${CC} ${COPTS} -c ising_simulation.cpp
 
-nagaoka_simulation.o: nagaoka_simulation.cpp smart_data_types.h
+nagaoka_simulation.o: nagaoka_simulation.cpp smart_data_types.h dopon_problem.cpp
 	${CC} ${COPTS} -c nagaoka_simulation.cpp
-
 
 init_functions.o: strutture.h init_functions.cpp
 	${CC} ${COPTS} -c init_functions.cpp

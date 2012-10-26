@@ -494,8 +494,7 @@ ising_simulation::ising_simulation(const adj_struct & NN1) : NN(NN1) {
         for (int i = 0; i < NN.N; i++)
             config[i] = 1;
     else
-        for (int i = 0; i < NN.N; i++)
-            config[i] = 2*(i % 2)-1;
+        init_config();
     
     if (update_rule == CREUTZ)
         link_energies.resize(NN.N);

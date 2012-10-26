@@ -1,4 +1,4 @@
-L = 200;
+L = 100;
 N = L^2;
 
 
@@ -8,7 +8,7 @@ s = reshape(1/2 * (-1) .^ (x+y),L,L);
 %draw a FM ellipse in the middle of the spin configuration
 center = [L/2,L/2];
 ellipse_axes = [1,1];
-radius = L/2;
+radius = L/7;
 s(1/ellipse_axes(1)*(x-center(1)).^2+1/ellipse_axes(2)*(y-center(2)).^2 <= radius^2)=0.5;
 
 %parameters of the Hamiltonian
