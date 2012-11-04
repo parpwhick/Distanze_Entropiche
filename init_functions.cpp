@@ -76,6 +76,7 @@ void print_help() {
             "  -beta B[,B2,..]   Floating point beta parameter for the (many) borders [0.45]\n"
             "  -sweeps N         Number of full sweeps in a time unit [1]\n"
             "  -skip N           Skip N time units to thermalize the system [50000]\n"
+            "  -config_out FILE  Write generated configurations to FILE [configurations.bin]"
             "\n"
             "Quantum Hamiltonian:\n"
             "  -electrons        Calculate at each iteration the electron energy\n"
@@ -256,7 +257,7 @@ void set_program_options(options &opts, int argc, char**argv) {
 
                 opts.skip = atoi(argv[read_argvs++]);
                 fprintf(stderr, "Skipping %d configurations at beginning\n", opts.skip);
-            } else if (input == "-config_file") {
+            } else if (input == "-config_out") {
                 if (argc - read_argvs < 1)
                     error("Missing file name\n");
 

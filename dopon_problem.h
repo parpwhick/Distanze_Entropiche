@@ -22,7 +22,7 @@ class dopon_problem {
 public:
 
     dopon_problem(double t1, double J1, double lambda1, const adj_struct & adj) :
-    NN(adj), t(t1), J(J1), lambda(lambda1), V(0) {
+    NN(adj), V(0),t(t1), J(J1),  lambda(lambda1)  {
         last_energy = 0;
         last_gs_spin = 0;
     };
@@ -60,6 +60,7 @@ public:
     }
 
     double last_energy;
+    double V;
 
     template <typename T> void MultMv (T*in, T*out);
 private:
@@ -70,9 +71,8 @@ private:
     double t;
     double J;
     double lambda;
-    double V;
     
-    double L;
+    int L;
     int last_gs_spin;
     int probed_spin;
 

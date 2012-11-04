@@ -22,6 +22,10 @@ template <typename spin_t> void dopon_problem<spin_t>::construct_problem_matrix(
         }
 
         H(k, k) = lambda * (s[k] == spin) + J * spin * 0.25 * sum_nn;
+        H(k, k) += -V * 
+                //pow(2*(   ((k / L)+0.0) / (L - 1.0) )-1,2) //parabola, centered in the middle row, y in [0,1]                
+                (2*(floor(k / L)/(L - 1))-1) //linear
+                ;
 
         //spin +- 1
         //H(k, k) = lambda * 0.5 * (s[k] == 1);
@@ -33,44 +37,40 @@ template <typename spin_t> void dopon_problem<spin_t>::construct_problem_matrix(
 template void dopon_problem<char>::construct_problem_matrix(int spin);
 template void dopon_problem<double>::construct_problem_matrix(int spin);
 
-
-
 template <typename spin_t> double dopon_problem<spin_t>::calculate_lowest_energy(bool verbose) {
     SelfAdjointEigenSolver<MatrixXf> eigenproblem;
 
-    //energy for spin up polaron
-    double E_up;
-    construct_problem_matrix(+1);
-    eigenproblem.compute(H, EigenvaluesOnly);
+    double E_up = 1e4, E_down = 1e4;
 
-    if (eigenproblem.info() != Success) {
-        fprintf(stderr, "Did not manage to find eigenvalues\n");
-        E_up = 10000.0;
+    if (last_gs_spin != 1) {
+        construct_problem_matrix(-1);
+        eigenproblem.compute(H, EigenvaluesOnly);
+
+        if (eigenproblem.info() == Success)
+            E_down = eigenproblem.eigenvalues().coeff(0) / J;
+        else
+            fprintf(stderr, "Did not manage to find eigenvalue for spin down dopons\n");
     }
-    E_up = eigenproblem.eigenvalues().coeff(0) / J;
-    //std::cout << "The eigenvalues of H_up are: " << eigenproblem.eigenvalues().transpose() << std::endl;
 
-    //energy for spin down polaron
-    double E_down;
-    construct_problem_matrix(-1);
-    eigenproblem.compute(H, EigenvaluesOnly);
-
-    if (eigenproblem.info() != Success) {
-        fprintf(stderr, "Did not manage to find eigenvalues\n");
-        E_down = 10000.0;
+    if (last_gs_spin != -1) {
+        construct_problem_matrix(+1);
+        eigenproblem.compute(H, EigenvaluesOnly);
+        if (eigenproblem.info() == Success)
+            E_up = eigenproblem.eigenvalues().coeff(0) / J;
+        else
+            fprintf(stderr, "Did not manage to find eigenvalue for spin up dopons\n");
     }
-    E_down = eigenproblem.eigenvalues().coeff(0) / J;
-    //std::cout << "The eigenvalues of H_down are: " << eigenproblem.eigenvalues().transpose() << std::endl;
 
     if (verbose)
         fprintf(stderr, "E(+) = %f, E(-) = %f\n", E_up, E_down);
-    if (E_down < E_up) {
-        last_gs_spin = -1;
-        return E_down;
-    } else {
-        last_gs_spin = +1;
-        return E_up;
-    }
+
+    if (abs(E_down - E_up) > 1)
+        last_gs_spin = (E_down < E_up) ? -1 : 1;
+    else
+        last_gs_spin = 0;
+
+    last_energy = std::min(E_up, E_down);
+    return last_energy;
 }
 template double dopon_problem<char>::calculate_lowest_energy(bool);
 template double dopon_problem<double>::calculate_lowest_energy(bool);
@@ -95,7 +95,10 @@ template <class spin_t> template <typename T> void dopon_problem<spin_t>::MultMv
         //diagonal element, dopon spin dependent
         out[k] += (lambda * (s[k] == spin) + J * spin * 0.25 * sum_nn) * in[k];
         //voltage gradient
-        out[k] += V * (k / L) / (L - 1) * in[k];
+        out[k] += -V * 
+                //pow(2*(   ((k / L)+0.0) / (L - 1.0) )-1,2) //parabola, centered in the middle row, y in [0,1]                
+                (2*(floor(k / L)/(L - 1))-1) //linear
+                * in[k];
     }
 }
 template void dopon_problem<char>::MultMv(double *in, double*out);
@@ -202,13 +205,15 @@ template <typename spin_t> double* dopon_problem<spin_t>::get_ground_state() {
 
     dprob.ChangeTol(1.0e-8);
     dprob.ChangeMaxit(5000);
-    dprob.ChangeNcv(10);
+    dprob.ChangeNcv(20);
 
     probed_spin = last_gs_spin;
     nconv = dprob.FindEigenvectors();
 
-    if (nconv)
+    if (nconv){
+        last_energy = dprob.Eigenvalue(0) / J;
         return dprob.RawEigenvector(0);
+    }
     else {
         fprintf(stderr, "Did not manage to find ground state\n");
         return 0;
@@ -230,7 +235,7 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(b
     dprob.ChangeMaxit(5000);
 
     if (last_gs_spin != 1) {
-        dprob.ChangeNcv(7);
+        dprob.ChangeNcv(20);
         probed_spin = -1;
         nconv = dprob.FindEigenvalues();
 
@@ -242,7 +247,7 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(b
 
     if (last_gs_spin != -1) {
         probed_spin = +1;
-        dprob.ChangeNcv(7);
+        dprob.ChangeNcv(20);
         nconv = dprob.FindEigenvalues();
 
         if (nconv)

@@ -48,20 +48,20 @@ public:
     }
 
     void step_wh(int steps=1);
-    
+
     //measurements
     double average_position(double *ground_state);
-    void print_temperature_profile(){;};
-    
+    vector<double> print_temperature_profile(double *ground_state);
+
     //quantity
-    std::vector<std::vector<int> > bordering_links;
-    
+    vector<vector<int> > bordering_links;
+
 private:
     void metropolis_wh();
     void metropolis_gradient();
     void creutz_wh();
     void microcanonical_wh();
-    
+
     void setup_bordering_links();
 };
 
@@ -81,7 +81,7 @@ template <typename data_t> void write_binary_array(const data_t *array, int N, c
     fclose(out);
 }
 
-void nagaoka_simulation::setup_bordering_links(){    
+void nagaoka_simulation::setup_bordering_links(){
     bordering_links.resize(borders.size());
 
     for (int link = 0; link < NN.n_link; link++) {
@@ -112,7 +112,7 @@ void nagaoka_simulation::step_wh(int steps){
     if (update_rule == CREUTZ)
         for (int i = 0; i < steps; i++) {
             creutz_wh();
-            
+
             //heat up the sites making up the borders
             for (int b = 0; b < n_borders_thermalize; b++)
                 for (size_t j = 0; j < borders[b].size(); j++)
@@ -122,13 +122,13 @@ void nagaoka_simulation::step_wh(int steps){
     if(update_rule == MICROCANONICAL)
         for (int i = 0; i < steps; i++) {
             microcanonical_wh();
-            
+
             //heat up the links adjacent to the borders
             for (int b = 0; b < n_borders_thermalize; b++)
                 for (size_t j = 0; j < bordering_links[b].size(); j++)
                          link_energies[bordering_links[b][j]] = -1 / opts.beta[b] * std::log(random.get_double());
 
-        }        
+        }
 }
 
 void nagaoka_simulation::metropolis_wh() {
@@ -149,6 +149,7 @@ void nagaoka_simulation::metropolis_wh() {
         config[s] = -config[s];
 
         dH += quantum_energy.lanczos_lowest_energy() - old_gs_energy;
+        //dH += quantum_energy.calculate_lowest_energy() - old_gs_energy;
         if (dH > 0 && random.get_double() > exp(-2 * opts.beta[0] * dH)) {
             //if the energy difference is unwanted, restore the previous state
             //of the spins
@@ -231,7 +232,7 @@ void nagaoka_simulation::microcanonical_wh() {
     for (int j = 0; j < NN.N;) {
         // il generatore di numeri casuali influisce per un 5% sulla performance
         // totale, in realta' è l'accesso disordinato alla memoria che uccide
-        
+
         uint32_t randnum = random.get_int();
         int link = randnum % NN.n_link;
         int flip1 = (randnum & (1 << 29)) != 0;
@@ -240,13 +241,13 @@ void nagaoka_simulation::microcanonical_wh() {
 
         s1 = NN.positive_links[link].first;
         s2 = NN.positive_links[link].second;
-        
+
         energy_t &linkenergy = link_energies[link];
-                
+
         if (!(flip1 || flip2) )
             continue;
 	j++;
-        
+
         if (flip1) {
             // z numero dei vicini di s1
             z = NN.fetch(s1);
@@ -257,7 +258,7 @@ void nagaoka_simulation::microcanonical_wh() {
         } else
             dH = 0;
 
-        //energia dai vicini di s2, se cambia 
+        //energia dai vicini di s2, se cambia
         if (flip2) {
             z = NN.fetch(s2);
             somma_vicini = 0;
@@ -289,12 +290,46 @@ void nagaoka_simulation::microcanonical_wh() {
 double nagaoka_simulation::average_position(double *ground_state){
     int side = opts.lato;
     double position=0.0;
-    
-    for(int i=0; i < N; i++){   
+    if(ground_state==0)
+        return NAN;
+
+    for(int i=0; i < N; i++){
         double rho = ground_state[i]*ground_state[i];
         position+= (i/side) * rho;
     }
     return position;
+}
+
+vector<double> nagaoka_simulation::print_temperature_profile(double *ground_state) {
+    vector<double> avg_local_energy(opts.lato);
+    vector<int> accepted(opts.lato);
+
+    if(ground_state==0)
+        return avg_local_energy;
+    
+    accepted.assign(opts.lato, 0);
+    double epsilon = 0.005;
+
+    if (update_rule == MICROCANONICAL) {
+        for (int i = 0; i < NN.n_link; i++) {
+            int s1 = NN.positive_links[i].first;
+            int s2 = NN.positive_links[i].second;
+            int pos1 = (s1 / opts.lato);
+            int pos2 = (s2 / opts.lato);
+            double rho1 = ground_state[s1] * ground_state[s1];
+            double rho2 = ground_state[s2] * ground_state[s2];
+
+            if (pos1 == pos2 && rho1 < epsilon && rho2 < epsilon) {
+                accepted[pos1]++;
+                avg_local_energy[pos1] += link_energies[i];
+            }
+
+        }
+        for (int i = 0; i < opts.lato; i++)
+            avg_local_energy[i] /= accepted[i];
+
+    }
+    return avg_local_energy;
 }
 
 template <typename T> void init_AFM(std::vector<T> &config) {
@@ -302,9 +337,12 @@ template <typename T> void init_AFM(std::vector<T> &config) {
     for (int col = 0; col < side; col++)
         for (int row = 0; row < side; row++)
             config[col * side + row ] = 2 * ((row + col) % 2) - 1;
-    
-    for (int col = side/2-2; col < side/2+2; col++)
-        for (int row = side/2-2; row < side/2+2; row++)
+}
+
+template <typename T> void make_hole(std::vector<T> &config) {
+    int side = opts.lato;
+    for (int col = side / 2 - 2; col < side / 2 + 2; col++)
+        for (int row = side / 2 - 2; row < side / 2 + 2; row++)
             config[col * side + row ] = 1;
 }
 
@@ -322,16 +360,18 @@ void nagaoka_run(const adj_struct &adj) {
     nagaoka_simulation sim(adj);
 
     init_AFM(sim.config);
-    double afm_gs_energy = - sim.energia_magnetica() * opts.J * 0.25;    
+    double afm_gs_energy = - sim.energia_magnetica() * opts.J * 0.25;
     sim.link_energies.assign(sim.link_energies.size(), 0.0);
-    sim.quantum_energy.lanczos_lowest_energy();
 
     std::clock_t start = std::clock();
     double time_diff, completed_ratio;
     fprintf(stderr, "\n");
-    
-    init_AFM(sim.config);
+
+    //init with a 4x4 hole in the middle
+    if(sim.update_rule == METROPOLIS) make_hole(sim.config);
+    sim.quantum_energy.lanczos_lowest_energy();
     sim.step_wh(opts.skip);
+    
     if (opts.verbose)
             write_binary_array(sim.config_reference(), adj.N, opts.config_out.c_str(), "ab");
     vector<double> avg_local_energy = sim.local_energy();
@@ -339,7 +379,19 @@ void nagaoka_run(const adj_struct &adj) {
     out0 << std::fixed << std::setprecision(4)
             << "%J,\t\tR,\t\te_H+M+K,\t\te_bub,\t\te_H+M,\t\tM,\t\tbt,\t\tbtEST" << endl;
     for (int i = 1; i < opts.n_seq + 1; i++) {
+        //drive the bubble back to the middle
+        //sim.quantum_energy.set_V((position - opts.lato/2)/50);
+        //drive the voltage periodically, with T=60
+        sim.quantum_energy.set_V( 1*sin(2*3.1415* i/30));
+        /*if(i<=50)
+            sim.quantum_energy.set_V(0);
+        else
+            sim.quantum_energy.set_V(+10);*/
+        
         //calcolo quantita' da stampare
+        ground_state = sim.quantum_energy.get_ground_state();
+        position = sim.average_position(ground_state);
+        
         E_kin = sim.energia_cinetica() * opts.J;
         E_mag = - sim.energia_magnetica() * opts.J * 0.25;
         E_hamiltonian = sim.quantum_energy.last_energy * opts.J;
@@ -349,20 +401,19 @@ void nagaoka_run(const adj_struct &adj) {
 
         mag = sim.magnetizzazione();
         radius = sqrt(mag / 3.1415);
-        beta_est = sim.link_energies.size() / (E_kin / opts.J);//0.25 * std::log(1. + 4. * sim.link_energies.size() / E_kin);
-        
-        ground_state = sim.quantum_energy.get_ground_state();
-        position = sim.average_position(ground_state);
-        sim.print_temperature_profile();
+        beta_est = sim.link_energies.size() / (E_kin / opts.J);//0.25 * std::log(1. + 4. * sim.link_energies.size() / E_kin);       
+       
 
         //simulation step
-        sim.step_wh(opts.sweeps);        
+        sim.step_wh(opts.sweeps);
         if (opts.verbose) {
             write_binary_array(sim.config_reference(), adj.N, opts.config_out.c_str(), "ab");
-            //calcolo energie medie per ogni iterazione
-            vector<double> local_energy = sim.local_energy();
-            for (int k = 0; k < adj.N; k++)
-                avg_local_energy[k] += local_energy[k];
+            if (opts.simulation_type != METROPOLIS)
+                write_binary_array(sim.print_temperature_profile(ground_state).data(), opts.lato, "avg_energies.bin", "ab");
+//            //calcolo energie medie per ogni iterazione
+//            vector<double> local_energy = sim.local_energy();
+//            for (int k = 0; k < adj.N; k++)
+//                avg_local_energy[k] += local_energy[k];
         }
         if (opts.verbose)
             out0 << opts.J << "\t\t"
@@ -372,7 +423,10 @@ void nagaoka_run(const adj_struct &adj) {
             << E_tot << "\t\t"
             << mag << "\t\t"
             << sim.avg_beta << "\t\t"
-            << beta_est << endl;
+            << beta_est << "\t\t"
+            << position << "\t\t"
+            << sim.quantum_energy.V << "\t\t"
+            << E_hamiltonian  << endl;
 
         //progress bar
         fprintf(stderr, "\r");
@@ -390,8 +444,7 @@ void nagaoka_run(const adj_struct &adj) {
 
     //stampa medie
     std::ofstream out1("averages.txt", std::ios::app);
-    out1 << std::fixed << std::setprecision(4)
-            << "%J,\t\tR,\t\te_H+M+K,\t\te_bub,\t\te_H+M,\t\tM,\t\tbt,\t\tbtEST" << endl;
+    out1 << std::fixed << std::setprecision(4);
     out1 << opts.J << "\t\t"
             << radius.mean() << "\t\t"
             << E_micro.mean() << "\t\t"
@@ -403,8 +456,7 @@ void nagaoka_run(const adj_struct &adj) {
 
     //best results
     std::ofstream out2("best.txt", std::ios::app);
-    out2 << std::fixed << std::setprecision(4)
-            << "%J,\t\tR,\t\te_H+M+K,\t\te_bub,\t\te_H+M,\t\tM,\t\tbt,\t\tbtEST" << endl;
+    out2 << std::fixed << std::setprecision(4);
     out2 << opts.J << "\t\t"
             << radius.max() << "\t\t"
             << E_micro.min() << "\t\t"

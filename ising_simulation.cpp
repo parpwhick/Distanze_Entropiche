@@ -590,7 +590,6 @@ void time_series(const adj_struct &adj){
     double time_diff, completed_ratio;
     fprintf(stderr,"\n");
     
-    vector<double> avg_local_energy = sim.local_energy();
     for (int i = 1; i < opts.n_seq + 1; i++) {
         //calcolo quantita' da stampare
         E_kin = sim.energia_cinetica();
@@ -622,7 +621,7 @@ void time_series(const adj_struct &adj){
         //aggiornamento partizione
         Z2.from_configuration(sim.config_reference(), adj);
         if (opts.verbose > 1){
-            write_binary_array(sim.config_reference(), adj.N, "configurations.bin", "ab");
+            write_binary_array(sim.config_reference(), adj.N, opts.config_out.c_str(), "ab");
             if (opts.distance) write_binary_array(Z2.show_labels(), adj.N, "partitions.bin","ab");
         }
         if(opts.distance){
@@ -631,12 +630,6 @@ void time_series(const adj_struct &adj){
         }
         //adesso Z1 conterra' la vecchia partizione, Z2 la prossima
         std::swap(Z1, Z2);
-        if (opts.verbose) {
-            //calcolo energie medie per ogni iterazione
-            vector<double> local_energy = sim.local_energy();
-            for (int k = 0; k < adj.N; k++)
-                avg_local_energy[k] += local_energy[k];
-        }
         
         //progress bar
         fprintf(stderr, "\r");
@@ -648,14 +641,8 @@ void time_series(const adj_struct &adj){
     }
     fprintf(stderr,"\n");
     //energie medie
-    if (opts.verbose) {
-        for (int k = 0; k < adj.N; k++)
-            avg_local_energy[k] /= opts.n_seq;
-        write_binary_array(avg_local_energy.data(), adj.N, "average_energies.bin", "wb");
-        //energie finali
-        if (opts.simulation_type != METROPOLIS)
+    if (opts.verbose && opts.simulation_type != METROPOLIS)
             write_binary_array(sim.energy_reference(), sim.energy_size(), "energies_end.bin", "wb");
-    }
   
     //stampa medie
     std::ofstream out1("medie.txt", std::ios::app);

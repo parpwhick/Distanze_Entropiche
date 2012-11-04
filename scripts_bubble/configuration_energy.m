@@ -1,4 +1,4 @@
-function e_bubble=configuration_energy(t,J,s)
+function e_bubble=configuration_energy(t,J,V,s)
 
 [L,~] = size(s);
 N = L^2;
@@ -7,7 +7,8 @@ if(max(s)==1)
     s = s / 2;
 end
 
-lambda = 600;
+lambda = 600*t;
+[x,y]=ind2sub([L,L],1:N);
 %nearest neighbors to fill up the matrix
 nnr = reshape(1:N,L,L);
 nnd = circshift(nnr,-1);
@@ -20,11 +21,11 @@ righe = [nnl(:);nnr(:);nnd(:);nnu(:);(1:N)'];
 neigh_sum = sum(s([nnl(:),nnr(:),nnd(:),nnu(:)]),2);
 
 % dopon spin up
-values=([t*ones(4*N,1);lambda * (+1/2*s(:)+1/4) + J*0.5*neigh_sum]);
+values=([t*ones(4*N,1);lambda * (+1/2*s(:)+1/4) + J*0.5*neigh_sum + V * (2*(y'/L-1)-1).^2]);
 H_up= sparse(righe,colonne,values);
 
 % dopon spin down
-values=([t*ones(4*N,1);lambda * (-1/2*s(:)+1/4) - J*0.5*neigh_sum]);
+values=([t*ones(4*N,1);lambda * (-1/2*s(:)+1/4) - J*0.5*neigh_sum + V * (2*(y'/L-1)-1).^2]);
 H_down= sparse(righe,colonne,values);
 
 opts.issym = true;
