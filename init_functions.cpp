@@ -82,6 +82,7 @@ void print_help() {
             "  -electrons        Calculate at each iteration the electron energy\n"
             "  -t X              Set hopping parameter to X [1.0]\n"
             "  -J X              Set J to X [0.01]\n"
+            "  -V X              Set V to X [0]\n"
             "\n"
             ;
     fprintf(stderr, "%s", message);
@@ -114,6 +115,7 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.electrons = false;
     opts.hopping = 1.0;
     opts.J = 0.01;
+    opts.V = 0;
     opts.config_out = "configurations.bin";
     opts.da_calcolare = 0
             | SHAN | TOP
@@ -294,6 +296,12 @@ void set_program_options(options &opts, int argc, char**argv) {
 
                 opts.J = atof(argv[read_argvs++]);
                 fprintf(stderr, "J interaction set to %f\n", opts.J);
+            } else if (input == "-V") {
+                if (argc - read_argvs < 1)
+                    error("Missing J\n");
+
+                opts.V = atof(argv[read_argvs++]);
+                fprintf(stderr, "Voltage set to %f\n", opts.V);
             } else if (input == "-v") {
                 opts.verbose++;
                 fprintf(stderr, "Verbosity at %d\n", opts.verbose);

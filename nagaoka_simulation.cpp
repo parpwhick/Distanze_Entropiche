@@ -35,15 +35,15 @@ using std::vector;
  */
 class nagaoka_simulation : public ising_simulation {
 public:
-    dopon_problem<config_t> quantum_energy;
+    dopon_problem<config_t> hamiltonian;
 
-    nagaoka_simulation(const adj_struct & NN1) : ising_simulation(NN1), quantum_energy(1, 0.01, 300, NN1) {
-        quantum_energy.set_spin_array(config.data());
-        quantum_energy.set_t(opts.hopping);
-        quantum_energy.set_lambda(300 * opts.hopping);
-        quantum_energy.set_J(opts.J);
-        quantum_energy.set_L(opts.lato);
-        quantum_energy.set_V(0);
+    nagaoka_simulation(const adj_struct & NN1) : ising_simulation(NN1), hamiltonian(1, 0.01, 300, NN1) {
+        hamiltonian.set_spin_array(config.data());
+        hamiltonian.set_t(opts.hopping);
+        hamiltonian.set_lambda(300 * opts.hopping);
+        hamiltonian.set_J(opts.J);
+        hamiltonian.set_L(opts.lato);
+        hamiltonian.set_V(0);
         setup_bordering_links();
     }
 
@@ -145,17 +145,17 @@ void nagaoka_simulation::metropolis_wh() {
             somma_vicini += config[NN.vicini[m]];
         dH = J * config[s] * somma_vicini;
 
-        double old_gs_energy = quantum_energy.last_energy;
+        double old_gs_energy = hamiltonian.last_energy;
         config[s] = -config[s];
 
-        dH += quantum_energy.lanczos_lowest_energy() - old_gs_energy;
+        dH += hamiltonian.lanczos_lowest_energy() - old_gs_energy;
         //dH += quantum_energy.calculate_lowest_energy() - old_gs_energy;
         if (dH > 0 && random.get_double() > exp(-2 * opts.beta[0] * dH)) {
             //if the energy difference is unwanted, restore the previous state
             //of the spins
             config[s] = -config[s];
             //of the recorded energy
-            quantum_energy.last_energy = old_gs_energy;
+            hamiltonian.last_energy = old_gs_energy;
         }
 
     }
@@ -182,16 +182,16 @@ void nagaoka_simulation::metropolis_gradient() {
             somma_vicini += config[NN.vicini[m]];
         dH = J * config[s] * somma_vicini;
 
-        double old_gs_energy = quantum_energy.last_energy;
+        double old_gs_energy = hamiltonian.last_energy;
         config[s] = -config[s];
 
-        dH += quantum_energy.lanczos_lowest_energy() - old_gs_energy;
+        dH += hamiltonian.lanczos_lowest_energy() - old_gs_energy;
         if (dH > 0 && random.get_double() > exp(-2 * local_beta * dH)) {
             //if the energy difference is unwanted, restore the previous state
             //of the spins
             config[s] = -config[s];
             //of the recorded energy
-            quantum_energy.last_energy = old_gs_energy;
+            hamiltonian.last_energy = old_gs_energy;
         }
     }
 }
@@ -208,15 +208,15 @@ void nagaoka_simulation::creutz_wh() {
             sum_neigh += config[NN.vicini[m]];
         dH = J * 2 * config[s] * sum_neigh;
 
-        double old_gs_energy = quantum_energy.last_energy;
+        double old_gs_energy = hamiltonian.last_energy;
         config[s] = -config[s];
-        dH += quantum_energy.lanczos_lowest_energy() - old_gs_energy;
+        dH += hamiltonian.lanczos_lowest_energy() - old_gs_energy;
 
         if (dH <= 0 || link_energies[s] >= dH)
             link_energies[s] -= dH;
         else {
             config[s] = -config[s];
-            quantum_energy.last_energy = old_gs_energy;
+            hamiltonian.last_energy = old_gs_energy;
         }
 
     }
@@ -271,18 +271,18 @@ void nagaoka_simulation::microcanonical_wh() {
         if (flip12)
             dH -= J * 4 * config[s1] * config[s2];
 
-        double old_gs_energy = quantum_energy.last_energy;
+        double old_gs_energy = hamiltonian.last_energy;
         if (flip1) config[s1] = -config[s1];
         if (flip2) config[s2] = -config[s2];
 
-        dH += quantum_energy.lanczos_lowest_energy() - old_gs_energy;
+        dH += hamiltonian.lanczos_lowest_energy() - old_gs_energy;
 
         if (dH <= 0 || linkenergy >= dH)
             linkenergy -= dH;
         else {
             if (flip1) config[s1] = -config[s1];
             if (flip2) config[s2] = -config[s2];
-            quantum_energy.last_energy = old_gs_energy;
+            hamiltonian.last_energy = old_gs_energy;
         }
     }
 }
@@ -332,6 +332,10 @@ vector<double> nagaoka_simulation::print_temperature_profile(double *ground_stat
     return avg_local_energy;
 }
 
+template <typename T> int signof(T number){
+    return 2*(number >= 0)-1;
+}
+
 template <typename T> void init_AFM(std::vector<T> &config) {
     int side = opts.lato;
     for (int col = 0; col < side; col++)
@@ -355,9 +359,11 @@ void nagaoka_run(const adj_struct &adj) {
     auto_stats<double> E_kin("Energy: K"), E_mag("Energy: M");
     auto_stats<double> E_tot("Energy: H+M");
     auto_stats<double> E_micro("Energy: H+M+K");
-    auto_stats<double> position("Position:");
+    auto_stats<double> position("Position");
+    auto_stats<double> V("Voltage");
     double *ground_state;
     nagaoka_simulation sim(adj);
+    const double L = opts.lato;
 
     init_AFM(sim.config);
     double afm_gs_energy = - sim.energia_magnetica() * opts.J * 0.25;
@@ -367,11 +373,13 @@ void nagaoka_run(const adj_struct &adj) {
     double time_diff, completed_ratio;
     fprintf(stderr, "\n");
 
-    //init with a 4x4 hole in the middle
-    if(sim.update_rule == METROPOLIS) make_hole(sim.config);
-    sim.quantum_energy.lanczos_lowest_energy();
+    //init the hole confined to about L/4
+    sim.hamiltonian.set_confining(2* L /4);    
     sim.step_wh(opts.skip);
+    sim.hamiltonian.set_confining(0);
     
+    sim.hamiltonian.set_V(opts.V);
+    V = opts.V;
     if (opts.verbose)
             write_binary_array(sim.config_reference(), adj.N, opts.config_out.c_str(), "ab");
     vector<double> avg_local_energy = sim.local_energy();
@@ -379,22 +387,26 @@ void nagaoka_run(const adj_struct &adj) {
     out0 << std::fixed << std::setprecision(4)
             << "%J,\t\tR,\t\te_H+M+K,\t\te_bub,\t\te_H+M,\t\tM,\t\tbt,\t\tbtEST" << endl;
     for (int i = 1; i < opts.n_seq + 1; i++) {
-        //drive the bubble back to the middle
-        //sim.quantum_energy.set_V((position - opts.lato/2)/50);
-        //drive the voltage periodically, with T=60
-        sim.quantum_energy.set_V( 1*sin(2*3.1415* i/30));
-        /*if(i<=50)
-            sim.quantum_energy.set_V(0);
-        else
-            sim.quantum_energy.set_V(+10);*/
+        //drive the voltage periodically, with T=30
+        //const double 2pi = 6.283; sim.quantum_energy.set_V(sin(2pi* i/30));
         
         //calcolo quantita' da stampare
-        ground_state = sim.quantum_energy.get_ground_state();
+        ground_state = sim.hamiltonian.get_ground_state();
         position = sim.average_position(ground_state);
+        
+        if(position > 0.8*L){
+            //recenter
+            sim.hamiltonian.set_confining(2* L /4);
+            sim.step_wh(3);
+            sim.hamiltonian.set_confining(0);
+            //change the voltage
+            V -= 0.001;
+            sim.hamiltonian.set_V(V);
+        }        
         
         E_kin = sim.energia_cinetica() * opts.J;
         E_mag = - sim.energia_magnetica() * opts.J * 0.25;
-        E_hamiltonian = sim.quantum_energy.last_energy * opts.J;
+        E_hamiltonian = sim.hamiltonian.last_energy * opts.J;
         E_bubble = E_hamiltonian + E_mag - afm_gs_energy;
         E_tot = E_mag + E_hamiltonian;
         E_micro = E_tot + E_kin;
@@ -425,7 +437,7 @@ void nagaoka_run(const adj_struct &adj) {
             << sim.avg_beta << "\t\t"
             << beta_est << "\t\t"
             << position << "\t\t"
-            << sim.quantum_energy.V << "\t\t"
+            << sim.hamiltonian.V * 1000 << "\t\t"
             << E_hamiltonian  << endl;
 
         //progress bar
@@ -439,7 +451,7 @@ void nagaoka_run(const adj_struct &adj) {
     fprintf(stderr, "\n");
     if (opts.simulation_type != METROPOLIS)
             write_binary_array(sim.energy_reference(), sim.energy_size(), "energies_end.bin", "wb");
-    write_binary_array(sim.quantum_energy.get_ground_state(),sim.N, "electron_eigenstate.bin","wb");
+    write_binary_array(sim.hamiltonian.get_ground_state(),sim.N, "electron_eigenstate.bin","wb");
 
 
     //stampa medie

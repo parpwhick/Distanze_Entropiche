@@ -150,6 +150,8 @@ public:
     double hopping;
     ///Interazione J per l'hamiltoniana t-J(z)
     double J;
+    ///Voltaggio
+    double V;
 
 } options;
 

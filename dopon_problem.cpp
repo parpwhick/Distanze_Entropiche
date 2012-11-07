@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   dopon_problem.cpp
  * Author: fake
- * 
+ *
  * Created on September 30, 2012, 2:48 PM
  */
 
@@ -22,16 +22,11 @@ template <typename spin_t> void dopon_problem<spin_t>::construct_problem_matrix(
         }
 
         H(k, k) = lambda * (s[k] == spin) + J * spin * 0.25 * sum_nn;
-        H(k, k) += -V * 
-                //pow(2*(   ((k / L)+0.0) / (L - 1.0) )-1,2) //parabola, centered in the middle row, y in [0,1]                
-                (2*(floor(k / L)/(L - 1))-1) //linear
-                ;
-
-        //spin +- 1
-        //H(k, k) = lambda * 0.5 * (s[k] == 1);
-        //H(k, k) += +0.25 * sum_nn;
-        //spin +- 1/2
-        //H(k, k) = lambda * (0.5 * s[k] + 0.25 + 0.5 * sum_nn);
+        
+        if (confining==0)
+                H(k, k) += -V * (2*(floor(k / L)/(L - 1))-1); //linear
+        else
+                H(k, k) += 3 * pow(2*((floor(k / L)-confining) / (L - 1)),2); //parabola, centered in the middle row, y in [0,1]
     }
 }
 template void dopon_problem<char>::construct_problem_matrix(int spin);
@@ -94,11 +89,11 @@ template <class spin_t> template <typename T> void dopon_problem<spin_t>::MultMv
         }
         //diagonal element, dopon spin dependent
         out[k] += (lambda * (s[k] == spin) + J * spin * 0.25 * sum_nn) * in[k];
-        //voltage gradient
-        out[k] += -V * 
-                //pow(2*(   ((k / L)+0.0) / (L - 1.0) )-1,2) //parabola, centered in the middle row, y in [0,1]                
-                (2*(floor(k / L)/(L - 1))-1) //linear
-                * in[k];
+        //voltage gradient        
+        if (confining==0)
+                out[k] += -V * (2*(floor(k / L)/(L - 1))-1) * in[k]; //linear
+        else
+                out[k] += 3 * pow(2*((floor(k / L)-confining) / (L - 1)),2) * in[k]; //parabola, centered in the middle row, y in [0,1]
     }
 }
 template void dopon_problem<char>::MultMv(double *in, double*out);
@@ -252,7 +247,7 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(b
 
         if (nconv)
             E_up = dprob.Eigenvalue(0) / J;
-        else 
+        else
             fprintf(stderr, "Did not manage to find eigenvalue for spin up dopons\n");
     }
 
@@ -266,6 +261,6 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(b
 
     last_energy = std::min(E_up,E_down);
     return last_energy;
-} 
+}
 template double dopon_problem<char>::lanczos_lowest_energy(bool);
 template double dopon_problem<double>::lanczos_lowest_energy(bool);

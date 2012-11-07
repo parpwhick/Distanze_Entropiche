@@ -22,9 +22,11 @@ class dopon_problem {
 public:
 
     dopon_problem(double t1, double J1, double lambda1, const adj_struct & adj) :
-    NN(adj), V(0),t(t1), J(J1),  lambda(lambda1)  {
+    NN(adj), t(t1), J(J1),  lambda(lambda1)  {
         last_energy = 0;
         last_gs_spin = 0;
+        confining = 0;
+        V = 0;
     };
 
     double calculate_lowest_energy(bool verbose = false);
@@ -53,6 +55,12 @@ public:
     
     void set_V(double V_new){
         V = V_new;
+        lanczos_lowest_energy();
+    }
+    
+    void set_confining(double P_new){
+        confining = P_new;
+        lanczos_lowest_energy();
     }
     
     void set_L(double L_new){
@@ -60,7 +68,6 @@ public:
     }
 
     double last_energy;
-    double V;
 
     template <typename T> void MultMv (T*in, T*out);
 private:
@@ -74,8 +81,10 @@ private:
     
     int L;
     int last_gs_spin;
-    int probed_spin;
+    int probed_spin;    
 
+    double V;
+    int confining;
     void construct_problem_matrix(int spin);
 };
 
