@@ -22,7 +22,7 @@ template <typename spin_t> void dopon_problem<spin_t>::construct_problem_matrix(
         }
 
         H(k, k) = lambda * (s[k] == spin) + J * spin * 0.25 * sum_nn;
-        
+
         if (confining==0)
                 H(k, k) += -V * (2*(floor(k / L)/(L - 1))-1); //linear
         else
@@ -89,7 +89,7 @@ template <class spin_t> template <typename T> void dopon_problem<spin_t>::MultMv
         }
         //diagonal element, dopon spin dependent
         out[k] += (lambda * (s[k] == spin) + J * spin * 0.25 * sum_nn) * in[k];
-        //voltage gradient        
+        //voltage gradient
         if (confining==0)
                 out[k] += -V * (2*(floor(k / L)/(L - 1))-1) * in[k]; //linear
         else
@@ -192,63 +192,44 @@ void Solution(dopon_problem<char> &A, EIGPROB &Prob)
 
 } // Solution
 
-template <typename spin_t> double* dopon_problem<spin_t>::get_ground_state() {
-    int nconv;
-
-    ARSymStdEig<double, dopon_problem<spin_t> >
-            dprob(NN.N, 1, this, &dopon_problem<spin_t>::MultMv, "SA");
-
-    dprob.ChangeTol(1.0e-8);
-    dprob.ChangeMaxit(5000);
-    dprob.ChangeNcv(20);
-
-    probed_spin = last_gs_spin;
-    nconv = dprob.FindEigenvectors();
-
-    if (nconv){
-        last_energy = dprob.Eigenvalue(0) / J;
-        return dprob.RawEigenvector(0);
-    }
-    else {
-        fprintf(stderr, "Did not manage to find ground state\n");
-        return 0;
-    }
-}
-template double* dopon_problem<double>::get_ground_state();
-template double* dopon_problem<char>::get_ground_state();
-
 template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(bool verbose){
     int nconv;
     double E_up=1e4, E_down=1e4;
 
-    // Defining what we need: the four eigenvectors of A with smallest magnitude.
+    if(ground_state.empty())
+        ground_state.assign(NN.N,1.0);
 
+    const double tol = 1.0e-7;
+    const int maxiterations = 5000;
+    const int arnoldi_vectors = 7;
     ARSymStdEig<double, dopon_problem<spin_t> >
-            dprob(NN.N, 1, this, &dopon_problem<spin_t>::MultMv, "SA");
+            dprob(NN.N, 1, this, &dopon_problem<spin_t>::MultMv, "SA", arnoldi_vectors, tol, maxiterations, ground_state.data());
 
     dprob.ChangeTol(1.0e-7);
     dprob.ChangeMaxit(5000);
 
     if (last_gs_spin != 1) {
-        dprob.ChangeNcv(20);
+        dprob.ChangeNcv(arnoldi_vectors);
         probed_spin = -1;
-        nconv = dprob.FindEigenvalues();
+        nconv = dprob.FindEigenvectors();
 
         if (nconv)
             E_down = dprob.Eigenvalue(0) / J;
         else
             fprintf(stderr, "Did not manage to find eigenvalue for spin down dopons\n");
+        ground_state.assign(dprob.RawEigenvector(0),dprob.RawEigenvector(0)+NN.N);
     }
 
     if (last_gs_spin != -1) {
         probed_spin = +1;
-        dprob.ChangeNcv(20);
-        nconv = dprob.FindEigenvalues();
+        dprob.ChangeNcv(arnoldi_vectors);
+        nconv = dprob.FindEigenvectors();
 
         if (nconv)
             E_up = dprob.Eigenvalue(0) / J;
         else
             fprintf(stderr, "Did not manage to find eigenvalue for spin up dopons\n");
+        ground_state.assign(dprob.RawEigenvector(0),dprob.RawEigenvector(0)+NN.N);
     }
 
     if (verbose)

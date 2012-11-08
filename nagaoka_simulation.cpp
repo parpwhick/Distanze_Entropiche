@@ -50,8 +50,8 @@ public:
     void step_wh(int steps=1);
 
     //measurements
-    double average_position(double *ground_state);
-    vector<double> print_temperature_profile(double *ground_state);
+    double average_position();
+    vector<double> print_temperature_profile();
 
     //quantity
     vector<vector<int> > bordering_links;
@@ -287,26 +287,26 @@ void nagaoka_simulation::microcanonical_wh() {
     }
 }
 
-double nagaoka_simulation::average_position(double *ground_state){
+double nagaoka_simulation::average_position(){
     int side = opts.lato;
     double position=0.0;
-    if(ground_state==0)
+    if(hamiltonian.ground_state.empty())
         return NAN;
 
     for(int i=0; i < N; i++){
-        double rho = ground_state[i]*ground_state[i];
+        double rho = hamiltonian.ground_state[i]*hamiltonian.ground_state[i];
         position+= (i/side) * rho;
     }
     return position;
 }
 
-vector<double> nagaoka_simulation::print_temperature_profile(double *ground_state) {
+vector<double> nagaoka_simulation::print_temperature_profile() {
     vector<double> avg_local_energy(opts.lato);
     vector<int> accepted(opts.lato);
 
-    if(ground_state==0)
+    if(hamiltonian.ground_state.empty())
         return avg_local_energy;
-    
+
     accepted.assign(opts.lato, 0);
     double epsilon = 0.005;
 
@@ -316,8 +316,8 @@ vector<double> nagaoka_simulation::print_temperature_profile(double *ground_stat
             int s2 = NN.positive_links[i].second;
             int pos1 = (s1 / opts.lato);
             int pos2 = (s2 / opts.lato);
-            double rho1 = ground_state[s1] * ground_state[s1];
-            double rho2 = ground_state[s2] * ground_state[s2];
+            double rho1 = hamiltonian.ground_state[s1] * hamiltonian.ground_state[s1];
+            double rho2 = hamiltonian.ground_state[s2] * hamiltonian.ground_state[s2];
 
             if (pos1 == pos2 && rho1 < epsilon && rho2 < epsilon) {
                 accepted[pos1]++;
@@ -361,7 +361,8 @@ void nagaoka_run(const adj_struct &adj) {
     auto_stats<double> E_micro("Energy: H+M+K");
     auto_stats<double> position("Position");
     auto_stats<double> V("Voltage");
-    double *ground_state;
+    double voltage_step = 0.050;
+    int reached_border = 0;
     nagaoka_simulation sim(adj);
     const double L = opts.lato;
 
@@ -374,10 +375,10 @@ void nagaoka_run(const adj_struct &adj) {
     fprintf(stderr, "\n");
 
     //init the hole confined to about L/4
-    sim.hamiltonian.set_confining(2* L /4);    
+    sim.hamiltonian.set_confining(2* L /4);
     sim.step_wh(opts.skip);
     sim.hamiltonian.set_confining(0);
-    
+
     sim.hamiltonian.set_V(opts.V);
     V = opts.V;
     if (opts.verbose)
@@ -389,21 +390,36 @@ void nagaoka_run(const adj_struct &adj) {
     for (int i = 1; i < opts.n_seq + 1; i++) {
         //drive the voltage periodically, with T=30
         //const double 2pi = 6.283; sim.quantum_energy.set_V(sin(2pi* i/30));
-        
+
         //calcolo quantita' da stampare
-        ground_state = sim.hamiltonian.get_ground_state();
-        position = sim.average_position(ground_state);
-        
-        if(position > 0.8*L){
+        position = sim.average_position();
+
+        if(position > 0.85*L || position < 0.15*L){
             //recenter
             sim.hamiltonian.set_confining(2* L /4);
             sim.step_wh(3);
             sim.hamiltonian.set_confining(0);
+
+            if(position > 0.5 * L)
+                reached_border += 1;
+            else
+                reached_border -= 1;
+        }
+        if(abs(reached_border)>= 2){
             //change the voltage
-            V -= 0.001;
+            if(reached_border > 0){
+                printf("\nLowering to %f, by %f\n",V - voltage_step,voltage_step);
+                V = V - voltage_step;
+            }
+            else{
+                printf("\nRaising to %f, by %f\n",voltage_step + V,voltage_step);
+                V = V + voltage_step;
+            }
+            voltage_step /= 2;
             sim.hamiltonian.set_V(V);
-        }        
-        
+            reached_border = 0;
+        }
+
         E_kin = sim.energia_cinetica() * opts.J;
         E_mag = - sim.energia_magnetica() * opts.J * 0.25;
         E_hamiltonian = sim.hamiltonian.last_energy * opts.J;
@@ -413,15 +429,15 @@ void nagaoka_run(const adj_struct &adj) {
 
         mag = sim.magnetizzazione();
         radius = sqrt(mag / 3.1415);
-        beta_est = sim.link_energies.size() / (E_kin / opts.J);//0.25 * std::log(1. + 4. * sim.link_energies.size() / E_kin);       
-       
+        beta_est = sim.link_energies.size() / (E_kin / opts.J);//0.25 * std::log(1. + 4. * sim.link_energies.size() / E_kin);
+
 
         //simulation step
         sim.step_wh(opts.sweeps);
         if (opts.verbose) {
             write_binary_array(sim.config_reference(), adj.N, opts.config_out.c_str(), "ab");
             if (opts.simulation_type != METROPOLIS)
-                write_binary_array(sim.print_temperature_profile(ground_state).data(), opts.lato, "avg_energies.bin", "ab");
+                write_binary_array(sim.print_temperature_profile().data(), opts.lato, "avg_energies.bin", "ab");
 //            //calcolo energie medie per ogni iterazione
 //            vector<double> local_energy = sim.local_energy();
 //            for (int k = 0; k < adj.N; k++)
@@ -437,7 +453,7 @@ void nagaoka_run(const adj_struct &adj) {
             << sim.avg_beta << "\t\t"
             << beta_est << "\t\t"
             << position << "\t\t"
-            << sim.hamiltonian.V * 1000 << "\t\t"
+            << V * 1000 << "\t\t"
             << E_hamiltonian  << endl;
 
         //progress bar
@@ -451,7 +467,7 @@ void nagaoka_run(const adj_struct &adj) {
     fprintf(stderr, "\n");
     if (opts.simulation_type != METROPOLIS)
             write_binary_array(sim.energy_reference(), sim.energy_size(), "energies_end.bin", "wb");
-    write_binary_array(sim.hamiltonian.get_ground_state(),sim.N, "electron_eigenstate.bin","wb");
+    write_binary_array(sim.hamiltonian.ground_state.data(),sim.N, "electron_eigenstate.bin","wb");
 
 
     //stampa medie

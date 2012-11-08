@@ -31,7 +31,7 @@ public:
 
     double calculate_lowest_energy(bool verbose = false);
     double lanczos_lowest_energy(bool verbose=false);
-    double* get_ground_state();
+    //double* get_ground_state();
     
     void set_spin_array(const spin_t *spin_array) {
         s = spin_array;
@@ -68,8 +68,11 @@ public:
     }
 
     double last_energy;
+    vector<double> ground_state;
 
     template <typename T> void MultMv (T*in, T*out);
+    template <typename T> void nutrlan_multiply(const int vector_length, const int n_vectors, const double *in, const int in_vec_size,
+	     double *out, const int out_vec_size, void*);
 private:
     const adj_struct & NN;
     MatrixXf H;
