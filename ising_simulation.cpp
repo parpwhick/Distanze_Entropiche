@@ -621,7 +621,7 @@ void time_series(const adj_struct &adj){
         //aggiornamento partizione
         Z2.from_configuration(sim.config_reference(), adj);
         if (opts.verbose > 1){
-            write_binary_array(sim.config_reference(), adj.N, opts.config_out.c_str(), "ab");
+            write_binary_array(sim.config_reference(), adj.N, opts.suffix_out.c_str(), "ab");
             if (opts.distance) write_binary_array(Z2.show_labels(), adj.N, "partitions.bin","ab");
         }
         if(opts.distance){

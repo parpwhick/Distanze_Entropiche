@@ -22,8 +22,6 @@ extern options opts;
 
 const int J = -1;
 
-template <typename data_t> void write_binary_array(const data_t *array, int N, const char *filename, const char * mode = "wb");
-
 using std::vector;
 
 
@@ -52,6 +50,8 @@ public:
     //measurements
     double average_position();
     vector<double> print_temperature_profile();
+    
+    bool is_electron_near(int k);
 
     //quantity
     vector<vector<int> > bordering_links;
@@ -65,15 +65,12 @@ private:
     void setup_bordering_links();
 };
 
-template <typename data_t> void write_binary_array(const data_t *array, int N, const char *filename, const char * mode){
+template <typename data_t> void write_binary_array(const data_t *array, int N, std::string filename, const char * mode){
     FILE *out;
 
-    if(filename==0)
-        return;
-
-    out = fopen(filename, mode);
+    out = fopen(filename.c_str(), mode);
     if (out == 0) {
-        fprintf(stderr, "Error opening file %s for writing\n", filename);
+        fprintf(stderr, "Error opening file %s for writing\n", filename.c_str());
         exit(1);
     }
 
@@ -148,8 +145,8 @@ void nagaoka_simulation::metropolis_wh() {
         double old_gs_energy = hamiltonian.last_energy;
         config[s] = -config[s];
 
-        dH += hamiltonian.lanczos_lowest_energy() - old_gs_energy;
-        //dH += quantum_energy.calculate_lowest_energy() - old_gs_energy;
+        if(is_electron_near(s))
+                dH += hamiltonian.lanczos_lowest_energy() - old_gs_energy;
         if (dH > 0 && random.get_double() > exp(-2 * opts.beta[0] * dH)) {
             //if the energy difference is unwanted, restore the previous state
             //of the spins
@@ -185,7 +182,9 @@ void nagaoka_simulation::metropolis_gradient() {
         double old_gs_energy = hamiltonian.last_energy;
         config[s] = -config[s];
 
-        dH += hamiltonian.lanczos_lowest_energy() - old_gs_energy;
+        if(is_electron_near(s))
+                dH += hamiltonian.lanczos_lowest_energy() - old_gs_energy;
+        
         if (dH > 0 && random.get_double() > exp(-2 * local_beta * dH)) {
             //if the energy difference is unwanted, restore the previous state
             //of the spins
@@ -275,7 +274,8 @@ void nagaoka_simulation::microcanonical_wh() {
         if (flip1) config[s1] = -config[s1];
         if (flip2) config[s2] = -config[s2];
 
-        dH += hamiltonian.lanczos_lowest_energy() - old_gs_energy;
+        if(is_electron_near(s1) || is_electron_near(s2))
+                dH += hamiltonian.lanczos_lowest_energy() - old_gs_energy;
 
         if (dH <= 0 || linkenergy >= dH)
             linkenergy -= dH;
@@ -294,10 +294,23 @@ double nagaoka_simulation::average_position(){
         return NAN;
 
     for(int i=0; i < N; i++){
-        double rho = hamiltonian.ground_state[i]*hamiltonian.ground_state[i];
+        double rho = square(hamiltonian.ground_state[i]);
         position+= (i/side) * rho;
     }
     return position;
+}
+
+bool nagaoka_simulation::is_electron_near(int k) {
+    //return false;
+    int z;
+    z = NN.fetch(k);
+    double total_rho = 0.0;
+
+    total_rho += square(hamiltonian.ground_state[k]);
+    for (int m = 0; m < z; m++)
+        total_rho += square(hamiltonian.ground_state[NN.vicini[m]]);
+
+    return (total_rho > 1e-5);
 }
 
 vector<double> nagaoka_simulation::print_temperature_profile() {
@@ -316,8 +329,8 @@ vector<double> nagaoka_simulation::print_temperature_profile() {
             int s2 = NN.positive_links[i].second;
             int pos1 = (s1 / opts.lato);
             int pos2 = (s2 / opts.lato);
-            double rho1 = hamiltonian.ground_state[s1] * hamiltonian.ground_state[s1];
-            double rho2 = hamiltonian.ground_state[s2] * hamiltonian.ground_state[s2];
+            double rho1 = square(hamiltonian.ground_state[s1]);
+            double rho2 = square(hamiltonian.ground_state[s2]);
 
             if (pos1 == pos2 && rho1 < epsilon && rho2 < epsilon) {
                 accepted[pos1]++;
@@ -361,7 +374,6 @@ void nagaoka_run(const adj_struct &adj) {
     auto_stats<double> E_micro("Energy: H+M+K");
     auto_stats<double> position("Position");
     auto_stats<double> V("Voltage");
-    double voltage_step = 0.050;
     int reached_border = 0;
     nagaoka_simulation sim(adj);
     const double L = opts.lato;
@@ -375,16 +387,17 @@ void nagaoka_run(const adj_struct &adj) {
     fprintf(stderr, "\n");
 
     //init the hole confined to about L/4
+    V = opts.V;
+    sim.hamiltonian.set_V(V);
     sim.hamiltonian.set_confining(2* L /4);
     sim.step_wh(opts.skip);
     sim.hamiltonian.set_confining(0);
 
-    sim.hamiltonian.set_V(opts.V);
-    V = opts.V;
-    if (opts.verbose)
-            write_binary_array(sim.config_reference(), adj.N, opts.config_out.c_str(), "ab");
+    double voltage_step = 0.015;
+    if (opts.verbose > 1)
+            write_binary_array(sim.config_reference(), adj.N, "states" + opts.suffix_out + ".bin", "ab");
     vector<double> avg_local_energy = sim.local_energy();
-    std::ofstream out0("output.txt", std::ios::app);
+    std::ofstream out0("output" + opts.suffix_out + ".txt", std::ios::out);
     out0 << std::fixed << std::setprecision(4)
             << "%J,\t\tR,\t\te_H+M+K,\t\te_bub,\t\te_H+M,\t\tM,\t\tbt,\t\tbtEST" << endl;
     for (int i = 1; i < opts.n_seq + 1; i++) {
@@ -394,10 +407,10 @@ void nagaoka_run(const adj_struct &adj) {
         //calcolo quantita' da stampare
         position = sim.average_position();
 
-        if(position > 0.85*L || position < 0.15*L){
+        if((position > 0.85*L || position < 0.15*L)){
             //recenter
             sim.hamiltonian.set_confining(2* L /4);
-            sim.step_wh(3);
+            sim.step_wh(5);
             sim.hamiltonian.set_confining(0);
 
             if(position > 0.5 * L)
@@ -405,17 +418,16 @@ void nagaoka_run(const adj_struct &adj) {
             else
                 reached_border -= 1;
         }
-        if(abs(reached_border)>= 2){
+        if (abs(reached_border) >= 5 && 0) {
             //change the voltage
-            if(reached_border > 0){
-                printf("\nLowering to %f, by %f\n",V - voltage_step,voltage_step);
+            if (reached_border > 0) {
+                printf("\nIteration %d: lowering to %f, by %f\n", i, V - voltage_step, voltage_step);
                 V = V - voltage_step;
-            }
-            else{
-                printf("\nRaising to %f, by %f\n",voltage_step + V,voltage_step);
+            } else {
+                printf("\nIteration %d: raising to %f, by %f\n", i, voltage_step + V, voltage_step);
                 V = V + voltage_step;
             }
-            voltage_step /= 2;
+            voltage_step /= 1.2;
             sim.hamiltonian.set_V(V);
             reached_border = 0;
         }
@@ -434,10 +446,10 @@ void nagaoka_run(const adj_struct &adj) {
 
         //simulation step
         sim.step_wh(opts.sweeps);
-        if (opts.verbose) {
-            write_binary_array(sim.config_reference(), adj.N, opts.config_out.c_str(), "ab");
+        if (opts.verbose > 1) {
+            write_binary_array(sim.config_reference(), adj.N, ("states" + opts.suffix_out + ".bin"), "ab");
             if (opts.simulation_type != METROPOLIS)
-                write_binary_array(sim.print_temperature_profile().data(), opts.lato, "avg_energies.bin", "ab");
+                write_binary_array(sim.print_temperature_profile().data(), opts.lato, ("avg_energies" + opts.suffix_out + ".bin"), "ab");
 //            //calcolo energie medie per ogni iterazione
 //            vector<double> local_energy = sim.local_energy();
 //            for (int k = 0; k < adj.N; k++)
@@ -466,8 +478,8 @@ void nagaoka_run(const adj_struct &adj) {
     }
     fprintf(stderr, "\n");
     if (opts.simulation_type != METROPOLIS)
-            write_binary_array(sim.energy_reference(), sim.energy_size(), "energies_end.bin", "wb");
-    write_binary_array(sim.hamiltonian.ground_state.data(),sim.N, "electron_eigenstate.bin","wb");
+            write_binary_array(sim.energy_reference(), sim.energy_size(), "energies_end" + opts.suffix_out + ".bin", "wb");
+    write_binary_array(sim.hamiltonian.ground_state.data(),sim.N, "electron_eigenstate" + opts.suffix_out + ".bin","wb");
 
 
     //stampa medie
@@ -480,7 +492,10 @@ void nagaoka_run(const adj_struct &adj) {
             << E_tot.mean() << "\t\t"
             << mag.mean() << "\t\t"
             << sim.avg_beta << "\t\t"
-            << beta_est.mean() << endl;
+            << beta_est.mean() << "\t\t"
+            << position.mean() << "\t\t"
+            << V.mean() << "\t\t"
+            << reached_border << endl;
 
     //best results
     std::ofstream out2("best.txt", std::ios::app);
@@ -492,7 +507,10 @@ void nagaoka_run(const adj_struct &adj) {
             << E_tot.min() << "\t\t"
             << mag.max() << "\t\t"
             << sim.avg_beta << "\t\t"
-            << beta_est << endl;
+            << beta_est << "\t\t"
+            << position.mean() << "\t\t"
+            << V.mean() << "\t\t"
+            << reached_border << endl;
 
     //le variabili auto_stat qui stampano le loro medie, lasciamo una riga di spazio
     printf("\n");

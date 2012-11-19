@@ -100,7 +100,7 @@ class auto_stats{
 	///Distruttore che stampa automaticamente le statistiche accumulate
 	~auto_stats(){
 		print();
-	}
+	}        
 };
 
 /**

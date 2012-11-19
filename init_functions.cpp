@@ -116,7 +116,7 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.hopping = 1.0;
     opts.J = 0.01;
     opts.V = 0;
-    opts.config_out = "configurations.bin";
+    opts.suffix_out = "";
     opts.da_calcolare = 0
             | SHAN | TOP
             | RID | RID_TOP
@@ -259,12 +259,12 @@ void set_program_options(options &opts, int argc, char**argv) {
 
                 opts.skip = atoi(argv[read_argvs++]);
                 fprintf(stderr, "Skipping %d configurations at beginning\n", opts.skip);
-            } else if (input == "-config_out") {
+            } else if (input == "-suffix") {
                 if (argc - read_argvs < 1)
                     error("Missing file name\n");
 
-                opts.config_out = argv[read_argvs++];
-                fprintf(stderr, "Writing configurations to %s\n", opts.config_out.c_str());
+                opts.suffix_out = argv[read_argvs++];
+                fprintf(stderr, "Writing run data with '%s' appended\n", opts.suffix_out.c_str());
             } else if (input == "-microcanonical") {
                 fprintf(stderr, "Temporal series with microcanonical rule\n");
                 opts.simulation_type = MICROCANONICAL;

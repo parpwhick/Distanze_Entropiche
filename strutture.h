@@ -135,7 +135,7 @@ public:
     ///Temperatura inversa per simulazioni, un vettore contenente un valore per ogni lato [default: 0.45]
     std::vector<double> beta;
     ///File in cui scrivere le configurazioni
-    std::string config_out;
+    std::string suffix_out;
 
     ///Grado di verbosita', da 0 [default: 0]
     int verbose;

@@ -17,6 +17,10 @@
 
 using namespace Eigen;
 
+template <typename T> T square (T val){
+    return val*val;
+}
+
 template <typename spin_t>
 class dopon_problem {
 public:

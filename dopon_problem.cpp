@@ -26,7 +26,7 @@ template <typename spin_t> void dopon_problem<spin_t>::construct_problem_matrix(
         if (confining==0)
                 H(k, k) += -V * (2*(floor(k / L)/(L - 1))-1); //linear
         else
-                H(k, k) += 3 * pow(2*((floor(k / L)-confining) / (L - 1)),2); //parabola, centered in the middle row, y in [0,1]
+                H(k, k) += 3 * square(2*((floor(k / L)-confining) / (L - 1))); //parabola, centered in the middle row, y in [0,1]
     }
 }
 template void dopon_problem<char>::construct_problem_matrix(int spin);
@@ -93,7 +93,7 @@ template <class spin_t> template <typename T> void dopon_problem<spin_t>::MultMv
         if (confining==0)
                 out[k] += -V * (2*(floor(k / L)/(L - 1))-1) * in[k]; //linear
         else
-                out[k] += 3 * pow(2*((floor(k / L)-confining) / (L - 1)),2) * in[k]; //parabola, centered in the middle row, y in [0,1]
+                out[k] += 5 * square(2*((floor(k / L)-confining) / (L - 1))) * in[k]; //parabola, centered in the middle row, y in [0,1]
     }
 }
 template void dopon_problem<char>::MultMv(double *in, double*out);
@@ -199,9 +199,9 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(b
     if(ground_state.empty())
         ground_state.assign(NN.N,1.0);
 
-    const double tol = 1.0e-7;
-    const int maxiterations = 5000;
-    const int arnoldi_vectors = 7;
+    static double tol = 1.0e-7;
+    static int maxiterations = 5000;
+    static int arnoldi_vectors = 7;
     ARSymStdEig<double, dopon_problem<spin_t> >
             dprob(NN.N, 1, this, &dopon_problem<spin_t>::MultMv, "SA", arnoldi_vectors, tol, maxiterations, ground_state.data());
 
@@ -215,8 +215,11 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(b
 
         if (nconv)
             E_down = dprob.Eigenvalue(0) / J;
-        else
+        else{
             fprintf(stderr, "Did not manage to find eigenvalue for spin down dopons\n");
+            arnoldi_vectors += 3;
+            return lanczos_lowest_energy();
+        }
         ground_state.assign(dprob.RawEigenvector(0),dprob.RawEigenvector(0)+NN.N);
     }
 
@@ -227,8 +230,11 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(b
 
         if (nconv)
             E_up = dprob.Eigenvalue(0) / J;
-        else
+        else{
             fprintf(stderr, "Did not manage to find eigenvalue for spin up dopons\n");
+            arnoldi_vectors += 3;
+            return lanczos_lowest_energy();
+        }
         ground_state.assign(dprob.RawEigenvector(0),dprob.RawEigenvector(0)+NN.N);
     }
 
