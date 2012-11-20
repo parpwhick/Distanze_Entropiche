@@ -90,10 +90,10 @@ template <class spin_t> template <typename T> void dopon_problem<spin_t>::MultMv
         //diagonal element, dopon spin dependent
         out[k] += (lambda * (s[k] == spin) + J * spin * 0.25 * sum_nn) * in[k];
         //voltage gradient
-        if (confining==0)
-                out[k] += -V * (2*(floor(k / L)/(L - 1))-1) * in[k]; //linear
-        else
-                out[k] += 5 * square(2*((floor(k / L)-confining) / (L - 1))) * in[k]; //parabola, centered in the middle row, y in [0,1]
+        //if (confining==0)
+        //        out[k] += -V * (2*(floor(k / L)/(L - 1))-1) * in[k]; //linear
+        //else
+        out[k] += V * square(2*((floor(k / L)-confining) / (L - 1))) * in[k]; //parabola, centered at "confining", y in [0,1]
     }
 }
 template void dopon_problem<char>::MultMv(double *in, double*out);

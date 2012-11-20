@@ -3,6 +3,7 @@
  */
 #include <vector>
 #include <cmath>
+#include <ctime>
 #include "adj_handler.h"
 #include "strutture.h"
 #include "rand_mersenne.h"
@@ -391,13 +392,12 @@ void nagaoka_run(const adj_struct &adj) {
     sim.hamiltonian.set_V(V);
     sim.hamiltonian.set_confining(2* L /4);
     sim.step_wh(opts.skip);
-    sim.hamiltonian.set_confining(0);
+    //sim.hamiltonian.set_confining(0);
 
-    double voltage_step = 0.015;
     if (opts.verbose > 1)
             write_binary_array(sim.config_reference(), adj.N, "states" + opts.suffix_out + ".bin", "ab");
     vector<double> avg_local_energy = sim.local_energy();
-    std::ofstream out0("output" + opts.suffix_out + ".txt", std::ios::out);
+    std::ofstream out0(("output" + opts.suffix_out + ".txt").c_str(), std::ios::out);
     out0 << std::fixed << std::setprecision(4)
             << "%J,\t\tR,\t\te_H+M+K,\t\te_bub,\t\te_H+M,\t\tM,\t\tbt,\t\tbtEST" << endl;
     for (int i = 1; i < opts.n_seq + 1; i++) {
@@ -409,27 +409,14 @@ void nagaoka_run(const adj_struct &adj) {
 
         if((position > 0.85*L || position < 0.15*L)){
             //recenter
-            sim.hamiltonian.set_confining(2* L /4);
-            sim.step_wh(5);
-            sim.hamiltonian.set_confining(0);
+            //sim.hamiltonian.set_confining(2* L /4);
+            //sim.step_wh(5);
+            //sim.hamiltonian.set_confining(0);
 
             if(position > 0.5 * L)
                 reached_border += 1;
             else
                 reached_border -= 1;
-        }
-        if (abs(reached_border) >= 5 && 0) {
-            //change the voltage
-            if (reached_border > 0) {
-                printf("\nIteration %d: lowering to %f, by %f\n", i, V - voltage_step, voltage_step);
-                V = V - voltage_step;
-            } else {
-                printf("\nIteration %d: raising to %f, by %f\n", i, voltage_step + V, voltage_step);
-                V = V + voltage_step;
-            }
-            voltage_step /= 1.2;
-            sim.hamiltonian.set_V(V);
-            reached_border = 0;
         }
 
         E_kin = sim.energia_cinetica() * opts.J;
