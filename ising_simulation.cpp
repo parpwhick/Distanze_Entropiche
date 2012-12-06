@@ -3,6 +3,7 @@
  */
 #include <vector>
 #include <cmath>
+#include <ctime>
 #include "adj_handler.h"
 #include "strutture.h"
 #include "rand_mersenne.h"
@@ -21,7 +22,7 @@ extern
 #endif
 options opts;
 
-constexpr int J = 1;
+const int J = -1;
 
 template <typename data_t> void write_binary_array(const data_t *array, int N, const char *filename, const char * mode = "wb");
 
@@ -250,14 +251,21 @@ void ising_simulation::metropolis_step() {
         prefetch(config[s1]);
         prefetch(NN.index[s1]);
         
+        //position along the gradient expressed in the interval [0..1]
+        double position = ((s / opts.lato) + 0.0) / (opts.lato-1);
+        //local T
+        double T = 1/opts.beta[0] + position * (1/opts.beta[1] - 1/opts.beta[0]);
+        //local beta
+        double local_beta = 1/T;
+        
         z = NN.fetch(s);
         somma_vicini = 0;
         for (int m = 0; m < z; m++)
             somma_vicini += config[NN.vicini[m]];
 
-        dH = J * 2 * config[s] * somma_vicini;
+        dH = J * config[s] * somma_vicini;
 
-        if (dH <= 0 || random.get_double() < exp(-avg_beta * dH))
+        if (dH <= 0 || random.get_double() < exp(-2 * local_beta * dH))
             config[s] = -config[s];
     }
 }
@@ -470,14 +478,14 @@ void ising_simulation::init_config() {
 ising_simulation::ising_simulation(const adj_struct & NN1) : NN(NN1) {
     avg_beta = 0;
     for (size_t i = 0; i < opts.beta.size(); i++)
-        avg_beta += opts.beta[i];
-    avg_beta /= opts.beta.size();   
+        avg_beta += 1/opts.beta[i];
+    avg_beta = 1/(avg_beta/opts.beta.size()); 
     steps_per_time = opts.sweeps;
     skip = opts.skip;
     
     N = NN.N;
 
-    update_rule = opts.simulation_type;
+    update_rule = opts.dynamics;
 
     if (opts.topologia == SIERPINSKI)
         borders = generate_sierpinski_borders(N);
@@ -621,8 +629,10 @@ void time_series(const adj_struct &adj){
         //aggiornamento partizione
         Z2.from_configuration(sim.config_reference(), adj);
         if (opts.verbose > 1){
-            write_binary_array(sim.config_reference(), adj.N, opts.suffix_out.c_str(), "ab");
-            if (opts.distance) write_binary_array(Z2.show_labels(), adj.N, "partitions.bin","ab");
+            write_binary_array(sim.config_reference(), adj.N, ("states" + opts.suffix_out + ".bin").c_str(), "ab");
+            if (opts.verbose > 2 && opts.dynamics != METROPOLIS)
+                write_binary_array(sim.local_energy().data(), adj.N, ("energies" + opts.suffix_out + ".bin").c_str(), "ab");
+            if (opts.distance) write_binary_array(Z2.show_labels(), adj.N, ("partitions" + opts.suffix_out + ".bin").c_str(), "ab");
         }
         if(opts.distance){
             //calcolo distanze
@@ -639,10 +649,10 @@ void time_series(const adj_struct &adj){
                 completed_ratio * 100, ceil(time_diff * (1 / completed_ratio - 1)));
         fflush(stderr);
     }
-    fprintf(stderr,"\n");
+    fprintf(stderr, "\n");
     //energie medie
-    if (opts.verbose && opts.simulation_type != METROPOLIS)
-            write_binary_array(sim.energy_reference(), sim.energy_size(), "energies_end.bin", "wb");
+    if (opts.verbose && opts.dynamics != METROPOLIS)
+            write_binary_array(sim.energy_reference(), sim.energy_size(), ("energies_end" + opts.suffix_out + ".bin").c_str(), "wb");
   
     //stampa medie
     std::ofstream out1("medie.txt", std::ios::app);

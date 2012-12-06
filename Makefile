@@ -23,7 +23,7 @@ else
     COPTS+=-xHOST -ipo -no-prec-div
     COPTS+=-mkl
     LINK_OPTS =-mkl -larpack -larpack++
-    INTEL_DEFINES =-DEIGEN_USE_MKL_ALL
+#    INTEL_DEFINES =-DEIGEN_USE_MKL_ALL
 endif
 COPTS +=-std=c++0x
 

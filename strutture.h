@@ -127,7 +127,7 @@ public:
     ///Seed del generatore di numeri casuali [default: casuale]
     int seed;
     ///Dinamica Metropolis o microcanonica [default: microcanonica]
-    simulation_t simulation_type;
+    simulation_t dynamics;
     ///Numero di sweeps in un intervallo temporale [default: 1]
     int sweeps;
     ///Numero di istanti temporali da saltare inizialmente

@@ -101,7 +101,7 @@ void set_program_options(options &opts, int argc, char**argv) {
     else
         opts.topologia = LINEARE;
     opts.letto_da = RANDOM;
-    opts.simulation_type = MICROCANONICAL;
+    opts.dynamics = MICROCANONICAL;
     opts.skip = 50000;
     opts.sweeps = 1;
     opts.graphics = false;
@@ -267,15 +267,15 @@ void set_program_options(options &opts, int argc, char**argv) {
                 fprintf(stderr, "Writing run data with '%s' appended\n", opts.suffix_out.c_str());
             } else if (input == "-microcanonical") {
                 fprintf(stderr, "Temporal series with microcanonical rule\n");
-                opts.simulation_type = MICROCANONICAL;
+                opts.dynamics = MICROCANONICAL;
                 opts.letto_da = SIMULATION;
             } else if (input == "-metropolis") {
                 fprintf(stderr, "Temporal with Metropolis rule\n");
-                opts.simulation_type = METROPOLIS;
+                opts.dynamics = METROPOLIS;
                 opts.letto_da = SIMULATION;
             } else if (input == "-creutz") {
                 fprintf(stderr, "Temporal series with Creutz rule\n");
-                opts.simulation_type = CREUTZ;
+                opts.dynamics = CREUTZ;
                 opts.letto_da = SIMULATION;
             } else if (input == "-electrons") {
                 fprintf(stderr, "Calculating Hamiltonian at each iteration\n");

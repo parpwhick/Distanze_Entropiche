@@ -7,6 +7,7 @@
 
 #include "dopon_problem.h"
 
+#ifdef USE_EIGEN
 template <typename spin_t> void dopon_problem<spin_t>::construct_problem_matrix(int spin) {
     H.resize(NN.N, NN.N);
     H.setZero();
@@ -69,6 +70,7 @@ template <typename spin_t> double dopon_problem<spin_t>::calculate_lowest_energy
 }
 template double dopon_problem<char>::calculate_lowest_energy(bool);
 template double dopon_problem<double>::calculate_lowest_energy(bool);
+#endif USE_EIGEN
 
 template <class spin_t> template <typename T> void dopon_problem<spin_t>::MultMv(T*in, T*out) {
 
@@ -90,10 +92,10 @@ template <class spin_t> template <typename T> void dopon_problem<spin_t>::MultMv
         //diagonal element, dopon spin dependent
         out[k] += (lambda * (s[k] == spin) + J * spin * 0.25 * sum_nn) * in[k];
         //voltage gradient
-        //if (confining==0)
-        //        out[k] += -V * (2*(floor(k / L)/(L - 1))-1) * in[k]; //linear
-        //else
-        out[k] += V * square(2*((floor(k / L)-confining) / (L - 1))) * in[k]; //parabola, centered at "confining", y in [0,1]
+        if (confining==0)
+                out[k] += -V * (2*(floor(k / L)/(L - 1))-1) * in[k]; //linear
+        else
+                out[k] += 5 * square(2*((floor(k / L)-confining) / (L - 1))) * in[k]; //parabola, centered at "confining", y in [0,1]
     }
 }
 template void dopon_problem<char>::MultMv(double *in, double*out);

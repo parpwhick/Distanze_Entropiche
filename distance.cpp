@@ -64,15 +64,6 @@ void distance::dist(const general_partition& e1, const general_partition& e2) {
             ridotto1.reduce(e1, e2);
             ridotto2.reduce(e2, e1);
         }
-        //stampa delle etichette in modo testuale, eventualmente da rimuovere
-        if (opts.verbose > 2) {
-            label_t quanto = std::min(e1.N, (label_t) 50);
-            print_array(&partizione_comune.labels[0], quanto, "lbls comune");
-            print_array(&e1.labels[0], quanto, "lbls e1    ");
-            print_array(&ridotto1.labels[0], quanto, "lbls ridot1");
-            print_array(&e2.labels[0], quanto, "lbls e2    ");
-            print_array(&ridotto2.labels[0], quanto, "lbls ridot2");
-        }
 
         calc_distance(ridotto1, ridotto2);
         dist_shan_r = dist_shan;

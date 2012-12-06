@@ -9,13 +9,15 @@
 #define	DOPON_PROBLEM_H
 
 #include "adj_handler.h"
-#include "eigen3/Eigen/Dense"
 #include "blas1c.h"
 #include "arssym.h"
 #include <iostream>
 #include <cstdio>
 
+#ifdef USE_EIGEN
+#include "eigen3/Eigen/Dense"
 using namespace Eigen;
+#endif
 
 template <typename T> T square (T val){
     return val*val;
@@ -79,7 +81,9 @@ public:
 	     double *out, const int out_vec_size, void*);
 private:
     const adj_struct & NN;
+#ifdef USE_EIGEN
     MatrixXf H;
+#endif
 
     const spin_t *s;
     double t;
