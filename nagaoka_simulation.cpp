@@ -129,7 +129,7 @@ void nagaoka_simulation::metropolis_wh() {
     double dH;
 
     /* Dinamica di Metropolis, 1 passo temporale */
-    for (int j = 0; j < NN.N; j++) {
+    for (int j = 0; j < 1; j++) {
         s = random.get_int() % NN.N;
 
         z = NN.fetch(s);
@@ -159,7 +159,7 @@ void nagaoka_simulation::metropolis_gradient() {
     double dH;
 
     /* Dinamica di Metropolis, 1 passo temporale */
-    for (int j = 0; j < NN.N; j++) {
+    for (int j = 0; j < 1; j++) {
         s = random.get_int() % NN.N;
 
         //position along the gradient expressed in the interval [0..1]
@@ -309,10 +309,9 @@ bool nagaoka_simulation::is_electron_near(int k) {
     return (total_rho > 1e-5);
 }
 
-template <typename T> void shift_vector(vector<T> &conf, int by, int L){
+template <typename T> void shift_lattice(vector<T> &conf, int by, int L){
     static vector<T> temp;
     temp.resize(conf.size());
-    int N = conf.size();
     if(by==0)
         return;
     
@@ -321,10 +320,9 @@ template <typename T> void shift_vector(vector<T> &conf, int by, int L){
         //destination column
         int to = (col + by + L ) % L;
         for(int i=0; i<L; i++)
-            temp[to*L+i] = conf(col*L+i);
+            temp[to*L+i] = conf[col*L+i];
     }
     temp.swap(conf);
-    return temp;    
 }
 
 vector<double> nagaoka_simulation::print_temperature_profile(double epsilon) {
@@ -388,14 +386,9 @@ void nagaoka_run(const adj_struct &adj) {
     auto_stats<double> E_micro("Energy: H+M+K");
     auto_stats<double> position("Position");
     auto_stats<double> V("Voltage");
-    auto_stats<int> shifts("Shifts");
+    auto_stats<int> shifts("Polaron shifts"), displacement("Instant speed");
     nagaoka_simulation sim(adj);
-    const double L = opts.lato;
-    //last snapshot!
-    vector<nagaoka_simulation::config_t> config_backup;
-    vector<nagaoka_simulation::energy_t> energy_backup;
-    vector<double> groundstate_backup;
-    
+    const double L = opts.lato;    
 
     init_AFM(sim.config);
     double afm_gs_energy = - sim.energia_magnetica() * opts.J * 0.25;    
@@ -405,22 +398,17 @@ void nagaoka_run(const adj_struct &adj) {
     double time_diff, completed_ratio;
     fprintf(stderr, "\n");
 
+    //we only shift the configuration, so only metropolis is allowed
+    if(!sim.update_rule == METROPOLIS){
+        fprintf(stderr,"Only supporting Metropolis dynamics at the moment, sorry\n");
+        exit(2);
+    }
+    
     V = opts.V;
     sim.step(opts.skip * 100);
-    if(opts.dynamics == METROPOLIS){
-        //make_hole(sim.config);
-        sim.hamiltonian.set_confining(0.1*L);
-    }
-    sim.step_wh(opts.skip);
-    sim.hamiltonian.set_confining(0);
     sim.step_wh(opts.skip);
     sim.hamiltonian.set_V(V);
-
-    if (opts.dynamics == METROPOLIS) {
-        config_backup = sim.config;
-        energy_backup = sim.link_energies;
-        groundstate_backup = sim.hamiltonian.ground_state;
-    }
+    
 
     if (opts.verbose > 1)
             write_binary_array(sim.config_reference(), adj.N, "states" + opts.suffix_out + ".bin", "ab");
@@ -430,29 +418,16 @@ void nagaoka_run(const adj_struct &adj) {
     for (int i = 1; i < opts.n_seq + 1; i++) {
         //calcolo quantita' da stampare
         sim.hamiltonian.lanczos_lowest_energy();
-        position = sim.average_position();
+        displacement = static_cast<int>(round(0.5*L - sim.average_position()));
 
-        if (!config_backup.empty() && (position > 0.85 * L || position < 0.15 * L)) {
-            //recenter
-            //sim.hamiltonian.set_confining(2* L /4);
-            //sim.step_wh(5);
-            //sim.hamiltonian.set_confining(0);
-            if (position > 0.5 * L)
-                shifts = shifts + 1;
-            else
-                shifts = shifts - 1;
-
-            sim.config = config_backup;
-            sim.link_energies = energy_backup;
-            sim.hamiltonian.ground_state = groundstate_backup;
-            sim.hamiltonian.set_V(V);
-        }
-        if (opts.dynamics != METROPOLIS && abs(position - 0.5 * L) < 0.3) {
-            config_backup = sim.config;
-            energy_backup = sim.link_energies;
-            groundstate_backup = sim.hamiltonian.ground_state;
+        shifts = shifts - displacement;
+        if (displacement) {
+            shift_lattice(sim.config, displacement, L);
+            shift_lattice(sim.hamiltonian.ground_state, displacement, L);
+            sim.hamiltonian.lanczos_lowest_energy();
         }
         
+        position = -displacement;//sim.average_position()+shifts;
         E_kin = sim.energia_cinetica() * opts.J;
         E_mag = - sim.energia_magnetica() * opts.J * 0.25;
         E_hamiltonian = sim.hamiltonian.last_energy * opts.J;
