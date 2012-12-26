@@ -129,7 +129,7 @@ void nagaoka_simulation::metropolis_wh() {
     double dH;
 
     /* Dinamica di Metropolis, 1 passo temporale */
-    for (int j = 0; j < 1; j++) {
+    for (int j = 0; j < NN.N; j++) {
         s = random.get_int() % NN.N;
 
         z = NN.fetch(s);
@@ -159,7 +159,7 @@ void nagaoka_simulation::metropolis_gradient() {
     double dH;
 
     /* Dinamica di Metropolis, 1 passo temporale */
-    for (int j = 0; j < 1; j++) {
+    for (int j = 0; j < NN.N; j++) {
         s = random.get_int() % NN.N;
 
         //position along the gradient expressed in the interval [0..1]
@@ -311,18 +311,18 @@ bool nagaoka_simulation::is_electron_near(int k) {
 
 template <typename T> void shift_lattice(vector<T> &conf, int by, int L){
     static vector<T> temp;
-    temp.resize(conf.size());
     if(by==0)
         return;
+    temp.reserve(conf.size());
+    std::copy(conf.begin(),conf.end(),temp.begin());    
     
     //we map i -> i + by * L
-    for(int col = 0; col < L; col++){
+    for(int from = 0; from < L; from++){
         //destination column
-        int to = (col + by + L ) % L;
+        int to = (from + by + 2*L ) % L;
         for(int i=0; i<L; i++)
-            temp[to*L+i] = conf[col*L+i];
+            conf[to*L+i] = temp[from*L+i];
     }
-    temp.swap(conf);
 }
 
 vector<double> nagaoka_simulation::print_temperature_profile(double epsilon) {
@@ -386,7 +386,8 @@ void nagaoka_run(const adj_struct &adj) {
     auto_stats<double> E_micro("Energy: H+M+K");
     auto_stats<double> position("Position");
     auto_stats<double> V("Voltage");
-    auto_stats<int> shifts("Polaron shifts"), displacement("Instant speed");
+    auto_stats<int> shifts("Polaron shifts"), displacement("Shift per time");
+    auto_stats<double> dist_travelled("Instant speed");
     nagaoka_simulation sim(adj);
     const double L = opts.lato;    
 
@@ -405,29 +406,33 @@ void nagaoka_run(const adj_struct &adj) {
     }
     
     V = opts.V;
+    sim.hamiltonian.set_confining(L/4);
     sim.step(opts.skip * 100);
     sim.step_wh(opts.skip);
+    sim.hamiltonian.set_confining(0);
     sim.hamiltonian.set_V(V);
-    
 
-    if (opts.verbose > 1)
-            write_binary_array(sim.config_reference(), adj.N, "states" + opts.suffix_out + ".bin", "ab");
+
     std::ofstream out0(("output" + opts.suffix_out + ".txt").c_str(), std::ios::out);
     out0 << std::fixed << std::setprecision(4)
             << "%J,\t\tR,\t\te_H+M+K,\t\te_bub,\t\te_H+M,\t\tM,\t\tbt,\t\tbtEST" << endl;
     for (int i = 1; i < opts.n_seq + 1; i++) {
         //calcolo quantita' da stampare
         sim.hamiltonian.lanczos_lowest_energy();
-        displacement = static_cast<int>(round(0.5*L - sim.average_position()));
-
-        shifts = shifts - displacement;
-        if (displacement) {
+        double new_position = sim.average_position();
+        dist_travelled = new_position - position;
+      
+        if ((new_position > (0.75 * L)) || (new_position < (0.25 * L))) {
+            displacement = static_cast<int>(round((L/2) - new_position));
             shift_lattice(sim.config, displacement, L);
             shift_lattice(sim.hamiltonian.ground_state, displacement, L);
             sim.hamiltonian.lanczos_lowest_energy();
-        }
+            new_position = sim.average_position();
+        } else 
+            displacement = 0;
         
-        position = -displacement;//sim.average_position()+shifts;
+        shifts = shifts - displacement;
+        position = new_position;
         E_kin = sim.energia_cinetica() * opts.J;
         E_mag = - sim.energia_magnetica() * opts.J * 0.25;
         E_hamiltonian = sim.hamiltonian.last_energy * opts.J;
@@ -466,7 +471,9 @@ void nagaoka_run(const adj_struct &adj) {
             << position << "\t\t"
             << V * 1000 << "\t\t"
             << E_hamiltonian  << "\t\t" 
-            << shifts << endl;
+            << shifts << "\t\t"
+            << displacement << "\t\t"
+            << dist_travelled << endl;
 
         //progress bar
         fprintf(stderr, "\r");

@@ -93,7 +93,7 @@ template <class spin_t> template <typename T> void dopon_problem<spin_t>::MultMv
         out[k] += (lambda * (s[k] == spin) + J * spin * 0.25 * sum_nn) * in[k];
         //voltage gradient
         if (confining==0)
-                out[k] += -V * (2*(floor(k / L)/(L - 1))-1) * in[k]; //linear
+                out[k] += -V * ((floor(k / L)/(L - 1))-1) * in[k]; //linear
         else
                 out[k] += 5 * square(2*((floor(k / L)-confining) / (L - 1))) * in[k]; //parabola, centered at "confining", y in [0,1]
     }

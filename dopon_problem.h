@@ -64,7 +64,7 @@ public:
         lanczos_lowest_energy();
     }
     
-    void set_confining(double P_new){
+    void set_confining(int P_new){
         confining = P_new;
         lanczos_lowest_energy();
     }
