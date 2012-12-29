@@ -117,6 +117,7 @@ FILE_PATTERNS          = *.c \
                          *.php3 \
                          *.inc \
                          *.m \
+			 *.md \
                          *.mm \
                          *.dox \
                          *.py \

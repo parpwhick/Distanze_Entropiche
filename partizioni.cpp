@@ -188,7 +188,7 @@ bool is_equal(Iter_t from1, Iter_t last1, Iter_t from2, Iter_t last2) {
 }
 
 /**
- * Genera una partizione ridotta incompleta, generata da p1, scartando gli elementi
+ * Genera una partizione ridotta generata a partire da p1, scartando gli elementi
  * uguali (a meno di epsilon) ad atomi in p2.\n
  * La partizione cosi generata è completa, contiene tutte le informazioni necessarie, sovrabbondante
  * rispetto a quanto richiesto dal solo calcolo delle distanze.

@@ -127,15 +127,15 @@ public:
     ///Seed del generatore di numeri casuali [default: casuale]
     int seed;
     ///Dinamica Metropolis o microcanonica [default: microcanonica]
-    simulation_t simulation_type;
+    simulation_t dynamics;
     ///Numero di sweeps in un intervallo temporale [default: 1]
     int sweeps;
     ///Numero di istanti temporali da saltare inizialmente
     int skip;
     ///Temperatura inversa per simulazioni, un vettore contenente un valore per ogni lato [default: 0.45]
     std::vector<double> beta;
-    ///Massima energia per link nel caso di distribuzione random uniforme
-    int max_link_energy;
+    ///Suffisso per tutti i file di output
+    std::string suffix_out;
 
     ///Grado di verbosita', da 0 [default: 0]
     int verbose;
@@ -150,6 +150,8 @@ public:
     double hopping;
     ///Interazione J per l'hamiltoniana t-J(z)
     double J;
+    ///Voltaggio
+    double V;
 
 } options;
 

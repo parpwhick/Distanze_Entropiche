@@ -3,6 +3,7 @@
  */
 #include <vector>
 #include <cmath>
+#include <ctime>
 #include "adj_handler.h"
 #include "strutture.h"
 #include "rand_mersenne.h"
@@ -15,13 +16,14 @@
 #include <iomanip>
 using std::cout;
 using std::endl;
+using std::string;
 
 #ifndef SOLO_SIMULAZIONE
 extern
 #endif
 options opts;
 
-constexpr int J = 1;
+const int J = 1;
 
 template <typename data_t> void write_binary_array(const data_t *array, int N, const char *filename, const char * mode = "wb");
 
@@ -149,13 +151,6 @@ void ising_simulation::step(int steps) {
         for (int i = 0; i < steps; i++)
             metropolis_step();
 
-    if (update_rule == CREUTZ)
-        for (int i = 0; i < steps; i++) {
-            creutz_step();
-            for (int b = 0; b < n_borders_thermalize; b++)
-                thermalize_subset(borders[b],opts.beta[b]);
-                //metropolis_subset(borders[b],opts.beta[b]);
-        }
     else if (update_rule == MICROCANONICAL)
         for (int i = 0; i < steps; i++) {
             microcanonical_step();
@@ -173,7 +168,7 @@ void ising_simulation::step(int steps) {
  */
 double ising_simulation::energia_cinetica() {
     double totale = 0.0;
-    if (update_rule == CREUTZ || update_rule == MICROCANONICAL) {
+    if (update_rule == MICROCANONICAL) {
         for (size_t i = 0; i < link_energies.size(); i++)
             totale += static_cast<double>(link_energies[i]);
         return totale;
@@ -194,10 +189,7 @@ double ising_simulation::magnetizzazione(){
 vector<double> ising_simulation::local_energy() {
     vector<double> avg_local_energy(N);
 
-    if (update_rule == CREUTZ)
-        avg_local_energy.assign(link_energies.begin(), link_energies.end());
-
-    else if (update_rule == MICROCANONICAL) {
+    if (update_rule == MICROCANONICAL) {
         for (int i = 0; i < NN.n_link; i++) {
             int s1 = NN.positive_links[i].first;
             int s2 = NN.positive_links[i].second;
@@ -231,13 +223,14 @@ double ising_simulation::energia_magnetica() {
 
 void ising_simulation::metropolis_step() {
     int s, z, somma_vicini;
-    double dH;
-
-    /*if (myexp == 0) {
+    int dH;
+    
+    if (myexp == 0) 
         myexp = new double[10  * NN.zmax];
-        for (int i = 0; i < 10 * NN.zmax; i++)
+    
+    for (int i = 0; i < 10 * NN.zmax; i++)
             myexp[i] = exp(-avg_beta * i);
-    }*/
+    
 
     int s1 = random.get_int() % NN.N;    
     /* Dinamica di Metropolis, 1 passo temporale */
@@ -255,9 +248,9 @@ void ising_simulation::metropolis_step() {
         for (int m = 0; m < z; m++)
             somma_vicini += config[NN.vicini[m]];
 
-        dH = J * 2 * config[s] * somma_vicini;
-
-        if (dH <= 0 || random.get_double() < exp(-avg_beta * dH))
+        dH = 2 * J * config[s] * somma_vicini;
+        
+        if (dH <= 0 || random.get_double() < myexp[dH]) // exp(-beta * dH))
             config[s] = -config[s];
     }
 }
@@ -270,10 +263,10 @@ void ising_simulation::metropolis_subset(vector<int> subset, double local_beta) 
     int s, z, somma_vicini, dH;
       
     if (myexp == 0)
-        myexp = new double[NN.zmax + 2];
+        myexp = new double[10*NN.zmax];
 
-    for (int i = 0; i <= NN.zmax + 1; i++)
-            myexp[i] = exp(-2 * local_beta * i);
+    for (int i = 0; i <= 3*NN.zmax; i++)
+            myexp[i] = exp(-local_beta * i);
         
     /* Dinamica di Metropolis, 1 passo temporale */
     
@@ -287,7 +280,7 @@ void ising_simulation::metropolis_subset(vector<int> subset, double local_beta) 
         for (int m = 0; m < z; m++)
             somma_vicini += config[NN.vicini[m]];
 
-        dH = J * config[s] * somma_vicini;
+        dH = 2 * J * config[s] * somma_vicini;
         if (dH <= 0 || random.get_double() < myexp[dH])
             config[s] = -config[s];
     }
@@ -302,7 +295,7 @@ void ising_simulation::metropolis_subset(vector<int> subset, double local_beta) 
         for (int m = 0; m < z; m++)
             somma_vicini += config[NN.vicini[m]];
 
-        dH = J * config[s] * somma_vicini;
+        dH = 2 * J * config[s] * somma_vicini;
         if (dH <= 0 || random.get_double() < myexp[dH])
             config[s] = -config[s];
     }
@@ -318,11 +311,6 @@ void ising_simulation::thermalize_subset(vector<int> subset, double local_beta) 
         fprintf(stderr,"Link thermalization for microcanonical update is not yet available\n");
         exit(1);
         }
-    
-    if (update_rule == CREUTZ) {
-        for (size_t j = 0; j < subset.size(); j++)
-                link_energies[subset[j]] = 4 * std::ceil(-1 / 4. / local_beta * std::log(1 - random.get_double()) - 1);
-    }
 }
 
 void ising_simulation::microcanonical_step() {
@@ -411,51 +399,6 @@ void ising_simulation::microcanonical_step() {
     }
 }
 
-void ising_simulation::creutz_step() {
-    int s, z, somma_vicini;
-    double dH;
-    int s1 = random.get_int() % NN.N;
-    for (int j = 0; j < NN.N; j++) {
-        s=s1;
-        s1 = random.get_int() % NN.N;
-        prefetch(config[s1]);
-        prefetch(NN.index[s1]);
-        prefetch(link_energies[s1]);
-        
-        z = NN.fetch(s);
-        somma_vicini = 0;
-        for (int m = 0; m < z; m++)
-            somma_vicini += config[NN.vicini[m]];
-
-        dH = J * 2 * config[s] * somma_vicini;
-
-        if (dH <= 0 || link_energies[s] >= dH){
-            config[s] = -config[s];
-            link_energies[s] -= dH;
-        }
-    }
-}
-
-void ising_simulation::measure() {
-    static int t = 0;
-    double M1 = 0, M2 = 0, M3 = 0;
-    int size = N / 3 + 1;
-
-    for (int i = 0; i < size; i++)
-        M1 += (double) config[i];
-    for (int i = size; i < 2 * size - 2; i++)
-        M2 += (double) config[i];
-    for (int i = 2 * size - 2; i < 3 * size - 3; i++)
-        M3 += (double) config[i];
-    M1 /= size;
-    M2 /= size - 2;
-    M3 /= size - 1;
-
-    printf("%d %f %f %f\n", t, M1, M2, M3);
-    //printf("%2d/%d done, M: %g\n", t, T, (M_medio + 0.0) / (N + 0.0));
-    t++;
-}
-
 void ising_simulation::init_config() {
     int side = opts.lato;
     for (int col = 0; col < side; col++)
@@ -470,20 +413,22 @@ void ising_simulation::init_config() {
 ising_simulation::ising_simulation(const adj_struct & NN1) : NN(NN1) {
     avg_beta = 0;
     for (size_t i = 0; i < opts.beta.size(); i++)
-        avg_beta += opts.beta[i];
-    avg_beta /= opts.beta.size();   
+        avg_beta += 1/opts.beta[i];
+    avg_beta = 1/(avg_beta/opts.beta.size()); 
     steps_per_time = opts.sweeps;
     skip = opts.skip;
     
     N = NN.N;
 
-    update_rule = opts.simulation_type;
+    update_rule = opts.dynamics;
 
+    ///Setta i bordi opportuni, a seconda della topologia scelta
     if (opts.topologia == SIERPINSKI)
         borders = generate_sierpinski_borders(N);
     else if (opts.topologia == TORO_2D || opts.topologia == RETICOLO_2D || opts.topologia == CILINDRO_2D)
         borders = generate_square_border(opts.lato);
 
+    //Quanti bordi termalizzare
     if(opts.beta.size()==1 || borders.size() !=opts.beta.size())
         n_borders_thermalize = 0;
     else
@@ -494,31 +439,15 @@ ising_simulation::ising_simulation(const adj_struct & NN1) : NN(NN1) {
         for (int i = 0; i < NN.N; i++)
             config[i] = 1;
     else
-        for (int i = 0; i < NN.N; i++)
-            config[i] = 2*(i % 2)-1;
+        init_config();
     
-    if (update_rule == CREUTZ)
-        link_energies.resize(NN.N);
-    else if (update_rule == MICROCANONICAL)
+    ///Generazione energie iniziali
+    if (update_rule == MICROCANONICAL)
         link_energies.resize(NN.n_link);
     for (size_t i = 0; i < link_energies.size(); i++)
         //distribuzione esponenziale inversa
         link_energies[i] = 4 * std::ceil(-1 / 4. / avg_beta * std::log(1 - random.get_double()) - 1);
 
-}
-
-void ising_simulation::test_run(int T){
-    init_config();
-    measure();
-
-    for (int t = 0; t < T; t++) {
-        step();
-        //si scartano i run con indice negativo, per termalizzare il sistema
-        if (t < 0)
-            continue;
-        measure();
-    }
-    measure();
 }
 
 /**
@@ -581,7 +510,7 @@ void time_series(const adj_struct &adj){
      * allora la stima della temperatura è diversa dal caso di energie continue: \f[\beta = \log\left(1 + \frac{1}{\langle E_n \rangle}\right)\f]
      * l'errore sulla stima è: \f[\Delta\beta = -\frac{1}{(\langle E_n \rangle+1)\langle E_n \rangle}\;\cdot\; \frac{\sigma(E_n)}{\sqrt{N}} \f]
      */
-    std::ofstream out0(opts.verbose ? "output.txt" : "/dev/null", std::ios::out);
+    std::ofstream out0(opts.verbose ? string("output" + opts.suffix_out + ".txt").c_str() : "/dev/null", std::ios::out);
     out0 << std::fixed << std::setprecision(4)
             << "%options: " << opts.command_line << endl
             << "%t,\tbeta,\tatomi,\tH,\te_kin,\te_mag,\tdist,\tdist_r,\tdist_t,\tdist_tr\tM" << endl;
@@ -591,7 +520,6 @@ void time_series(const adj_struct &adj){
     double time_diff, completed_ratio;
     fprintf(stderr,"\n");
     
-    vector<double> avg_local_energy = sim.local_energy();
     for (int i = 1; i < opts.n_seq + 1; i++) {
         //calcolo quantita' da stampare
         E_kin = sim.energia_cinetica();
@@ -623,8 +551,10 @@ void time_series(const adj_struct &adj){
         //aggiornamento partizione
         Z2.from_configuration(sim.config_reference(), adj);
         if (opts.verbose > 1){
-            write_binary_array(sim.config_reference(), adj.N, "configurations.bin", "ab");
-            if (opts.distance) write_binary_array(Z2.show_labels(), adj.N, "partitions.bin","ab");
+            write_binary_array(sim.config_reference(), adj.N, string("states" + opts.suffix_out + ".bin").c_str(), "ab");
+            if (opts.verbose > 2 && opts.dynamics != METROPOLIS)
+                write_binary_array(sim.local_energy().data(), adj.N, string("energies" + opts.suffix_out + ".bin").c_str(), "ab");
+            if (opts.distance) write_binary_array(Z2.show_labels(), adj.N, string("partitions" + opts.suffix_out + ".bin").c_str(), "ab");
         }
         if(opts.distance){
             //calcolo distanze
@@ -632,12 +562,6 @@ void time_series(const adj_struct &adj){
         }
         //adesso Z1 conterra' la vecchia partizione, Z2 la prossima
         std::swap(Z1, Z2);
-        if (opts.verbose) {
-            //calcolo energie medie per ogni iterazione
-            vector<double> local_energy = sim.local_energy();
-            for (int k = 0; k < adj.N; k++)
-                avg_local_energy[k] += local_energy[k];
-        }
         
         //progress bar
         fprintf(stderr, "\r");
@@ -647,16 +571,8 @@ void time_series(const adj_struct &adj){
                 completed_ratio * 100, ceil(time_diff * (1 / completed_ratio - 1)));
         fflush(stderr);
     }
-    fprintf(stderr,"\n");
-    //energie medie
-    if (opts.verbose) {
-        for (int k = 0; k < adj.N; k++)
-            avg_local_energy[k] /= opts.n_seq;
-        write_binary_array(avg_local_energy.data(), adj.N, "average_energies.bin", "wb");
-        //energie finali
-        if (opts.simulation_type != METROPOLIS)
-            write_binary_array(sim.energy_reference(), sim.energy_size(), "energies_end.bin", "wb");
-    }
+    time_diff = (std::clock() - start) / (double) CLOCKS_PER_SEC;
+    fprintf(stderr, "\rDone in %.1fs CPU time\n",time_diff);
   
     //stampa medie
     std::ofstream out1("medie.txt", std::ios::app);
@@ -694,26 +610,3 @@ void time_series(const adj_struct &adj){
     printf("\n");
 }
 #endif
-
-
-#ifdef SOLO_SIMULAZIONE
-int main(int argc, char** argv) {
-//    int N = 0;
-    int T = 1000;
-    int max_link_energy=4;
-    adj_struct da_file = adiacenza_open_square_lattice(16);
-    adiacenza_to_file(da_file);
-
-    if (argc > 1)
-        T = atoi(argv[1]);
-    fprintf(stderr, "Simulation %d steps long\n", T);
-    if (argc > 2)
-        max_link_energy = atoi(argv[2]);
-    fprintf(stderr, "Max link energy: %d\n", max_link_energy);
-    fprintf(stderr, "\n");
-    ising_simulation sim(da_file, MICROCANONICAL,1,0);
-    sim.set_max_energy(max_link_energy);
-    sim.test_run(T);
-}
-#endif
-

@@ -17,7 +17,7 @@ using std::vector;
 class ising_simulation {
 public:
     ///tipo di variabile utilizzata, un semplice byte
-    typedef char config_t;
+    typedef int32_t config_t;
     typedef double energy_t;
 public:
     ///update micranonico(con bordi?) o metropolis

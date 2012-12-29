@@ -46,7 +46,6 @@ void print_help() {
             "  -symbols N        Generate random strings with N symbols [2]\n"
             "  -nowrite          Don't write the distance matrices [off]\n"
             "  -threads N        Use N threads to calculate distance matrix [1]\n"
-            //          "  -translate        Translate protein sequence into reduced 10 letter code [off]\n"
             "  -v [-v -v]        Turns on increasingly verbose messages to stderr [off]\n"
             "  -help             Shows this message\n"
             "  -demo             Only shows examples of partition algebra [off]\n"
@@ -70,17 +69,12 @@ void print_help() {
             "                    -adj rows.bin cols.bin\n"
             "\n"
             "Simulation options:\n"
-            "  -microcanonical   Evolution according to microcanonical law [default]\n"
-            "  -metropolis       Evolution according to Metropolis rule\n"
-            "  -creutz           Evolution according to Creutz rule\n"
+            "  -microcanonical   Evolution according to microcanonical dynamics [default]\n"
+            "  -metropolis       Evolution according to Metropolis dynamics\n"
             "  -beta B[,B2,..]   Floating point beta parameter for the (many) borders [0.45]\n"
             "  -sweeps N         Number of full sweeps in a time unit [1]\n"
             "  -skip N           Skip N time units to thermalize the system [50000]\n"
-            "\n"
-            "Quantum Hamiltonian:\n"
-            "  -electrons        Calculate at each iteration the electron energy\n"
-            "  -t X              Set hopping parameter to X [1.0]\n"
-            "  -J X              Set J to X [0.01]\n"
+            "  -suffix_out X     Write output files with suffix END (eg. statesX.bin)"
             "\n"
             ;
     fprintf(stderr, "%s", message);
@@ -99,7 +93,7 @@ void set_program_options(options &opts, int argc, char**argv) {
     else
         opts.topologia = LINEARE;
     opts.letto_da = RANDOM;
-    opts.simulation_type = MICROCANONICAL;
+    opts.dynamics = MICROCANONICAL;
     opts.skip = 50000;
     opts.sweeps = 1;
     opts.graphics = false;
@@ -113,6 +107,8 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.electrons = false;
     opts.hopping = 1.0;
     opts.J = 0.01;
+    opts.V = 0;
+    opts.suffix_out = "";
     opts.da_calcolare = 0
             | SHAN | TOP
             | RID | RID_TOP
@@ -255,17 +251,23 @@ void set_program_options(options &opts, int argc, char**argv) {
 
                 opts.skip = atoi(argv[read_argvs++]);
                 fprintf(stderr, "Skipping %d configurations at beginning\n", opts.skip);
+            } else if (input == "-suffix") {
+                if (argc - read_argvs < 1)
+                    error("Missing file name\n");
+
+                opts.suffix_out = argv[read_argvs++];
+                fprintf(stderr, "Writing run data with '%s' appended\n", opts.suffix_out.c_str());
             } else if (input == "-microcanonical") {
                 fprintf(stderr, "Temporal series with microcanonical rule\n");
-                opts.simulation_type = MICROCANONICAL;
+                opts.dynamics = MICROCANONICAL;
                 opts.letto_da = SIMULATION;
             } else if (input == "-metropolis") {
                 fprintf(stderr, "Temporal with Metropolis rule\n");
-                opts.simulation_type = METROPOLIS;
+                opts.dynamics = METROPOLIS;
                 opts.letto_da = SIMULATION;
             } else if (input == "-creutz") {
                 fprintf(stderr, "Temporal series with Creutz rule\n");
-                opts.simulation_type = CREUTZ;
+                opts.dynamics = CREUTZ;
                 opts.letto_da = SIMULATION;
             } else if (input == "-electrons") {
                 fprintf(stderr, "Calculating Hamiltonian at each iteration\n");
@@ -286,6 +288,12 @@ void set_program_options(options &opts, int argc, char**argv) {
 
                 opts.J = atof(argv[read_argvs++]);
                 fprintf(stderr, "J interaction set to %f\n", opts.J);
+            } else if (input == "-V") {
+                if (argc - read_argvs < 1)
+                    error("Missing J\n");
+
+                opts.V = atof(argv[read_argvs++]);
+                fprintf(stderr, "Voltage set to %f\n", opts.V);
             } else if (input == "-v") {
                 opts.verbose++;
                 fprintf(stderr, "Verbosity at %d\n", opts.verbose);

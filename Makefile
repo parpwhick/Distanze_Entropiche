@@ -7,7 +7,7 @@ COPTS= -O3 -march=native
 #COPTS+= -pg
 # STL profiling
 #COPTS+= -D_GLIBCXX_PROFILE
-ifeq ($(shell hostname),Atomowy-linux)
+ifeq ($(shell hostname),PiorunBeskidow)
    CC=g++
 else
    CC=icc
@@ -23,7 +23,7 @@ else
 endif
 COPTS +=-std=c++0x
 
-files=*.cpp *.h Makefile Doxyfile
+files=*.cpp *.h Makefile Doxyfile README.md
 file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
 
 OBJ_LIST= init_functions.o distance.o partizioni.o adj_handler.o rand_mersenne.o 
