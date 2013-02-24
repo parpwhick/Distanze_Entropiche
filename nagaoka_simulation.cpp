@@ -136,14 +136,14 @@ void nagaoka_simulation::metropolis_wh() {
         somma_vicini = 0;
         for (int m = 0; m < z; m++)
             somma_vicini += config[NN.vicini[m]];
-        dH = J * config[s] * somma_vicini;
+        dH = 0.25 * 2 * J * config[s] * somma_vicini; //factor of 0.25 for spins 1/2
 
         double old_gs_energy = hamiltonian.last_energy;
         config[s] = -config[s];
 
         if(is_electron_near(s))
                 dH += hamiltonian.lanczos_lowest_energy() - old_gs_energy;
-        if (dH > 0 && random.get_double() > exp(-2 * opts.beta[0] * dH)) {
+        if (dH > 0 && random.get_double() > exp(- opts.beta[0] * dH)) {
             //if the energy difference is unwanted, restore the previous state
             //of the spins
             config[s] = -config[s];
@@ -173,7 +173,7 @@ void nagaoka_simulation::metropolis_gradient() {
         somma_vicini = 0;
         for (int m = 0; m < z; m++)
             somma_vicini += config[NN.vicini[m]];
-        dH = J * config[s] * somma_vicini;
+        dH = 0.25 * 2 * J * config[s] * somma_vicini; //factor of 0.25 for spins 1/2
 
         double old_gs_energy = hamiltonian.last_energy;
         config[s] = -config[s];
@@ -181,7 +181,7 @@ void nagaoka_simulation::metropolis_gradient() {
         if(is_electron_near(s))
                 dH += hamiltonian.lanczos_lowest_energy() - old_gs_energy;
         
-        if (dH > 0 && random.get_double() > exp(-2 * local_beta * dH)) {
+        if (dH > 0 && random.get_double() > exp(- local_beta * dH)) {
             //if the energy difference is unwanted, restore the previous state
             //of the spins
             config[s] = -config[s];
@@ -201,7 +201,7 @@ void nagaoka_simulation::creutz_wh() {
         sum_neigh = 0;
         for (int m = 0; m < z; m++)
             sum_neigh += config[NN.vicini[m]];
-        dH = J * 2 * config[s] * sum_neigh;
+        dH = 0.25 * J * 2 * config[s] * sum_neigh; //factor of 0.25 for spins 1/2
 
         double old_gs_energy = hamiltonian.last_energy;
         config[s] = -config[s];
@@ -249,7 +249,7 @@ void nagaoka_simulation::microcanonical_wh() {
             somma_vicini = 0;
             for (int m = 0; m < z; m++)
                 somma_vicini += config[NN.vicini[m]];
-            dH = J * 2 * config[s1] * somma_vicini;
+            dH = 0.25 * J * 2 * config[s1] * somma_vicini; //factor of 0.25 for spins 1/2
         } else
             dH = 0;
 
@@ -259,12 +259,12 @@ void nagaoka_simulation::microcanonical_wh() {
             somma_vicini = 0;
             for (int m = 0; m < z; m++)
                 somma_vicini += config[NN.vicini[m]];
-            dH += J * 2 * config[s2] * somma_vicini;
+            dH += 0.25 * J * 2 * config[s2] * somma_vicini; //factor of 0.25 for spins 1/2
         }
 
         //energia dal flip simultaneo di s1 e s2
         if (flip12)
-            dH -= J * 4 * config[s1] * config[s2];
+            dH -= 0.25 * J * 4 * config[s1] * config[s2]; //factor of 0.25 for spins 1/2
 
         double old_gs_energy = hamiltonian.last_energy;
         if (flip1) config[s1] = -config[s1];
@@ -432,7 +432,7 @@ void nagaoka_run(const adj_struct &adj) {
         sim.hamiltonian.lanczos_lowest_energy();
         position = sim.average_position();
 
-        if (!config_backup.empty() && (position > 0.85 * L || position < 0.15 * L)) {
+        if (!config_backup.empty() && (position > 0.8 * L || position < 0.2 * L)) {
             //recenter
             //sim.hamiltonian.set_confining(2* L /4);
             //sim.step_wh(5);
