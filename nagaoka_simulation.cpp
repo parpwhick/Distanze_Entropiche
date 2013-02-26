@@ -411,6 +411,7 @@ void nagaoka_run(const adj_struct &adj) {
     sim.step_wh(opts.skip);
     sim.hamiltonian.set_confining(0);
     sim.hamiltonian.set_V(V);
+    shifts = 0;
 
 
     std::ofstream out0(("output" + opts.suffix_out + ".txt").c_str(), std::ios::out);
@@ -469,7 +470,7 @@ void nagaoka_run(const adj_struct &adj) {
             << sim.avg_beta << "\t\t"
             << beta_est << "\t\t"
             << position << "\t\t"
-            << V * 1000 << "\t\t"
+            << V << "\t\t"
             << E_hamiltonian  << "\t\t" 
             << shifts << "\t\t"
             << displacement << "\t\t"

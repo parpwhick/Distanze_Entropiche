@@ -96,7 +96,7 @@ class auto_stats{
 		return history;
 	}
 	///Costruttore con valore di default zero e battesimo della variabile
-	auto_stats(std::string _name="") : counter(0), sum(0.0), sum2(0.0), name(_name) {}
+	auto_stats(std::string _name="") : counter(0), sum(0.0), sum2(0.0), value(0), name(_name) {}
 	///Distruttore che stampa automaticamente le statistiche accumulate
 	~auto_stats(){
 		print();
