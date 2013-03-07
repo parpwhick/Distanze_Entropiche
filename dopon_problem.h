@@ -13,6 +13,7 @@
 #include "arssym.h"
 #include <iostream>
 #include <cstdio>
+#include <vector>
 
 #ifdef USE_EIGEN
 #include "eigen3/Eigen/Dense"
@@ -22,6 +23,12 @@ using namespace Eigen;
 template <typename T> T square (T val){
     return val*val;
 }
+
+int tqlrat(int n, double d[], double e2[]);
+int tql2(int n, double d[], double e[], double z[]);
+double pythag(double a, double b);
+
+const double epsilon=2.220446049250313E-016;
 
 template <typename spin_t>
 class dopon_problem {
@@ -33,10 +40,14 @@ public:
         last_gs_spin = 0;
         confining = 0;
         V = 0;
+        phi0.resize(NN.N);
+        phi1.resize(NN.N);
+        phi2.resize(NN.N);
     };
 
     double calculate_lowest_energy(bool verbose = false);
     double lanczos_lowest_energy(bool verbose=false);
+    double lanczos_lowest_energy2(bool verbose=false);
     //double* get_ground_state();
     
     void set_spin_array(const spin_t *spin_array) {
@@ -77,9 +88,19 @@ public:
     vector<double> ground_state;
 
     template <typename T> void MultMv (T*in, T*out);
-    template <typename T> void nutrlan_multiply(const int vector_length, const int n_vectors, const double *in, const int in_vec_size,
-	     double *out, const int out_vec_size, void*);
-private:
+    
+    double tol = 1.0e-7;
+    int maxiterations = 100;
+    vector<double> a; //Diagonal of tridiagonal matrix
+    vector<double> d; //Eigenvalues in output
+    vector<double> n; //Offdiagonal of tridiagonal matrix
+    vector<double> e; //Working array for diagonalization    
+    vector<double> phi0;
+    vector<double> phi1;
+    vector<double> phi2;
+    vector<double> eigenvectors, fullvectors;
+    double lanczos_groundstate(int verbose=0);
+//private:
     const adj_struct & NN;
 #ifdef USE_EIGEN
     MatrixXf H;

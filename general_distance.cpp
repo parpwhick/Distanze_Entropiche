@@ -143,7 +143,7 @@ int main(int argc, char** argv) {
             topologia = adiacenza_sierpinski(opts.sierpinski_gen);
             break;
         case(FUZZY):
-            topologia = adiacenza_fuzzy_line(opts.seq_len);
+            topologia = adiacenza_fuzzy_line(opts.seq_len,opts.fuzzy);
             break;
         case(LINEARE):
             topologia = adiacenza_simple_line(opts.seq_len);

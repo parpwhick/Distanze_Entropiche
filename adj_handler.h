@@ -76,7 +76,7 @@ public:
     adj_struct() {}
 };
 
-adj_struct adiacenza_fuzzy_line(int N);
+adj_struct adiacenza_fuzzy_line(int N,int fuzzy);
 adj_struct adiacenza_simple_line(int N);
 adj_struct adiacenza_toroidal_lattice(int lato);
 adj_struct adiacenza_open_square_lattice(int lato);

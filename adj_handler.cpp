@@ -9,7 +9,6 @@
 #include <cstdio>
 using std::vector;
 
-extern options opts;
 
 #define nnu(i) (i - (i % lato)+ ((i+lato-1)%lato))
 #define nnd(i) ((i/lato)*lato + ((i+lato+1)%lato))
@@ -170,13 +169,13 @@ adj_struct adiacenza_simple_line(int N){
 }
 
 /**
- * @brief Adiacenza per sequenza con salto @ref options.fuzzy, corrispondente alla retta con `opts.fuzzy+1` primi vicini all'indietro
+ * @brief Adiacenza per sequenza con salto @ref options.fuzzy, corrispondente alla retta con `fuzzy+1` primi vicini all'indietro
  * @param N lunghezza della sequenza
  * @return adj_struct La struttura di adiacenza
  */
-adj_struct adiacenza_fuzzy_line(int N){
+adj_struct adiacenza_fuzzy_line(int N, int fuzzy){
     vector<int> adi;
-    vector<int> adj((opts.fuzzy+1)*N);
+    vector<int> adj((fuzzy+1)*N);
     vector<int> index(N+1);
     int adj_count=0;
     
@@ -186,7 +185,7 @@ adj_struct adiacenza_fuzzy_line(int N){
         index[i]=adj_count;
         adj[adj_count++]=-(i-1);
     
-        for(int j=2; i-j>=0 && j<=opts.fuzzy+1; j++)
+        for(int j=2; i-j>=0 && j<=fuzzy+1; j++)
                 adj[adj_count++]=i-j;
     }
     adj[adj_count]=-1;
@@ -195,7 +194,7 @@ adj_struct adiacenza_fuzzy_line(int N){
     adj_struct temp(adi,adj,index);
     temp.N=N;
     temp.n_total_links=adj_count;
-    temp.zmax=opts.fuzzy+1;
+    temp.zmax=fuzzy+1;
     return(temp);
 }
 
@@ -417,8 +416,8 @@ adj_struct adiacenza_from_file(const char *name_vec1,const char *name_vec2){
     fprintf(stderr,"ADJ READ Info: Reading vectors for %d elements, %ld nonempty links\n",N,M);
     vector<int> index(N+1);
        
-    if(opts.verbose)
-        fprintf(stderr,"ADJ READ Info: Finished allocating\n");
+    //if(opts.verbose)
+    //    fprintf(stderr,"ADJ READ Info: Finished allocating\n");
     index[0]=0;
     int count=0;
     adj[0] -= offset;

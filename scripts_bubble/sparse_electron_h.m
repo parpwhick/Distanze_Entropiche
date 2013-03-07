@@ -14,8 +14,8 @@ s(1/ellipse_axes(1)*(x-center(1)).^2+1/ellipse_axes(2)*(y-center(2)).^2 <= radiu
 %parameters of the Hamiltonian
 t = 1;
 lambda = 600;
-J = 1;
-V = 10;
+J = 0.01;
+V = 0;
 
 %nearest neighbors to fill up the matrix
 nnr = reshape(1:N,L,L);
