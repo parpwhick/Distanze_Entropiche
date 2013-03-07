@@ -6,6 +6,7 @@
  */
 
 #include "dopon_problem.h"
+#include <cmath>
 
 #ifdef USE_EIGEN
 template <typename spin_t> void dopon_problem<spin_t>::construct_problem_matrix(int spin) {
@@ -72,8 +73,8 @@ template double dopon_problem<char>::calculate_lowest_energy(bool);
 template double dopon_problem<double>::calculate_lowest_energy(bool);
 #endif
 
-template <class spin_t> template <typename T> void dopon_problem<spin_t>::MultMv(T*in, T*out) {
-
+//int vicini[4] = {(k - (k % L)+ ((k+L-1)%L)),((k/L)*L + ((k+L+1)%L)),(k+N-L)%N,(k+N+L)%N};
+template <class spin_t> void dopon_problem<spin_t>::MultMv(double*in, double*out) {
     const int & spin = probed_spin;
     int z;
     double sum_nn;
@@ -87,7 +88,7 @@ template <class spin_t> template <typename T> void dopon_problem<spin_t>::MultMv
         for (int m = 0; m < z; m++) {
             sum_nn += s[NN.vicini[m]];
             //action of the "offdiagonal" terms, picking a t for every neighbor
-            out[k] += in[NN.vicini[m]] * t;
+            out[k] += in[NN.vicini[m]]; //*t;
         }
         //diagonal element, dopon spin dependent
         out[k] += (lambda * (s[k] == spin) + J * spin * 0.25 * sum_nn) * in[k];
@@ -100,66 +101,6 @@ template <class spin_t> template <typename T> void dopon_problem<spin_t>::MultMv
 }
 template void dopon_problem<char>::MultMv(double *in, double*out);
 template void dopon_problem<double>::MultMv(double *in, double*out);
-
-template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy2(bool verbose){
-    int nconv;
-    double E_up=1e4, E_down=1e4;
-
-    if(ground_state.empty())
-        ground_state.assign(NN.N,1.0);
-
-    static double tol = 1.0e-7;
-    static int maxiterations = 5000;
-    static int arnoldi_vectors = 7;
-    ARSymStdEig<double, dopon_problem<spin_t> >
-            dprob(NN.N, 1, this, &dopon_problem<spin_t>::MultMv, "SA", arnoldi_vectors, tol, maxiterations, ground_state.data());
-
-    dprob.ChangeTol(1.0e-7);
-    dprob.ChangeMaxit(5000);
-
-    if (last_gs_spin != 1) {
-        dprob.ChangeNcv(arnoldi_vectors);
-        probed_spin = -1;
-        nconv = dprob.FindEigenvectors();
-
-        if (nconv)
-            E_down = dprob.Eigenvalue(0) / J;
-        else{
-            fprintf(stderr, "Did not manage to find eigenvalue for spin down dopons\n");
-            arnoldi_vectors += 3;
-            return lanczos_lowest_energy();
-        }
-        ground_state.assign(dprob.RawEigenvector(0),dprob.RawEigenvector(0)+NN.N);
-    }
-
-    if (last_gs_spin != -1) {
-        probed_spin = +1;
-        dprob.ChangeNcv(arnoldi_vectors);
-        nconv = dprob.FindEigenvectors();
-
-        if (nconv)
-            E_up = dprob.Eigenvalue(0) / J;
-        else{
-            fprintf(stderr, "Did not manage to find eigenvalue for spin up dopons\n");
-            arnoldi_vectors += 3;
-            return lanczos_lowest_energy();
-        }
-        ground_state.assign(dprob.RawEigenvector(0),dprob.RawEigenvector(0)+NN.N);
-    }
-
-    if (verbose)
-        fprintf(stderr, "E(+) = %f, E(-) = %f\n", E_up, E_down);
-    
-    if(std::abs(E_down - E_up) > 1)
-        last_gs_spin = (E_down < E_up) ? -1 : 1;
-    else
-        last_gs_spin = 0;
-
-    last_energy = std::min(E_up,E_down);
-    return last_energy;
-}
-template double dopon_problem<char>::lanczos_lowest_energy2(bool);
-template double dopon_problem<double>::lanczos_lowest_energy2(bool);
 
 template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(bool verbose){
     double E_up=1e4, E_down=1e4;
@@ -190,33 +131,31 @@ template double dopon_problem<double>::lanczos_lowest_energy(bool);
 template double dopon_problem<char>::lanczos_lowest_energy(bool);
 
 ///Normalize the input vector, v/sqrt(<v,v>) and return the norm <v,v>
-double normalize(vector<double> &v){
+double normalize(double *v, size_t L){
     double norm=0.0, norm2=0.0;
-    for(size_t i=0; i<v.size();i++)
+    for(size_t i=0; i<L;i++)
         norm2+=v[i]*v[i];
     norm = std::sqrt(norm2);
-    for(size_t i=0; i<v.size();i++)
+    for(size_t i=0; i<L;i++)
         v[i]/=norm;
     return norm;
 }
 
-double scalar_product(const vector<double> &v1, const vector<double> &v2){
-    double prod=0.0;
-    for(size_t i=0; i<v1.size();i++)
-        prod+=v1[i]*v2[i];
-    return prod;
-}
-
-double scalar_product2(const double *v1, const double *v2, size_t L){
+double scalar_product(const double *v1, const double *v2, size_t L){
     double prod=0.0;
     for(size_t i=0; i<L;i++)
         prod+=v1[i]*v2[i];
     return prod;
 }
 
-void subtract_scaled(vector<double> &v2,double a,const vector<double> &v1,double n, const vector<double> &v0){
-    for(size_t i=0; i<v2.size();i++)
+void subtract_scaled3(double *v2,double a,const double *v1,double n, const double *v0,size_t L){
+    for(size_t i=0; i<L;i++)
         v2[i]-= a * v1[i] + n * v0[i];
+}
+
+void subtract_scaled2(double *v2,double a,const double *v1,size_t L){
+    for(size_t i=0; i<L;i++)
+        v2[i]-= a * v1[i];
 }
 
 void sum_scaled(double *v2,double a,const double *v1,size_t N){
@@ -227,6 +166,9 @@ void sum_scaled(double *v2,double a,const double *v1,size_t N){
 template <typename spin_t> double dopon_problem<spin_t>::lanczos_groundstate(int verbose) {
     int nconv;
     if(ground_state.empty())
+        //we assign a uniform initial state, although it's a terrible choice
+        //in certain cases the true groundstate could be the uniform vector,
+        //leading to errors and nonconvergence in the Lanczos algorithm.
         ground_state.assign(NN.N, 1.0);
     if(a.empty()){
         a.resize(maxiterations);
@@ -236,31 +178,38 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_groundstate(int
         eigenvectors.resize(maxiterations*maxiterations);
         fullvectors.resize(maxiterations * NN.N);
     }
+    double *phi0;
+    double *phi1;
+    double *phi2;
 
-    int N = NN.N;
+    int N = NN.N; //vector length
     int m = 1; //iteration counter
     double gs, gs_old = 0.0;
 
-    phi0.assign(ground_state.begin(), ground_state.end());
-    double gs_norm = normalize(phi0);
+    phi0 = &fullvectors[0];
+    std::copy(ground_state.begin(), ground_state.end(),&phi0[0]);
+    double gs_norm = normalize(phi0,N);
     if (verbose>1) printf("Initial state normalized with: %f\n", gs_norm);
 
-    MultMv(phi0.data(), phi1.data());
-    a[0] = scalar_product(phi0, phi1);
-    subtract_scaled(phi1, a[0], phi0, 0.0, phi0);
-    n[0] = normalize(phi1);
+    phi1 = &fullvectors[1*N];
+    MultMv(phi0, phi1);
+    a[0] = scalar_product(phi0, phi1,N);
+    subtract_scaled2(phi1, a[0], phi0,N);
+    n[0] = normalize(phi1,N);
     if (verbose>1) fprintf(stdout, "Iteration 0: a = %f, n = %f\n", a[0], n[0]);
 
-    for (m = 1; m < maxiterations; m++) {
-        MultMv(phi1.data(), phi2.data());
-        a[m] = scalar_product(phi2, phi1);
-        subtract_scaled(phi2, a[m], phi1, n[m - 1], phi0);
-        n[m] = normalize(phi2);
+    for (m = 1; m < maxiterations-1; m++) {
+        phi2 = &fullvectors[(m+1)*N];
+        phi1 = &fullvectors[m*N];
+        phi0 = &fullvectors[(m-1)*N];
+        
+        MultMv(phi1, phi2);
+        a[m] = scalar_product(phi2, phi1,N);
+        subtract_scaled3(phi2, a[m], phi1, n[m - 1], phi0,N);
+        n[m] = normalize(phi2,N);
         if (verbose>1) fprintf(stdout, "Iteration %d: a = %f, n = %f\n", m, a[m], n[m]);
-        phi0.swap(phi1); //phi1 -> phi0, to be used
-        phi1.swap(phi2); //phi2 -> phi1, to be used, phi2 will be overwritten
-
-        if (m > 10) {
+        
+        if (m > 18) {
             d.assign(&a[0], &a[m]);
             e.assign(&n[0], &n[m]);
             nconv = tqlrat(m, d.data(), e.data());
@@ -274,11 +223,9 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_groundstate(int
         }
     }
     
-    if (m >= maxiterations) {
-        fprintf(stderr, "LANCZOS: convergence not reached after %d steps, increasing the step number\n", m);
-        maxiterations += 100;
-        ground_state.assign(NN.N, 1.0);
-        a.clear();
+    if (m >= maxiterations-1) {
+        fprintf(stderr, "LANCZOS: convergence not reached after %d steps, retrying from last known state\n", m);
+        ground_state.assign(&phi2[0],&phi2[N]);
         return lanczos_groundstate(verbose);
     } else
         m--; //m is 1 higher than the last determined coefficient, needs to be -1
@@ -293,6 +240,7 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_groundstate(int
     //now, the ground state eigenvector...
     
     //set the eigenvector matrix diagonal to 1
+    //tql2 will reconstruct the eigenvector matrix
     eigenvectors.assign(eigenvectors.size(),0.0);
     for (int i = 0; i < m; i++)
         eigenvectors[i * m + i] = 1.0;
@@ -303,55 +251,19 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_groundstate(int
     if (nconv != 0)
         fprintf(stderr, "TQL2 ERROR: bad convergence, diagonalized only %d vectors\n", nconv);
    
-    e.assign(&eigenvectors[0],&eigenvectors[m]);
-    e.resize(m);
-    gs_norm = normalize(e);
-    if (std::abs(gs_norm - 1) > 1e-6) {
-        fprintf(stderr, "\nLANCZOS ERROR: the calculated eigenvector in the L-basis isn't normalized, |gs| = %.9f\n", gs_norm);
-        fprintf(stderr,"Total %d vectors in the reduced basis\n",m);
-        fprintf(stderr, "gs: %f, gs_old: %f\n", gs, gs_old);
-        for(int i=0; i<m; i++)
-            for (int j=i; j<m; j++){
-                double scal = scalar_product2(&eigenvectors[i*m],&eigenvectors[j*m],m);
-                if((std::abs(scal)>1e-6 && (i!=j)) || (std::abs(scal-1)>1e-6 && (i==j)))
-                    fprintf(stderr,"<%d|%d>=%.3f\n",i,j,scal);
-            }
-        exit(1);
-    }
-
-    //set the original state back
-    phi0.assign(ground_state.begin(), ground_state.end());
-    //zero out the output state
     ground_state.assign(N, 0.0);
-    normalize(phi0);
-    sum_scaled(&ground_state[0], eigenvectors[0], &phi0[0], N);
-
-    MultMv(phi0.data(), phi1.data());
-    //a[0] = scalar_product(phi0, phi1);
-    subtract_scaled(phi1, a[0], phi0, 0.0, phi0);
-    n[0] = normalize(phi1);
-
-    for (int j = 1; j < m; j++) {
+    for (int j = 0; j < m; j++)
         //every component of the eigenvector in the Lanczos basis (eigenvectors[j])
         //multiplies the vectors forming said basis (phi1 at every iteration)
-        sum_scaled(&ground_state[0], eigenvectors[j], &phi1[0], N);
-
-        MultMv(phi1.data(), phi2.data());
-        //a[j] = scalar_product(phi2, phi1);
-        subtract_scaled(phi2, a[j], phi1, n[j - 1], phi0);
-        n[j] = normalize(phi2);
-
-        phi0.swap(phi1);
-        phi1.swap(phi2);
-    }
-    gs_norm = normalize(ground_state);
-    if (std::abs(gs_norm - 1) > 1e-6) {
-        fprintf(stderr, "LANCZOS ERROR: the calculated groundstate isn't normalized, |gs| = %.9f\n", gs_norm);
-        e.assign(&eigenvectors[0], &eigenvectors[m]);
-        e.resize(m);
-        gs_norm = normalize(e);
-        fprintf(stderr, "but the Lanczos basis: |gs| = %.9f\n", gs_norm);
+        sum_scaled(&ground_state[0], eigenvectors[j], &fullvectors[j*N], N);
+    
+    
+    gs_norm = normalize(ground_state.data(),N);
+    if (std::abs(gs_norm - 1) > 1e-7) {
+        fprintf(stderr, "LANCZOS algorithm failure: for the groundstate after %d steps, |gs| = %f\n", m,gs_norm);
+        fprintf(stderr, "Restart with a random initial state and check the Hamiltonian isn't constant\n");
         exit(1);
+        
     }
     return d[0];
 }

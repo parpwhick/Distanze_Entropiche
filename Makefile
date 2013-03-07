@@ -1,31 +1,33 @@
-COPTS= -O3 -march=native
+COPTS= -Ofast
 # debugging symbols
 #COPTS+=-g2
 # debugging the STL library
 #COPTS+=-D_GLIBCXX_DEBUG
 # profiling
-#COPTS+= -pg
+COPTS+= -pg
+LINK_OPTS += -pg
 # STL profiling
 #COPTS+= -D_GLIBCXX_PROFILE
-COPTS+=-I /usr/include/arpack++/
 ifeq ($(shell hostname),marcin)
    CC=icc
+#else ifeq ($(shell hostname),PiorunBeskidow)
+#   CC=icc
 else
    CC=g++
 endif
 
-COPTS +=-Wall
-
 ifeq (${CC},g++)
-    COPTS+=-fopenmp
-    LINK_OPTS = -lgomp -lblas -llapack -larpack -larpack++
+    COPTS+=-fopenmp -Wall -march=native
+    LINK_OPTS += -lgomp
+    COPTS +=-std=c++0x
 else
-    COPTS+=-xHOST -ipo -no-prec-div
-    COPTS+=-mkl
-    LINK_OPTS =-mkl -larpack -larpack++
-#    INTEL_DEFINES =-DEIGEN_USE_MKL_ALL
+    COPTS+=-xHOST
+    COPTS+=-ipo -no-prec-div 
+    COPTS+=-parallel -ansi-alias -fargument-noalias
+    COPTS+=-mkl -w2
+    LINK_OPTS +=-mkl
+#    INTEL_DEFINES =-DEIGEN_USE_MKL_ALL -I /usr/include/eigen3/ 
 endif
-COPTS +=-std=c++0x
 
 files=*.cpp *.h Makefile Doxyfile
 file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
@@ -81,10 +83,7 @@ rand_mersenne.o: rand_mersenne.cpp rand_mersenne.h
 	${CC} ${COPTS} -c rand_mersenne.cpp
 
 dopon_problem.o: dopon_problem.h dopon_problem.cpp adj_handler.h
-	${CC} ${COPTS} ${INTEL_DEFINES} -I /usr/include/eigen3/ -I/usr/include/arpack++/ -c dopon_problem.cpp
-
-energy_test.o: energy_test.cpp dopon_problem.h adj_handler.h
-	${CC} ${COPTS} ${INTEL_DEFINES} -I /usr/include/eigen3/ -I/usr/include/arpack++/ -c energy_test.cpp
+	${CC} ${COPTS} ${INTEL_DEFINES} -c dopon_problem.cpp
 
 rand55.o: rand55.cpp rand55.h
 	${CC} ${COPTS} -c rand55.cpp

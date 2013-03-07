@@ -4,7 +4,6 @@
  */
 
 #include "adj_handler.h"
-#include "strutture.h"
 #include "smart_data_types.h"
 #include <cstdio>
 using std::vector;
@@ -474,8 +473,8 @@ adj_struct adiacenza_from_file(const char *name_vec1,const char *name_vec2){
 void adiacenza_to_file(const adj_struct & nn){
     FILE *vec1 = fopen("vector1.bin", "wb");
     FILE *vec2 = fopen("vector2.bin", "wb");
-    fwrite(nn.adi.data(), sizeof (label_t), nn.n_total_links, vec1);
-    fwrite(nn.adj.data(), sizeof (label_t), nn.n_total_links, vec2);
+    fwrite(nn.adi.data(), sizeof (int), nn.n_total_links, vec1);
+    fwrite(nn.adj.data(), sizeof (int), nn.n_total_links, vec2);
     fclose(vec1);
     fclose(vec2);
  }

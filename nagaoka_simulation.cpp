@@ -36,10 +36,12 @@ class nagaoka_simulation : public ising_simulation {
 public:
     dopon_problem<config_t> hamiltonian;
 
-    nagaoka_simulation(const adj_struct & NN1) : ising_simulation(NN1), hamiltonian(1, 0.01, 300, NN1) {
+    nagaoka_simulation(const adj_struct & NN1) : ising_simulation(NN1), hamiltonian(0.01, NN1) {        
+        hamiltonian.ground_state.assign(NN1.N,1.0);
+        for(int i=0; i<NN1.N; i++)
+                hamiltonian.ground_state[i] = random.get_double();
+        
         hamiltonian.set_spin_array(config.data());
-        hamiltonian.set_t(opts.hopping);
-        hamiltonian.set_lambda(300 * opts.hopping);
         hamiltonian.set_J(opts.J);
         hamiltonian.set_L(opts.lato);
         hamiltonian.set_V(0);
