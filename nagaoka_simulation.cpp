@@ -501,7 +501,8 @@ void nagaoka_run(const adj_struct &adj) {
             << beta_est.mean() << "\t\t"
             << position.mean() << "\t\t"
             << V.mean() << "\t\t"
-            << shifts << endl;
+            << shifts  << "\t\t"
+            << -displacement.mean() << endl;
 
     //best results
     std::ofstream out2("best.txt", std::ios::app);
@@ -516,7 +517,8 @@ void nagaoka_run(const adj_struct &adj) {
             << beta_est << "\t\t"
             << position.mean() << "\t\t"
             << V.mean() << "\t\t"
-            << shifts << endl;
+            << shifts  << "\t\t"
+            << -displacement.mean() << endl;
 
     //le variabili auto_stat qui stampano le loro medie, lasciamo una riga di spazio
     printf("\n");

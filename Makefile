@@ -62,7 +62,7 @@ translation.o: strutture.h translation.cpp
 ising_simulation.o: ising_simulation.cpp ising_simulation.h adj_handler.h distance.h partizioni.h smart_data_types.h
 	${CC} ${COPTS} -c ising_simulation.cpp
 
-nagaoka_simulation.o: nagaoka_simulation.cpp smart_data_types.h dopon_problem.cpp
+nagaoka_simulation.o: nagaoka_simulation.cpp smart_data_types.h dopon_problem.h
 	${CC} ${COPTS} -c nagaoka_simulation.cpp
 
 init_functions.o: strutture.h init_functions.cpp
@@ -100,6 +100,7 @@ zip: ${files} ${file_supporto}
 	zip -9 prog_distanze.zip ${files} ${file_supporto}
 
 arch: ${files}
+	rm -f prog_distanze.tar.gz
 	mkdir distanze_entropiche
 	cp ${files} distanze_entropiche
 	tar -cvzf prog_distanze.tar.gz distanze_entropiche
