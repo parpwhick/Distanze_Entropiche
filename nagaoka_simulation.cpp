@@ -36,10 +36,12 @@ class nagaoka_simulation : public ising_simulation {
 public:
     dopon_problem<config_t> hamiltonian;
 
-    nagaoka_simulation(const adj_struct & NN1) : ising_simulation(NN1), hamiltonian(1, 0.01, 300, NN1) {
+    nagaoka_simulation(const adj_struct & NN1) : ising_simulation(NN1), hamiltonian(0.01, NN1) {        
+        hamiltonian.ground_state.assign(NN1.N,1.0);
+        for(int i=0; i<NN1.N; i++)
+                hamiltonian.ground_state[i] = random.get_double();
+        
         hamiltonian.set_spin_array(config.data());
-        hamiltonian.set_t(opts.hopping);
-        hamiltonian.set_lambda(300 * opts.hopping);
         hamiltonian.set_J(opts.J);
         hamiltonian.set_L(opts.lato);
         hamiltonian.set_V(0);
@@ -309,22 +311,20 @@ bool nagaoka_simulation::is_electron_near(int k) {
     return (total_rho > 1e-5);
 }
 
-template <typename T> void shift_vector(vector<T> &conf, int by, int L){
+template <typename T> void shift_lattice(vector<T> &conf, int by, int L){
     static vector<T> temp;
-    temp.resize(conf.size());
-    int N = conf.size();
     if(by==0)
         return;
+    temp.reserve(conf.size());
+    std::copy(conf.begin(),conf.end(),temp.begin());    
     
     //we map i -> i + by * L
-    for(int col = 0; col < L; col++){
+    for(int from = 0; from < L; from++){
         //destination column
-        int to = (col + by + L ) % L;
+        int to = (from + by + 2*L ) % L;
         for(int i=0; i<L; i++)
-            temp[to*L+i] = conf(col*L+i);
+            conf[to*L+i] = temp[from*L+i];
     }
-    temp.swap(conf);
-    return temp;    
 }
 
 vector<double> nagaoka_simulation::print_temperature_profile(double epsilon) {
@@ -388,13 +388,16 @@ void nagaoka_run(const adj_struct &adj) {
     auto_stats<double> E_micro("Energy: H+M+K");
     auto_stats<double> position("Position");
     auto_stats<double> V("Voltage");
-    auto_stats<int> shifts("Shifts");
+    auto_stats<int> shifts("Polaron shifts"), displacement("Shift per time");
     nagaoka_simulation sim(adj);
     const double L = opts.lato;
     //last snapshot!
     vector<nagaoka_simulation::config_t> config_backup;
     vector<nagaoka_simulation::energy_t> energy_backup;
     vector<double> groundstate_backup;
+    double known_position = 0;
+    displacement = 0;
+    shifts = 0;
     
 
     init_AFM(sim.config);
@@ -420,10 +423,9 @@ void nagaoka_run(const adj_struct &adj) {
         config_backup = sim.config;
         energy_backup = sim.link_energies;
         groundstate_backup = sim.hamiltonian.ground_state;
+        known_position = sim.average_position();
     }
 
-    if (opts.verbose > 1)
-            write_binary_array(sim.config_reference(), adj.N, "states" + opts.suffix_out + ".bin", "ab");
     std::ofstream out0(("output" + opts.suffix_out + ".txt").c_str(), std::ios::out);
     out0 << std::fixed << std::setprecision(4)
             << "%J,\t\tR,\t\te_H+M+K,\t\te_bub,\t\te_H+M,\t\tM,\t\tbt,\t\tbtEST" << endl;
@@ -438,10 +440,10 @@ void nagaoka_run(const adj_struct &adj) {
             //sim.step_wh(5);
             //sim.hamiltonian.set_confining(0);
             if (position > 0.5 * L)
-                shifts = shifts + 1;
+                shifts = shifts + 1;         
             else
                 shifts = shifts - 1;
-
+            displacement = displacement + (position - known_position);
             sim.config = config_backup;
             sim.link_energies = energy_backup;
             sim.hamiltonian.ground_state = groundstate_backup;
@@ -451,6 +453,7 @@ void nagaoka_run(const adj_struct &adj) {
             config_backup = sim.config;
             energy_backup = sim.link_energies;
             groundstate_backup = sim.hamiltonian.ground_state;
+            known_position = position;
         }
         
         E_kin = sim.energia_cinetica() * opts.J;
@@ -489,9 +492,10 @@ void nagaoka_run(const adj_struct &adj) {
             << sim.avg_beta << "\t\t"
             << beta_est << "\t\t"
             << position << "\t\t"
-            << V * 1000 << "\t\t"
+            << V << "\t\t"
             << E_hamiltonian  << "\t\t" 
-            << shifts << endl;
+            << shifts << "\t\t"
+            << displacement << endl;
 
         //progress bar
         fprintf(stderr, "\r");
@@ -518,7 +522,8 @@ void nagaoka_run(const adj_struct &adj) {
             << beta_est.mean() << "\t\t"
             << position.mean() << "\t\t"
             << V.mean() << "\t\t"
-            << shifts << endl;
+            << shifts  << "\t\t"
+            << displacement.mean() << endl;
 
     //best results
     std::ofstream out2("best.txt", std::ios::app);
@@ -533,7 +538,8 @@ void nagaoka_run(const adj_struct &adj) {
             << beta_est << "\t\t"
             << position.mean() << "\t\t"
             << V.mean() << "\t\t"
-            << shifts << endl;
+            << shifts  << "\t\t"
+            << displacement.mean() << endl;
 
     //le variabili auto_stat qui stampano le loro medie, lasciamo una riga di spazio
     printf("\n");

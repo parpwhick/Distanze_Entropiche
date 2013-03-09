@@ -9,10 +9,9 @@
 #define	DOPON_PROBLEM_H
 
 #include "adj_handler.h"
-#include "blas1c.h"
-#include "arssym.h"
 #include <iostream>
 #include <cstdio>
+#include <vector>
 
 #ifdef USE_EIGEN
 #include "eigen3/Eigen/Dense"
@@ -23,12 +22,39 @@ template <typename T> T square (T val){
     return val*val;
 }
 
+int tqlrat(int n, double d[], double e2[]);
+int tql2(int n, double d[], double e[], double z[]);
+double pythag(double a, double b);
+
+const double epsilon=2.220446049250313E-016;
+const double lambda=300.0;
+const double tol=1.0e-7;
+const double maxiterations = 200;
+
 template <typename spin_t>
 class dopon_problem {
 public:
 
-    dopon_problem(double t1, double J1, double lambda1, const adj_struct & adj) :
-    NN(adj), t(t1), J(J1),  lambda(lambda1)  {
+    const adj_struct & NN;
+    const spin_t *s;
+    int L;
+    int confining;
+    double J;
+    double V;
+    double last_energy;
+    int last_gs_spin;
+    int probed_spin;
+    
+    
+    vector<double> ground_state;
+    vector<double> a; //Diagonal of tridiagonal matrix
+    vector<double> d; //Eigenvalues in output
+    vector<double> n; //Offdiagonal of tridiagonal matrix
+    vector<double> e; //Working array for diagonalization
+    vector<double> eigenvectors, fullvectors;
+    
+    dopon_problem(double J1, const adj_struct & adj) :
+    NN(adj), J(J1) {
         last_energy = 0;
         last_gs_spin = 0;
         confining = 0;
@@ -37,7 +63,8 @@ public:
 
     double calculate_lowest_energy(bool verbose = false);
     double lanczos_lowest_energy(bool verbose=false);
-    //double* get_ground_state();
+    void MultMv (double*in, double*out);
+    double lanczos_groundstate(int verbose=0);
     
     void set_spin_array(const spin_t *spin_array) {
         s = spin_array;
@@ -45,14 +72,6 @@ public:
 
     int lowest_energy_spin() {
         return last_gs_spin;
-    }
-
-    void set_t(double t_new) {
-        t = t_new;
-    }
-
-    void set_lambda(double lambda_new) {
-        lambda = lambda_new;
     }
 
     void set_J(double J_new){
@@ -72,30 +91,10 @@ public:
     void set_L(double L_new){
         L = L_new;
     }
-
-    double last_energy;
-    vector<double> ground_state;
-
-    template <typename T> void MultMv (T*in, T*out);
-    template <typename T> void nutrlan_multiply(const int vector_length, const int n_vectors, const double *in, const int in_vec_size,
-	     double *out, const int out_vec_size, void*);
-private:
-    const adj_struct & NN;
+    
 #ifdef USE_EIGEN
     MatrixXf H;
 #endif
-
-    const spin_t *s;
-    double t;
-    double J;
-    double lambda;
-    
-    int L;
-    int last_gs_spin;
-    int probed_spin;    
-
-    double V;
-    int confining;
     void construct_problem_matrix(int spin);
 };
 

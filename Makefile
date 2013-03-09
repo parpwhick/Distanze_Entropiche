@@ -1,31 +1,33 @@
-COPTS= -O3 -march=native
+COPTS= -Ofast
 # debugging symbols
 #COPTS+=-g2
 # debugging the STL library
 #COPTS+=-D_GLIBCXX_DEBUG
 # profiling
-#COPTS+= -pg
+COPTS+= -pg
+LINK_OPTS += -pg
 # STL profiling
 #COPTS+= -D_GLIBCXX_PROFILE
-COPTS+=-I /usr/include/arpack++/
 ifeq ($(shell hostname),marcin)
    CC=icc
+#else ifeq ($(shell hostname),PiorunBeskidow)
+#   CC=icc
 else
    CC=g++
 endif
 
-COPTS +=-Wall
-
 ifeq (${CC},g++)
-    COPTS+=-fopenmp
-    LINK_OPTS = -lgomp -lblas -llapack -larpack -larpack++
+    COPTS+=-fopenmp -Wall -march=native
+    LINK_OPTS += -lgomp
+    COPTS +=-std=c++0x
 else
-    COPTS+=-xHOST -ipo -no-prec-div
-    COPTS+=-mkl
-    LINK_OPTS =-mkl -larpack -larpack++
-#    INTEL_DEFINES =-DEIGEN_USE_MKL_ALL
+    COPTS+=-xHOST
+    COPTS+=-ipo -no-prec-div 
+    COPTS+=-parallel -ansi-alias -fargument-noalias
+    COPTS+=-mkl -w2
+    LINK_OPTS +=-mkl
+#    INTEL_DEFINES =-DEIGEN_USE_MKL_ALL -I /usr/include/eigen3/ 
 endif
-COPTS +=-std=c++0x
 
 files=*.cpp *.h Makefile Doxyfile
 file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
@@ -62,7 +64,7 @@ translation.o: strutture.h translation.cpp
 ising_simulation.o: ising_simulation.cpp ising_simulation.h adj_handler.h distance.h partizioni.h smart_data_types.h
 	${CC} ${COPTS} -c ising_simulation.cpp
 
-nagaoka_simulation.o: nagaoka_simulation.cpp smart_data_types.h dopon_problem.cpp
+nagaoka_simulation.o: nagaoka_simulation.cpp smart_data_types.h dopon_problem.h
 	${CC} ${COPTS} -c nagaoka_simulation.cpp
 
 init_functions.o: strutture.h init_functions.cpp
@@ -81,10 +83,7 @@ rand_mersenne.o: rand_mersenne.cpp rand_mersenne.h
 	${CC} ${COPTS} -c rand_mersenne.cpp
 
 dopon_problem.o: dopon_problem.h dopon_problem.cpp adj_handler.h
-	${CC} ${COPTS} ${INTEL_DEFINES} -I /usr/include/eigen3/ -I/usr/include/arpack++/ -c dopon_problem.cpp
-
-energy_test.o: energy_test.cpp dopon_problem.h adj_handler.h
-	${CC} ${COPTS} ${INTEL_DEFINES} -I /usr/include/eigen3/ -I/usr/include/arpack++/ -c energy_test.cpp
+	${CC} ${COPTS} ${INTEL_DEFINES} -c dopon_problem.cpp
 
 rand55.o: rand55.cpp rand55.h
 	${CC} ${COPTS} -c rand55.cpp
@@ -100,6 +99,7 @@ zip: ${files} ${file_supporto}
 	zip -9 prog_distanze.zip ${files} ${file_supporto}
 
 arch: ${files}
+	rm -f prog_distanze.tar.gz
 	mkdir distanze_entropiche
 	cp ${files} distanze_entropiche
 	tar -cvzf prog_distanze.tar.gz distanze_entropiche
