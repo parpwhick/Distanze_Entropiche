@@ -275,26 +275,8 @@ template <typename T> int signof(T number){
     return 2*(number >= 0)-1;
 }
 
-double pythag(double a, double b){
-//      PYTHAG = sqrt ( A * A + B * B )
-    double p,r,s,t,u;
-    p = std::max(std::abs(a), std::abs(b));
-
-    if (p != 0.0) {
-        r = std::min(std::abs(a), std::abs(b)) / p;
-        r = r * r;
-
-        while (1) {
-            t = 4.0 + r;
-            if (t == 4.0)
-                break;
-            s = r / t;
-            u = 1.0 + 2.0 * s;
-            p = u * p;
-            r = (s / u) * (s / u) * r;
-        }
-    }
-    return p;
+inline double pythag(double a, double b){
+    return std::hypot(a,b);
 }
 
 int tql2(int n, double d[], double e[], double z[]){

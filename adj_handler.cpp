@@ -46,6 +46,13 @@ adj_struct adiacenza_toroidal_lattice(int lato){
     temp.N=N;
     temp.n_total_links=4*N;
     temp.zmax=4;
+    
+    temp.n_link = 2*N;
+    temp.positive_links.resize(temp.n_link);
+    for (int i = 0; i < N; i++){        
+            temp.positive_links[2*i] = std::make_pair(i,nnu(i));
+            temp.positive_links[2*i+1] = std::make_pair(i,nnl(i));
+    }
     return(temp);
 }
 
@@ -72,17 +79,17 @@ adj_struct adiacenza_square_lattice(int lato){
         adi[count] = i;
         adj[count++] = nnd(i);
 
-        //open left
-        if(i-lato >= 0){
-            //has LEFT neighbor
-            adi[count] = i;
-            adj[count++] = i-lato;
-        }
         //open right
         if(i+lato < N){
             //has RIGHT neighbor
             adi[count] = i;
             adj[count++] = i+lato;
+        }
+        //open left
+        if(i-lato >= 0){
+            //has LEFT neighbor
+            adi[count] = i;
+            adj[count++] = i-lato;
         }
     }
     adj[count]=LEAST;
@@ -92,6 +99,12 @@ adj_struct adiacenza_square_lattice(int lato){
     temp.N=N;
     temp.n_total_links=count;
     temp.zmax=4;
+    temp.n_link = 2*N;
+    temp.positive_links.resize(temp.n_link);
+    for (int i = 0; i < N; i++){        
+            temp.positive_links[2*i] = std::make_pair(i,nnu(i));
+            temp.positive_links[2*i+1] = std::make_pair(i,nnl(i));
+    }
     return(temp);
 }
 
@@ -164,6 +177,7 @@ adj_struct adiacenza_simple_line(int N){
     temp.N=N;
     temp.n_total_links=N;
     temp.zmax=1;
+    temp.normalize();
     return(temp);
 }
 
@@ -194,6 +208,7 @@ adj_struct adiacenza_fuzzy_line(int N, int fuzzy){
     temp.N=N;
     temp.n_total_links=adj_count;
     temp.zmax=fuzzy+1;
+    temp.normalize();
     return(temp);
 }
 
@@ -348,7 +363,7 @@ adj_struct adiacenza_sierpinski(int GEN){
     temp.N=total_size;
     temp.n_total_links=scritti;
     temp.zmax=4;
-    
+    temp.normalize();
 //    // test!
 //    for(int i=0; i < temp.N; i++){
 //        int z=temp.fetch(i);
@@ -460,7 +475,7 @@ adj_struct adiacenza_from_file(const char *name_vec1,const char *name_vec2){
     temp.n_total_links=M;
     temp.N=N;
     temp.zmax=zmax;
-    
+    temp.normalize();
     fclose(vec1);
     fclose(vec2);
     return(temp);
@@ -480,6 +495,8 @@ void adiacenza_to_file(const adj_struct & nn){
  }
 
 void adj_struct::normalize(){
+    if (!positive_links.empty())
+        return;
     n_link = n_total_links/2;
     int counter = 0;
     positive_links.resize(n_link);
