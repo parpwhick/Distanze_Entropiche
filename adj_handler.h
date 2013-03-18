@@ -44,6 +44,10 @@ public:
     std::vector<int> index;
     ///Coppie di elementi adiacenti, i~j, con i>j
     std::vector<pair<int,int> > positive_links;
+    ///Array di bordi, dove i bordi sono array con i siti per ogni bordo
+    vector<vector<int> > borders;
+    //Quali link sono connessi ad ogni bordo?
+    vector<vector<int> > bordering_links;
     ///Array per il veloce accesso ai vicini, tramite l'indice
     mutable const int *vicini;
 
@@ -69,7 +73,10 @@ public:
         return(z);
     }
 
+    ///Determina link con i<j
     void normalize();
+    ///Determina quali link fanno parte del bordo
+    void setup_bordering_links();
     ///Costruttore per allocare direttamente i vettori
     adj_struct(std::vector<int> _adi, std::vector<int> _adj , std::vector<int> _index)
             : adi(_adi), adj(_adj), index(_index) {}

@@ -56,9 +56,6 @@ public:
     
     bool is_electron_near(int k);
 
-    //quantity
-    vector<vector<int> > bordering_links;
-
 private:
     void metropolis_wh();
     void metropolis_gradient();
@@ -81,20 +78,6 @@ template <typename data_t> void write_binary_array(const data_t *array, int N, s
     fclose(out);
 }
 
-void nagaoka_simulation::setup_bordering_links(){
-    bordering_links.resize(borders.size());
-
-    for (int link = 0; link < NN.n_link; link++) {
-        int s1 = NN.positive_links[link].first;
-        int s2 = NN.positive_links[link].second;
-        
-        for (size_t b = 0; b < borders.size(); b++)
-            if (std::binary_search(borders[b].begin(), borders[b].end(), s1) ||
-                    std::binary_search(borders[b].begin(), borders[b].end(), s2))
-                bordering_links[b].push_back(link);
-    }
-}
-
 void nagaoka_simulation::step_wh(int steps){
     if (update_rule == METROPOLIS)
         for (int i = 0; i < steps; i++)
@@ -109,8 +92,8 @@ void nagaoka_simulation::step_wh(int steps){
 
             //heat up the sites making up the borders
             for (int b = 0; b < n_borders_thermalize; b++)
-                for (size_t j = 0; j < borders[b].size(); j++)
-                        link_energies[borders[b][j]] = -1 / opts.beta[b] * std::log(random.get_double());
+                for (size_t j = 0; j < NN.borders[b].size(); j++)
+                        link_energies[NN.borders[b][j]] = -1 / opts.beta[b] * std::log(random.get_double());
         }
 
     if(update_rule == MICROCANONICAL)
@@ -119,8 +102,8 @@ void nagaoka_simulation::step_wh(int steps){
 
             //heat up the links adjacent to the borders
             for (int b = 0; b < n_borders_thermalize; b++)
-                for (size_t j = 0; j < bordering_links[b].size(); j++)
-                         link_energies[bordering_links[b][j]] = -1 / opts.beta[b] * std::log(random.get_double());
+                for (size_t j = 0; j < NN.bordering_links[b].size(); j++)
+                         link_energies[NN.bordering_links[b][j]] = -1 / opts.beta[b] * std::log(random.get_double());
                                  //4 * std::ceil(-1 / 4. / opts.beta[b] * std::log(1 - random.get_double()) - 1);
 
         }

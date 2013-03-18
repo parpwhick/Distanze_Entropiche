@@ -4,8 +4,8 @@ COPTS= -Ofast
 # debugging the STL library
 #COPTS+=-D_GLIBCXX_DEBUG
 # profiling
-COPTS+= -pg
-LINK_OPTS += -pg
+#COPTS+= -pg
+#LINK_OPTS += -pg
 # STL profiling
 #COPTS+= -D_GLIBCXX_PROFILE
 ifeq ($(shell hostname),marcin)

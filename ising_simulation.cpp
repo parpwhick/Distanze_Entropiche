@@ -16,6 +16,7 @@
 #include <iomanip>
 using std::cout;
 using std::endl;
+using std::string;
 
 #ifndef SOLO_SIMULAZIONE
 extern
@@ -61,82 +62,6 @@ std::vector<ising_simulation::config_t> ising_simulation::copy() {
 }
 
 /**
- * @brief Riempie i vettori forniti con gli indici dei siti che fanno parte dei bordi, per poter
- * eseguire un update separato
- * @param N Numero di elementi nel triangolo di Sierpinski - serve per indovinare la generazione
- * @param bordo_sinistro Vettore di indici del bordo destro
- * @param bordo_destro Indici del bordo destro
- * @param bordo_sotto Indici del bordo inferiore
- * @return Dimensione dei bordi
- */
-vector<vector<int> > generate_sierpinski_borders(int N){
-    int gen=1;
-    int size=6;
-    int bordersize=2;
-
-    // determine generation and proper dimensions
-    while(size<N){
-	gen+=1;
-	size = 3*size-3;
-	bordersize = 2*bordersize;
-    }
-    vector<vector<int> > borders(3);
-    borders[0].resize(bordersize + 1);
-    borders[1].resize(bordersize);
-    borders[2].resize(bordersize);
-    borders[0][0] = 1;
-    borders[0][1] = 3;
-    borders[1][0] = 2;
-    borders[1][1] = 5;
-    
-    // we start over and populate
-    size=6;
-    bordersize = 2;
-    // iterate again over generations, to copy from the previous
-    for (int g = 2; g <= gen; g++) {
-        //copy left border, adding size of left triangle
-        for (int i = 0; i < bordersize; i++)
-            borders[0][bordersize + i] = borders[0][i] + size - 1;
-        //copy right border, adding size of right triangle
-        for (int i = 0; i < bordersize; i++)
-            borders[1][bordersize + i] = borders[1][i] + 2 * size - 3;
-
-        size = 3 * size - 3;
-        bordersize = 2 * bordersize;
-    }
-    borders[0][bordersize] = 0;
-    for (int i = 1; i < bordersize - 1; i++)
-        borders[2][i] = N - 1 - i;
-    return borders;
-}
-/**
- * @brief Genera gli indici degli elementi facenti parte del bordo di un reticolo quadrato periodico
- * @param lato Lato del reticolo quadrato in questione
- * @param bsx Vettore che conterra gli indici del bordo sinistro
- * @return Numero di elementi appartenenti al bordo
- */
-vector<vector<int> > generate_square_border(int lato) {
-    vector<vector<int> > borders(2);
-    borders[0].resize(lato);
-    borders[1].resize(lato);
-
-    //normale quadrato
-    if (opts.topologia == RETICOLO_2D || opts.topologia == CILINDRO_2D)
-        for (int i = 0; i < lato; i++) {
-            borders[0][i] = i;
-            borders[1][i] = lato * (lato - 1) + i;
-        }
-
-    if (opts.topologia == TORO_2D)
-        //toro, bordi a 1/4 e a 3/4 del sistema
-        for (int i = 0; i < lato; i++) {
-            borders[0][i] = lato * (lato / 4) + i;
-            borders[1][i] = lato * ((3 * lato) / 4) + i;
-        }
-
-    return borders;
-}
-/**
  * Conta il numero di passi da eseguire nell'intervallo di tempo considerato, tenendo presente il tempo da scartare per raggiungere
  * la termalizzazione (sono scartati una sola volta infatti).
  *
@@ -154,14 +79,14 @@ void ising_simulation::step(int steps) {
         for (int i = 0; i < steps; i++) {
             creutz_step();
             for (int b = 0; b < n_borders_thermalize; b++)
-                thermalize_subset(borders[b],opts.beta[b]);
+                thermalize_subset(NN.borders[b],opts.beta[b]);
                 //metropolis_subset(borders[b],opts.beta[b]);
         }
     else if (update_rule == MICROCANONICAL)
         for (int i = 0; i < steps; i++) {
             microcanonical_step();
             for (int b = 0; b < n_borders_thermalize; b++)
-                metropolis_subset(borders[b], opts.beta[b]);
+                metropolis_subset(NN.borders[b], opts.beta[b]);
             //thermalize_subset(borders[b],opts.beta[b]);
         }
 }
@@ -487,12 +412,7 @@ ising_simulation::ising_simulation(const adj_struct & NN1) : NN(NN1) {
 
     update_rule = opts.dynamics;
 
-    if (opts.topologia == SIERPINSKI)
-        borders = generate_sierpinski_borders(N);
-    else if (opts.topologia == TORO_2D || opts.topologia == RETICOLO_2D || opts.topologia == CILINDRO_2D)
-        borders = generate_square_border(opts.lato);
-
-    if(opts.beta.size()==1 || borders.size() !=opts.beta.size())
+    if(opts.beta.size()==1 || NN.borders.size() !=opts.beta.size())
         n_borders_thermalize = 0;
     else
         n_borders_thermalize = opts.beta.size();
@@ -579,7 +499,7 @@ void time_series(const adj_struct &adj){
 
     //thermalize configuration
     sim.step(opts.skip);
-           
+    
     Z1.from_configuration(sim.config_reference(),adj);
         
     /**@note
@@ -629,10 +549,10 @@ void time_series(const adj_struct &adj){
         //aggiornamento partizione
         Z2.from_configuration(sim.config_reference(), adj);
         if (opts.verbose > 1){
-            write_binary_array(sim.config_reference(), adj.N, ("states" + opts.suffix_out + ".bin").c_str(), "ab");
+            write_binary_array(sim.config_reference(), adj.N, string("states" + opts.suffix_out + ".bin").c_str(), "ab");
             if (opts.verbose > 2 && opts.dynamics != METROPOLIS)
-                write_binary_array(sim.local_energy().data(), adj.N, ("energies" + opts.suffix_out + ".bin").c_str(), "ab");
-            if (opts.distance) write_binary_array(Z2.show_labels(), adj.N, ("partitions" + opts.suffix_out + ".bin").c_str(), "ab");
+                write_binary_array(sim.local_energy().data(), adj.N, string("energies" + opts.suffix_out + ".bin").c_str(), "ab");
+            if (opts.distance) write_binary_array(Z2.show_labels(), adj.N, string("partitions" + opts.suffix_out + ".bin").c_str(), "ab");
         }
         if(opts.distance){
             //calcolo distanze
@@ -652,7 +572,7 @@ void time_series(const adj_struct &adj){
     fprintf(stderr, "\n");
     //energie medie
     if (opts.verbose && opts.dynamics != METROPOLIS)
-            write_binary_array(sim.energy_reference(), sim.energy_size(), ("energies_end" + opts.suffix_out + ".bin").c_str(), "wb");
+            write_binary_array(sim.energy_reference(), sim.energy_size(), string("energies_end" + opts.suffix_out + ".bin").c_str(), "wb");
   
     //stampa medie
     std::ofstream out1("medie.txt", std::ios::app);

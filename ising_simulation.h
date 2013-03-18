@@ -79,8 +79,6 @@ public:
     int energy_size(){
         return link_energies.size();
     }
-    ///Vettore contenente i vettori che rappresentano i bordi
-    vector<vector<int> > borders;
     ///Calcola l'energia cinetica media per sito
     double energia_cinetica();
     ///Calcola l'energia magnetica media per sito

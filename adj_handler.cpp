@@ -15,6 +15,97 @@ using std::vector;
 #define nnr(i) (i+N+lato)%N
 
 /**
+ * @brief Riempie i vettori forniti con gli indici dei siti che fanno parte dei bordi, per poter
+ * eseguire un update separato
+ * @param N Numero di elementi nel triangolo di Sierpinski - serve per indovinare la generazione
+ * @param bordo_sinistro Vettore di indici del bordo destro
+ * @param bordo_destro Indici del bordo destro
+ * @param bordo_sotto Indici del bordo inferiore
+ * @return Dimensione dei bordi
+ */
+vector<vector<int> > generate_sierpinski_borders(int N){
+    int gen=1;
+    int size=6;
+    int bordersize=2;
+
+    // determine generation and proper dimensions
+    while(size<N){
+	gen+=1;
+	size = 3*size-3;
+	bordersize = 2*bordersize;
+    }
+    vector<vector<int> > borders(3);
+    borders[0].resize(bordersize + 1);
+    borders[1].resize(bordersize);
+    borders[2].resize(bordersize);
+    borders[0][0] = 1;
+    borders[0][1] = 3;
+    borders[1][0] = 2;
+    borders[1][1] = 5;
+    
+    // we start over and populate
+    size=6;
+    bordersize = 2;
+    // iterate again over generations, to copy from the previous
+    for (int g = 2; g <= gen; g++) {
+        //copy left border, adding size of left triangle
+        for (int i = 0; i < bordersize; i++)
+            borders[0][bordersize + i] = borders[0][i] + size - 1;
+        //copy right border, adding size of right triangle
+        for (int i = 0; i < bordersize; i++)
+            borders[1][bordersize + i] = borders[1][i] + 2 * size - 3;
+
+        size = 3 * size - 3;
+        bordersize = 2 * bordersize;
+    }
+    borders[0][bordersize] = 0;
+    for (int i = 1; i < bordersize - 1; i++)
+        borders[2][i] = N - 1 - i;
+    return borders;
+}
+/**
+ * @brief Genera gli indici degli elementi facenti parte del bordo di un reticolo quadrato periodico
+ * @param lato Lato del reticolo quadrato in questione
+ * @param bsx Vettore che conterra gli indici del bordo sinistro
+ * @return Numero di elementi appartenenti al bordo
+ */
+vector<vector<int> > generate_square_border(int lato) {
+    vector<vector<int> > borders(2);
+    borders[0].resize(lato);
+    borders[1].resize(lato);
+
+    //normale quadrato
+//    if (opts.topologia == RETICOLO_2D || opts.topologia == CILINDRO_2D)
+        for (int i = 0; i < lato; i++) {
+            borders[0][i] = i;
+            borders[1][i] = lato * (lato - 1) + i;
+        }
+
+/*    if (opts.topologia == TORO_2D)
+        //toro, bordi a 1/4 e a 3/4 del sistema
+        for (int i = 0; i < lato; i++) {
+            borders[0][i] = lato * (lato / 4) + i;
+            borders[1][i] = lato * ((3 * lato) / 4) + i;
+        }
+*/
+    return borders;
+}
+
+void adj_struct::setup_bordering_links(){
+    bordering_links.resize(borders.size());
+
+    for (int link = 0; link < n_link; link++) {
+        int s1 = positive_links[link].first;
+        int s2 = positive_links[link].second;
+        
+        for (size_t b = 0; b < borders.size(); b++)
+            if (std::binary_search(borders[b].begin(), borders[b].end(), s1) ||
+                    std::binary_search(borders[b].begin(), borders[b].end(), s2))
+                bordering_links[b].push_back(link);
+    }
+}
+
+/**
  * @brief Genera struttura di adiacenza per il reticolo quadrato con condizioni periodiche toroidali
  * @param lato Lato del quadrato
  * @return adj_struct La struttura di adiacenza
@@ -46,6 +137,7 @@ adj_struct adiacenza_toroidal_lattice(int lato){
     temp.N=N;
     temp.n_total_links=4*N;
     temp.zmax=4;
+    temp.borders = generate_square_border(lato);
     return(temp);
 }
 
@@ -92,6 +184,7 @@ adj_struct adiacenza_square_lattice(int lato){
     temp.N=N;
     temp.n_total_links=count;
     temp.zmax=4;
+    temp.borders = generate_square_border(lato);
     return(temp);
 }
 
@@ -138,6 +231,7 @@ adj_struct adiacenza_open_square_lattice(int lato){
     temp.N=N;
     temp.n_total_links=count;
     temp.zmax=4;
+    temp.borders = generate_square_border(lato);
     return(temp);
 }
 
@@ -348,13 +442,7 @@ adj_struct adiacenza_sierpinski(int GEN){
     temp.N=total_size;
     temp.n_total_links=scritti;
     temp.zmax=4;
-    
-//    // test!
-//    for(int i=0; i < temp.N; i++){
-//        int z=temp.fetch(i);
-//        printf("z(%d)=%d\n",i+1,z);
-//    }
-
+    temp.borders = generate_sierpinski_borders(total_size);
     return(temp);
 }
 
