@@ -153,8 +153,6 @@ int main(int argc, char** argv) {
             topologia = adiacenza_from_file(opts.adj_vec_1, opts.adj_vec_2);
             break;
     }
-    //crea strutture contenenti solo link i~j, in cui i>j
-    topologia.normalize();
     ///Il volume della partizione è determinato dalla sua struttura di adiacenza
     opts.seq_len = topologia.N;
 
@@ -196,9 +194,9 @@ int main(int argc, char** argv) {
      * ma la time_series() tra configurazioni e partizioni successive nel tempo.
      */
     if(opts.letto_da == SIMULATION){
-        if(opts.electrons)
+        /*if(opts.electrons)
             nagaoka_run(topologia);
-        else
+        else*/
             time_series(topologia);
         return(0);
     }

@@ -16,6 +16,8 @@ else
    CC=g++
 endif
 
+BARTEK_OPTS = -inline -ipo -no-prec-div -fpe1 -ftz -O3 -xHost -opt-prefetch=4 -mkl=parallel -multiple-processes=2 -save -openmp-lib=compat -openmp-threadprivate=compat -openmp-link=dynamic -openmp-report0
+
 ifeq (${CC},g++)
     COPTS+=-fopenmp -Wall -march=native
     LINK_OPTS += -lgomp
@@ -33,9 +35,10 @@ files=*.cpp *.h Makefile Doxyfile
 file_supporto=./utility/carica* ./utility/cluster* ./utility/comandi*
 
 OBJ_LIST= init_functions.o distance.o partizioni.o adj_handler.o rand_mersenne.o 
-DIST_GEN_OBJ = general_distance.o ising_simulation.o dopon_problem.o nagaoka_simulation.o
+DIST_GEN_OBJ = general_distance.o ising_simulation.o
+# dopon_problem.o nagaoka_simulation.o
 
-all: distanze_generiche distanze_lineari #sierpinski ising
+all: distanze_generiche distanze_lineari polaron #sierpinski ising
 
 distanze_generiche: ${DIST_GEN_OBJ} ${OBJ_LIST}
 	${CC} -o distanze_generiche ${DIST_GEN_OBJ} ${OBJ_LIST} ${LINK_OPTS}
@@ -45,6 +48,9 @@ distanze_lineari: sequence_partitions.o ${OBJ_LIST}
 
 ising: ising_simulation.cpp adj_handler.o adj_handler.h rand_mersenne.o 
 	${CC} ${COPTS} -o ising -DSOLO_SIMULAZIONE ising_simulation.cpp adj_handler.o rand_mersenne.o 
+
+polaron: nagaoka_simulation.o adj_handler.o rand_mersenne.o dopon_problem.o
+	${CC} ${COPTS} -o polaron nagaoka_simulation.o adj_handler.o rand_mersenne.o init_functions.o dopon_problem.o ${LINK_OPTS}
 
 sierpinski: sierpinski.cpp smart_data_types.h
 	${CC} -o sierpinski -O3 -Wall sierpinski.cpp
@@ -64,7 +70,7 @@ translation.o: strutture.h translation.cpp
 ising_simulation.o: ising_simulation.cpp ising_simulation.h adj_handler.h distance.h partizioni.h smart_data_types.h
 	${CC} ${COPTS} -c ising_simulation.cpp
 
-nagaoka_simulation.o: nagaoka_simulation.cpp smart_data_types.h dopon_problem.h
+nagaoka_simulation.o: nagaoka_simulation.cpp smart_data_types.h dopon_problem.h adj_handler.h
 	${CC} ${COPTS} -c nagaoka_simulation.cpp
 
 init_functions.o: strutture.h init_functions.cpp

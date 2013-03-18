@@ -9,6 +9,7 @@
 #define	DOPON_PROBLEM_H
 
 #include "adj_handler.h"
+#include "rand_mersenne.h"
 #include <iostream>
 #include <cstdio>
 #include <vector>
@@ -52,6 +53,8 @@ public:
     vector<double> n; //Offdiagonal of tridiagonal matrix
     vector<double> e; //Working array for diagonalization
     vector<double> eigenvectors, fullvectors;
+    
+    RandMT random;
     
     dopon_problem(double J1, const adj_struct & adj) :
     NN(adj), J(J1) {

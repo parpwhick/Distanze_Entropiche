@@ -91,7 +91,7 @@ template <class spin_t> void dopon_problem<spin_t>::MultMv(double*in, double*out
             out[k] += in[NN.vicini[m]]; //*t;
         }
         //diagonal element, dopon spin dependent
-        out[k] += (lambda * (s[k] == spin) + J * spin * 0.25 * sum_nn) * in[k];
+        out[k] += (lambda * (s[k] == spin) + J * spin * sum_nn) * in[k];
         //voltage gradient
         if (confining==0)
                 out[k] += -V * (floor(k / L)/(L - 1)) * in[k]; //linear
@@ -107,12 +107,12 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_lowest_energy(b
 
     if (last_gs_spin != 1) {
         probed_spin = -1;
-        E_down = lanczos_groundstate(false) / J;
+        E_down = lanczos_groundstate(false);
     }
 
    if (last_gs_spin != -1) {
         probed_spin = +1;
-        E_up = lanczos_groundstate(false) / J;
+        E_up = lanczos_groundstate(false);
         
     }
 
@@ -165,6 +165,7 @@ void sum_scaled(double *v2,double a,const double *v1,size_t N){
 
 template <typename spin_t> double dopon_problem<spin_t>::lanczos_groundstate(int verbose) {
     int nconv;
+    static int retries = 0;
     if(ground_state.empty())
         //we assign a uniform initial state, although it's a terrible choice
         //in certain cases the true groundstate could be the uniform vector,
@@ -260,11 +261,18 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_groundstate(int
     
     gs_norm = normalize(ground_state.data(),N);
     if (std::abs(gs_norm - 1) > 1e-7) {
-        fprintf(stderr, "LANCZOS algorithm failure: for the groundstate after %d steps, |gs| = %f\n", m,gs_norm);
-        fprintf(stderr, "Restart with a random initial state and check the Hamiltonian isn't constant\n");
-        exit(1);
-        
-    }
+        retries++;
+        for (int i = 0; i < N; i++)
+            ground_state[i] = random.get_double();
+        if (retries < 5)
+            return lanczos_groundstate(verbose);
+        else {
+            fprintf(stderr, "LANCZOS algorithm failure: for the groundstate after %d steps, |gs| = %f\n", m, gs_norm);
+            fprintf(stderr, "Restart with a random initial state and check the Hamiltonian isn't constant\n");
+            exit(1);
+        }
+    } else
+        retries = 0;
     return d[0];
 }
 template double dopon_problem<double>::lanczos_groundstate(int verbose);

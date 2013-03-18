@@ -92,6 +92,8 @@ vector<vector<int> > generate_square_border(int lato) {
 }
 
 void adj_struct::setup_bordering_links(){
+    if(borders.empty())
+        return;
     bordering_links.resize(borders.size());
 
     for (int link = 0; link < n_link; link++) {
@@ -137,7 +139,15 @@ adj_struct adiacenza_toroidal_lattice(int lato){
     temp.N=N;
     temp.n_total_links=4*N;
     temp.zmax=4;
+    
+    temp.n_link = 2*N;
+    temp.positive_links.resize(temp.n_link);
+    for (int i = 0; i < N; i++){        
+            temp.positive_links[2*i] = std::make_pair(i,nnu(i));
+            temp.positive_links[2*i+1] = std::make_pair(i,nnl(i));
+    }
     temp.borders = generate_square_border(lato);
+    temp.setup_bordering_links();
     return(temp);
 }
 
@@ -185,6 +195,7 @@ adj_struct adiacenza_square_lattice(int lato){
     temp.n_total_links=count;
     temp.zmax=4;
     temp.borders = generate_square_border(lato);
+    temp.normalize();
     return(temp);
 }
 
@@ -232,6 +243,7 @@ adj_struct adiacenza_open_square_lattice(int lato){
     temp.n_total_links=count;
     temp.zmax=4;
     temp.borders = generate_square_border(lato);
+    temp.normalize();
     return(temp);
 }
 
@@ -258,6 +270,7 @@ adj_struct adiacenza_simple_line(int N){
     temp.N=N;
     temp.n_total_links=N;
     temp.zmax=1;
+    temp.normalize();
     return(temp);
 }
 
@@ -288,6 +301,7 @@ adj_struct adiacenza_fuzzy_line(int N, int fuzzy){
     temp.N=N;
     temp.n_total_links=adj_count;
     temp.zmax=fuzzy+1;
+    temp.normalize();
     return(temp);
 }
 
@@ -443,6 +457,7 @@ adj_struct adiacenza_sierpinski(int GEN){
     temp.n_total_links=scritti;
     temp.zmax=4;
     temp.borders = generate_sierpinski_borders(total_size);
+    temp.normalize();
     return(temp);
 }
 
@@ -548,7 +563,7 @@ adj_struct adiacenza_from_file(const char *name_vec1,const char *name_vec2){
     temp.n_total_links=M;
     temp.N=N;
     temp.zmax=zmax;
-    
+    temp.normalize();
     fclose(vec1);
     fclose(vec2);
     return(temp);
@@ -567,7 +582,9 @@ void adiacenza_to_file(const adj_struct & nn){
     fclose(vec2);
  }
 
-void adj_struct::normalize(){
+void adj_struct::normalize(){    
+    if (!positive_links.empty())
+        return;
     n_link = n_total_links/2;
     int counter = 0;
     positive_links.resize(n_link);
@@ -580,4 +597,5 @@ void adj_struct::normalize(){
         fprintf(stderr,"ADJ NORMALIZE: Asymmetric adjacency matrix\n");
         exit(1);
     }
+    setup_bordering_links();
 }
