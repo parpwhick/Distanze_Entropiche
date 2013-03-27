@@ -64,6 +64,7 @@ public:
     double kinetic_energy();
     double magnetic_energy();
     double total_magnetisation();
+    void init_AFM();
 
     nagaoka_simulation(const adj_struct & NN1) : hamiltonian(0.01, NN1), NN(NN1) {
         avg_beta = 0;
@@ -75,7 +76,7 @@ public:
 
         N = NN.N;
         update_rule = opts.dynamics;
-        J = - opts.J * 0.25; //we use spin +-1 internally, but the physical ones are +- 1/2
+        J =  - opts.J * 0.25; //we use spin +-1 internally, but the physical ones are +- 1/2
         J_abs = std::abs(J);
 
         if (opts.beta.size() == 1 || NN.borders.size() <= opts.beta.size())
@@ -84,7 +85,7 @@ public:
             n_borders_thermalize = opts.beta.size();
 
         config.resize(NN.N);
-        init_AFM(config);
+        init_AFM();
 
         if (update_rule == CREUTZ)
             link_energies.resize(NN.N);
@@ -92,7 +93,7 @@ public:
             link_energies.resize(NN.n_link);
         for (size_t i = 0; i < link_energies.size(); i++)
             //distribuzione esponenziale inversa
-            link_energies[i] = 4 * std::ceil(-J_abs / 4. / avg_beta * std::log(1 - random.get_double()) - 1);
+            link_energies[i] = 4 * J_abs * std::ceil(-0.25 / avg_beta * std::log(1 - random.get_double()) - 1);
 
         hamiltonian.ground_state.assign(NN.N, 1.0);
         for (int i = 0; i < NN.N; i++)
@@ -142,7 +143,7 @@ double nagaoka_simulation::kinetic_energy() {
         return totale;
     }
     else
-        return 4.0/(exp(4*avg_beta)-1);
+        return 4.0*J_abs/(exp(4*avg_beta)-1);
 }
 
 double nagaoka_simulation::total_magnetisation(){
@@ -187,8 +188,7 @@ void nagaoka_simulation::step_wh(int steps){
             //heat up the links adjacent to the borders
             for (int b = 0; b < n_borders_thermalize; b++)
                 for (size_t j = 0; j < NN.bordering_links[b].size(); j++)
-                         link_energies[NN.bordering_links[b][j]] = -J_abs / opts.beta[b] * std::log(random.get_double());
-                                 //4 * std::ceil(-J_abs / 4. / opts.beta[b] * std::log(1 - random.get_double()) - 1);
+                         link_energies[NN.bordering_links[b][j]] = 4 * J_abs * std::ceil(-0.25 / opts.beta[b] * std::log(1 - random.get_double()) - 1);
 
         }
 }
@@ -429,11 +429,14 @@ template <typename T> int signof(T number){
     return 2*(number >= 0)-1;
 }
 
-template <typename T> void init_AFM(std::vector<T> &config) {
+void nagaoka_simulation::init_AFM() {
     int side = opts.lato;
+    if(J < 0)
     for (int col = 0; col < side; col++)
         for (int row = 0; row < side; row++)
             config[col * side + row ] = 2 * ((row + col) % 2) - 1;
+    else
+        config.assign(config.size(),1);
 }
 
 template <typename T> void make_hole(std::vector<T> &config, int radius, int set_to) {
@@ -465,19 +468,12 @@ void nagaoka_run(const adj_struct &adj) {
     vector<double> groundstate_backup;
     double known_position = 0;
 
-    init_AFM(sim.config);
     double afm_gs_energy = - sim.magnetic_energy();
     //sim.link_energies.assign(sim.link_energies.size(), 0.0);
 
     std::clock_t start = std::clock();
     double time_diff, completed_ratio;
     fprintf(stderr, "\n");
-
-    //we only shift the configuration, so only metropolis is allowed
-    if(!sim.update_rule == METROPOLIS){
-        fprintf(stderr,"Only supporting Metropolis dynamics at the moment, sorry\n");
-        //exit(2);
-    }
 
     V = opts.V;
     sim.hamiltonian.set_confining(L/4);
@@ -560,7 +556,8 @@ printstuff:
 
         mag = sim.total_magnetisation();
         radius = sqrt(mag / 3.1415);
-        beta_est = sim.link_energies.size() / (E_kin / opts.J);//0.25 * std::log(1. + 4. * sim.link_energies.size() / (E_kin / opts.J));
+        beta_est = //sim.link_energies.size() / (E_kin / sim.J_abs);
+                0.25 * std::log(1. + 4. / ((E_kin/sim.link_energies.size()) / sim.J_abs));
 
         //simulation step
         sim.step_wh(opts.sweeps);

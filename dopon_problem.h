@@ -30,7 +30,7 @@ double pythag(double a, double b);
 const double epsilon=2.220446049250313E-016;
 const double lambda=300.0;
 const double tol=1.0e-7;
-const double maxiterations = 200;
+const double maxiterations = 500;
 
 template <typename spin_t>
 class dopon_problem {

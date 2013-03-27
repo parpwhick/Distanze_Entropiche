@@ -260,7 +260,7 @@ template <typename spin_t> double dopon_problem<spin_t>::lanczos_groundstate(int
     
     
     gs_norm = normalize(ground_state.data(),N);
-    if (std::abs(gs_norm - 1) > 1e-7) {
+    if (std::abs(gs_norm - 1) > 1e-5) {
         retries++;
         for (int i = 0; i < N; i++)
             ground_state[i] = random.get_double();
