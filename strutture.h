@@ -152,6 +152,10 @@ public:
     double J;
     ///Voltaggio
     double V;
+    ///Restarting state?
+    bool restart;
+    ///Shifting configurations?
+    bool shift;
 
 } options;
 

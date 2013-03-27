@@ -72,7 +72,6 @@ void print_help() {
             "Simulation options:\n"
             "  -microcanonical   Evolution according to microcanonical law [default]\n"
             "  -metropolis       Evolution according to Metropolis rule\n"
-            "  -creutz           Evolution according to Creutz rule\n"
             "  -beta B[,B2,..]   Floating point beta parameter for the (many) borders [0.45]\n"
             "  -sweeps N         Number of full sweeps in a time unit [1]\n"
             "  -skip N           Skip N time units to thermalize the system [50000]\n"
@@ -80,9 +79,10 @@ void print_help() {
             "\n"
             "Quantum Hamiltonian:\n"
             "  -electrons        Calculate at each iteration the electron energy\n"
-            "  -t X              Set hopping parameter to X [1.0]\n"
             "  -J X              Set J to X [0.01]\n"
             "  -V X              Set V to X [0]\n"
+            "  -restart          Restarting when polaron reaches border\n"
+            "  -shift            Circular shift when polaron reaches border [default]\n"
             "\n"
             ;
     fprintf(stderr, "%s", message);
@@ -116,6 +116,8 @@ void set_program_options(options &opts, int argc, char**argv) {
     opts.hopping = 1.0;
     opts.J = 0.01;
     opts.V = 0;
+    opts.restart = false;
+    opts.shift = true;
     opts.suffix_out = "";
     opts.da_calcolare = 0
             | SHAN | TOP
@@ -280,19 +282,17 @@ void set_program_options(options &opts, int argc, char**argv) {
             } else if (input == "-electrons") {
                 fprintf(stderr, "Calculating Hamiltonian at each iteration\n");
                 opts.electrons = true;
-            } else if (input == "-t") {
-                if (argc - read_argvs < 1)
-                    error("Missing t\n");
-                if (argv[read_argvs][0] == '-')
-                    error("Expecting argument, not another option\n");
-
-                opts.hopping = atof(argv[read_argvs++]);
-                fprintf(stderr, "Hoping parameter set to %f\n", opts.hopping);
+            } else if (input == "-restart") {
+                fprintf(stderr, "Restarting polaron from known configuration when reaching border\n");
+                opts.restart = true;
+                opts.shift = false;
+            } else if (input == "-shift") {
+                fprintf(stderr, "Shifting circularly all states when polaron reaches border\n");
+                opts.shift = true;
+                opts.restart = false;
             } else if (input == "-J") {
                 if (argc - read_argvs < 1)
                     error("Missing J\n");
-                if (argv[read_argvs][0] == '-')
-                    error("Expecting argument, not another option\n");
 
                 opts.J = atof(argv[read_argvs++]);
                 fprintf(stderr, "J interaction set to %f\n", opts.J);

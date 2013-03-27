@@ -94,6 +94,10 @@ vector<vector<int> > generate_square_border(int lato) {
 void adj_struct::setup_bordering_links(){
     if(borders.empty())
         return;
+    if(positive_links.empty()){
+        fprintf(stderr,"BORDER error: the positive_links structure is empty! Fill it first\n");
+        exit(2);
+    }
     bordering_links.resize(borders.size());
 
     for (int link = 0; link < n_link; link++) {
